@@ -70,7 +70,7 @@ classdef GridTests < matlab.unittest.TestCase
             % run when CO2SYS is updated in such a way that the results are
             % expected to change.
             co2sys = GridTests.calculate_temperature_salinity_pressure_results();
-            save("./data/temperature_salinity_pressure_grid.mat","co2sys");
+            save("./small_data/temperature_salinity_pressure_grid.mat","co2sys");
         end
         function generate_dic_alkalinity_reference()
             % generate_dic_alkalinity_reference
@@ -81,19 +81,19 @@ classdef GridTests < matlab.unittest.TestCase
             % expected to change.
 
             co2sys = GridTests.calculate_dic_alkalinity_results();
-            save("./data/dic_alkalinity_grid.mat","co2sys");
+            save("./small_data/dic_alkalinity_grid.mat","co2sys");
         end
         
         % Load reference states
         function co2sys_reference = load_temperature_salinity_pressure_reference()
             % load_temperature_salinity_pressure_reference
             % Load the reference state for comparison
-            co2sys_reference = load("./data/temperature_salinity_pressure_grid.mat").co2sys;
+            co2sys_reference = load("./small_data/temperature_salinity_pressure_grid.mat").co2sys;
         end
         function co2sys_reference = load_dic_alkalinity_reference()
             % load_dic_alkalinity_reference
             % Load the reference state for comparison
-            co2sys_reference = load("./data/dic_alkalinity_grid.mat").co2sys;
+            co2sys_reference = load("./small_data/dic_alkalinity_grid.mat").co2sys;
         end
     end
     %% Test Method Block

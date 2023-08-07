@@ -66,8 +66,8 @@ classdef RandomTests < matlab.unittest.TestCase
 
             co2sys = CO2SYS(dic,alkalinity,2,1,salinity,temperature_in,temperature_out,pressure_in,pressure_out,silicate,phosphate,ammonia,sulphide,1,which_k1k2,which_kso4,1,1);
 
-            writetable(inputs,"./data/temperature_salinity_pressure_random_inputs.csv");
-            save("./data/temperature_salinity_pressure_random.mat","co2sys");
+            writetable(inputs,"./small_data/temperature_salinity_pressure_random_inputs.csv");
+            save("./small_data/temperature_salinity_pressure_random.mat","co2sys");
         end
         function generate_dic_alkalinity_reference()
             % generate_dic_alkalinity_reference
@@ -110,8 +110,8 @@ classdef RandomTests < matlab.unittest.TestCase
 
             co2sys = CO2SYS(dic,alkalinity,2,1,salinity,temperature_in,temperature_out,pressure_in,pressure_out,silicate,phosphate,ammonia,sulphide,1,which_k1k2,which_kso4,1,1);
 
-            writetable(inputs,"./data/dic_alkalinity_random_inputs.csv");
-            save("./data/dic_alkalinity_random.mat","co2sys");
+            writetable(inputs,"./small_data/dic_alkalinity_random_inputs.csv");
+            save("./small_data/dic_alkalinity_random.mat","co2sys");
         end
         
         % Reference loading
@@ -121,8 +121,8 @@ classdef RandomTests < matlab.unittest.TestCase
             % salinity, and pressure combinations.
             % Returns: Table of inputs to co2sys
             %          The reference co2sys matrix
-            co2sys_inputs = readtable("./data/temperature_salinity_pressure_random_inputs.csv");
-            co2sys_reference = load("./data/temperature_salinity_pressure_random.mat").co2sys;
+            co2sys_inputs = readtable("./small_data/temperature_salinity_pressure_random_inputs.csv");
+            co2sys_reference = load("./small_data/temperature_salinity_pressure_random.mat").co2sys;
         end
         function [co2sys_inputs,co2sys_reference] = load_dic_alkalinity_reference()
             % load_dic_alkalinity_reference
@@ -131,8 +131,8 @@ classdef RandomTests < matlab.unittest.TestCase
             % Returns: Table of inputs to co2sys
             %          The reference co2sys matrix
 
-            co2sys_inputs = readtable("./data/dic_alkalinity_random_inputs.csv");
-            co2sys_reference = load("./data/dic_alkalinity_random.mat").co2sys;
+            co2sys_inputs = readtable("./small_data/dic_alkalinity_random_inputs.csv");
+            co2sys_reference = load("./small_data/dic_alkalinity_random.mat").co2sys;
         end        
         
         % Result calculation
