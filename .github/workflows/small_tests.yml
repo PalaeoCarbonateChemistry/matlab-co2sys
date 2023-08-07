@@ -1,0 +1,25 @@
+name: Run MATLAB tests
+on: [pull_request,workflow_dispatch]
+jobs:
+  calculate:
+    name: Run MATLAB tests
+    runs-on: ubuntu-latest
+    steps:        
+      - name: Check out repository
+        uses: actions/checkout@v3 
+      - name: Install DVC
+        run: |
+            sudo wget https://dvc.org/deb/dvc.list -O /etc/apt/sources.list.d/dvc.list
+            wget -qO - https://dvc.org/deb/iterative.asc | gpg --dearmor > packages.iterative.gpg
+            sudo install -o root -g root -m 644 packages.iterative.gpg /etc/apt/trusted.gpg.d/
+            rm -f packages.iterative.gpg
+            sudo apt update
+            sudo apt install dvc
+      - name: Get small data files
+        run: dvc pull tests/small_data
+      - name: Move to test directory
+        run: dvc pull tests/small_data
+      - name: Run script
+        uses: matlab-actions/run-command@v1
+        with:
+          command: ./tests/small_tests
