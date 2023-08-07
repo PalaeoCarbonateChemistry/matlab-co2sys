@@ -4,7 +4,7 @@ jobs:
   calculate:
     name: Run MATLAB tests
     runs-on: ubuntu-latest
-    steps:        
+    steps:
       - name: Check out repository
         uses: actions/checkout@v3 
       - name: Set up MATLAB
@@ -21,7 +21,9 @@ jobs:
             sudo apt install dvc
       - name: Get small data files
         run: dvc pull tests/small_data
+      - name: Show contents
+        run: ls -a tests/small_data/
       - name: Run script
         uses: matlab-actions/run-command@v1
         with:
-          command: cd 'tests', addpath("./../main/"),run_small_tests
+          command: cd 'tests', addpath("./../main/"), pwd, ls ./small_data, run_small_tests
