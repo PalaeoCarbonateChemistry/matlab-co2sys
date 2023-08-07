@@ -1,0 +1,2 @@
+['remote "remote"']
+    url = s3://co2sys-test-data
