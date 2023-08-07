@@ -1,7 +1,8 @@
 % Glodap
 glodap_tests = GlodapTests();
 
-glodap_tests.generate_glodap_results();
+glodap_tests.generate_glodap_results
+glodap_tests.generate_glodap_data_subset();
 glodap_tests.generate_glodap_subset_results();
 
 % Grid

@@ -135,13 +135,21 @@ classdef GlodapTests < matlab.unittest.TestCase
             arguments
                 inputs.version = "2022";
             end
-            glodap_data = GlodapTests.get_glodap_data(version=inputs.version);
 
-            % Randomly (but repeatably) decimate the data
-            rng(1);
-            keep = rand(height(glodap_data),1)<=0.1;
+            % Check if the file exists
+            % If it does fetch that, otherwise download the data and create
+            % subset
+            if ~(exist("./small_data/glodap_subset_"+inputs.version+".mat","file")==2)            
+                glodap_data = GlodapTests.get_glodap_data(version=inputs.version);
 
-            glodap_data_subset = glodap_data(keep,:);
+                % Randomly (but repeatably) decimate the data
+                rng(1);
+                keep = rand(height(glodap_data),1)<=0.1;
+    
+                glodap_data_subset = glodap_data(keep,:);
+            else
+                glodap_data_subset = load("./small_data/glodap_subset_"+inputs.version+".mat").glodap_data_subset;
+            end
         end
         
         % Calculate results from glodap inputs
@@ -161,6 +169,13 @@ classdef GlodapTests < matlab.unittest.TestCase
             save("./big_data/glodap_dic_alkalinity.mat","co2sys_dic_alkalinity");
             save("./big_data/glodap_pH_alkalinity.mat","co2sys_pH_alkalinity");
             save("./big_data/glodap_pH_dic.mat","co2sys_pH_dic");
+        end
+        function generate_glodap_data_subset(inputs)
+            arguments
+                inputs.version = "2022";
+            end
+            glodap_data_subset = GlodapTests.get_glodap_data_subset();
+            save("./small_data/glodap_subset_"+inputs.version+".mat","glodap_data_subset");
         end
         function generate_glodap_subset_results()
             % generate_glodap_subset_results 
