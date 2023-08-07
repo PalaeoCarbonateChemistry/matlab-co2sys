@@ -1,0 +1,6 @@
+outs:
+- md5: fc6be247b37a1e74e1a765831963ff24.dir
+  size: 47586489
+  nfiles: 9
+  hash: md5
+  path: small_data
