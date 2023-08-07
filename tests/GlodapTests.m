@@ -44,7 +44,7 @@ classdef GlodapTests < matlab.unittest.TestCase
                                         "https://www.ncei.noaa.gov/data/oceans/ncei/ocads/data/0237935/GLODAPv2.2021_Merged_Master_File.mat", ...
                                         "https://www.ncei.noaa.gov/data/oceans/ncei/ocads/data/0257247/GLODAPv2.2022_Merged_Master_File.mat"]);
                 
-                websave("./small_data/glodap_"+inputs.version,links(inputs.version));
+                websave("./big_data/glodap_"+inputs.version,links(inputs.version));
         
                 success = true;
             catch
@@ -66,15 +66,15 @@ classdef GlodapTests < matlab.unittest.TestCase
         
             % Check if the file exists
             % If it does fetch that, otherwise download the data
-            if ~(exist("./small_data/glodap_"+inputs.version+".mat","file")==2)
+            if ~(exist("./big_data/glodap_"+inputs.version+".mat","file")==2)
                 downloaded = GlodapTests.download_glodap_data(version=inputs.version);
                 if downloaded
-                    data = load("./small_data/glodap_"+inputs.version);
+                    data = load("./big_data/glodap_"+inputs.version);
                 else
                     error("Unable to acquire data");
                 end
             else
-                data = load("./small_data/glodap_"+inputs.version);
+                data = load("./big_data/glodap_"+inputs.version);
             end
         end
         function data = get_glodap_data(inputs)
@@ -188,9 +188,9 @@ classdef GlodapTests < matlab.unittest.TestCase
             % Returns three matrices for the three combinations of glodap
             % carbonate chemistry parameters (dic + alkalinity, pH +
             % alkalinity, and pH + DIC)
-            dic_alkalinity = load("./small_data/glodap_dic_alkalinity.mat").co2sys_dic_alkalinity;
-            pH_alkalinity = load("./small_data/glodap_pH_alkalinity.mat").co2sys_pH_alkalinity;
-            pH_dic = load("./small_data/glodap_pH_dic.mat").co2sys_pH_dic;
+            dic_alkalinity = load("./big_data/glodap_dic_alkalinity.mat").co2sys_dic_alkalinity;
+            pH_alkalinity = load("./big_data/glodap_pH_alkalinity.mat").co2sys_pH_alkalinity;
+            pH_dic = load("./big_data/glodap_pH_dic.mat").co2sys_pH_dic;
         end
         function [dic_alkalinity,pH_alkalinity,pH_dic] = load_glodap_subset_results()
             % load_glodap_subset_results 
