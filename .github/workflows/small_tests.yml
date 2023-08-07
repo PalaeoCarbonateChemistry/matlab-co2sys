@@ -24,9 +24,7 @@ jobs:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
         run: dvc pull tests/small_data
-      - name: Show contents
-        run: ls -a tests/small_data/
       - name: Run script
         uses: matlab-actions/run-command@v1
         with:
-          command: cd 'tests', addpath("./../main/"), pwd, ls ./small_data, run_small_tests
+          command: cd 'tests', addpath("./../main/"), assertSuccess(run_small_tests)
