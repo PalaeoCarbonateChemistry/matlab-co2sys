@@ -7,6 +7,8 @@ jobs:
     steps:        
       - name: Check out repository
         uses: actions/checkout@v3 
+      - name: Set up MATLAB
+        uses: matlab-actions/setup-matlab@v1
       - name: Install DVC
         run: |
             sudo wget https://dvc.org/deb/dvc.list -O /etc/apt/sources.list.d/dvc.list
@@ -16,8 +18,6 @@ jobs:
             sudo apt update
             sudo apt install dvc
       - name: Get small data files
-        run: dvc pull tests/small_data
-      - name: Move to test directory
         run: dvc pull tests/small_data
       - name: Run script
         uses: matlab-actions/run-command@v1
