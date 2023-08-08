@@ -43,7 +43,7 @@ classdef PerformanceTests < matlab.unittest.TestCase
             average_time_taken = median(time_taken);
             average_time_per_point = round((average_time_taken/number_of_points)*1e6,4,"significant");
 
-            PerformanceTests.add_performance_metric("array",average_time_per_point*1e6);
+            PerformanceTests.add_performance_metric("array",average_time_per_point);
         end
         function test_iterative_temperature_salinity_pressure(testCase)
             number_of_points = 100;
