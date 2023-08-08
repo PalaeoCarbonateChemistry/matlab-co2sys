@@ -1,6 +1,7 @@
 [![Run small verification tests](https://github.com/MUADh3i9yL/matlab-co2sys-traditional/actions/workflows/small_tests.yml/badge.svg)](https://github.com/MUADh3i9yL/matlab-co2sys-traditional/actions/workflows/small_tests.yml)
-![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgist.githubusercontent.com%2Frossidae%2Fc68eb447f90f281a543bca7ab1d7a56a%2Fraw%2F9ac172abdacff106379815d86e31720f80dadf57%2Fco2sys-performance-metrics.json&query=%24.iterative&suffix=%20%CE%BCsec%2Fpoint&label=Iterative%20speed&color=%23963023)
-![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgist.githubusercontent.com%2Frossidae%2Fc68eb447f90f281a543bca7ab1d7a56a%2Fraw%2F9ac172abdacff106379815d86e31720f80dadf57%2Fco2sys-performance-metrics.json&query=%24.array&suffix=%20%CE%BCsec%2Fpoint&label=Vectorised%20speed)
+![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgist.githubusercontent.com%2Frossidae%2Fc68eb447f90f281a543bca7ab1d7a56a%2Fraw%2Fco2sys-performance-metrics.json&query=%24.array&suffix=%20%CE%BCsec%2Fpoint&label=Array%20speed)
+![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgist.githubusercontent.com%2Frossidae%2Fc68eb447f90f281a543bca7ab1d7a56a%2Fraw%2Fco2sys-performance-metrics.json&query=%24.iterative&suffix=%20%CE%BCsec%2Fpoint&label=Iterative%20speed&color=%23983c31)
+
 
 # About CO2SYS
 This is a Matlab version of CO2SYS (which was originally written for DOS). CO2SYS calculates and returns a the state of the carbonate system of solutions. Give two carbonate system properties and input to calculate apparent equilibrium constants, CO2SYS will return a matrix of results describing subsidiary carbonate system properties.
