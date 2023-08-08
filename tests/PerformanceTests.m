@@ -3,13 +3,14 @@ classdef PerformanceTests < matlab.unittest.TestCase
     methods (Static)
         function json_data = load_performance_metrics()
             file_id = fopen("./performance_metrics.json","a+");
-            file_contents = fread(file_id);
+            fclose(file_id);
+
+            file_contents = fileread("./performance_metrics.json");
             if isempty(file_contents)
                 json_data = struct();
             else
                 json_data = jsondecode(file_contents);
             end
-            fclose(file_id);
         end
         function save_performance_metrics(json_data)
             file_id = fopen("./performance_metrics.json","w");
@@ -42,7 +43,7 @@ classdef PerformanceTests < matlab.unittest.TestCase
             average_time_taken = median(time_taken);
             average_time_per_point = average_time_taken/number_of_points;
 
-            PerformanceTests.add_performance_metric("array",average_time_per_point);
+            PerformanceTests.add_performance_metric("array",average_time_per_point*1e6);
         end
         function test_iterative_temperature_salinity_pressure(testCase)
             number_of_points = 100;
@@ -69,7 +70,7 @@ classdef PerformanceTests < matlab.unittest.TestCase
             average_time_taken = median(time_taken);
             average_time_per_point = average_time_taken/number_of_points;
 
-            PerformanceTests.add_performance_metric("iterative",average_time_per_point);
+            PerformanceTests.add_performance_metric("iterative",average_time_per_point*1e6);
         end
     end
 end

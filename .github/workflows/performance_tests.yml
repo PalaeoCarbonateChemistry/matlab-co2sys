@@ -1,4 +1,4 @@
-name: Run MATLAB tests
+name: Run performance tests
 on: [pull_request,workflow_dispatch]
 jobs:
   calculate:
