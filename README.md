@@ -1,3 +1,11 @@
+[![Run small verification tests](https://github.com/MUADh3i9yL/matlab-co2sys-traditional/actions/workflows/small_tests.yml/badge.svg)](https://github.com/MUADh3i9yL/matlab-co2sys-traditional/actions/workflows/small_tests.yml)
+
+![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgist.githubusercontent.com%2Frossidae%2Fc68eb447f90f281a543bca7ab1d7a56a%2Fraw%2F9ac172abdacff106379815d86e31720f80dadf57%2Fco2sys-performance-metrics.json&query=%24.iterative&suffix=%20%CE%BCsec%2Fpoint&label=Iterative%20speed&color=%23963023)
+
+
+![Dynamic JSON Badge](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fgist.githubusercontent.com%2Frossidae%2Fc68eb447f90f281a543bca7ab1d7a56a%2Fraw%2F9ac172abdacff106379815d86e31720f80dadf57%2Fco2sys-performance-metrics.json&query=%24.array&suffix=%20%CE%BCsec%2Fpoint&label=Vectorised%20speed)
+
+
 CITATION:
 van Heuven, S., D. Pierrot, J.W.B. Rae, E. Lewis, and D.W.R. Wallace. 2011.
 MATLAB Program Developed for CO2 System Calculations. ORNL/CDIAC-105b.
