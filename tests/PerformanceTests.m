@@ -2,10 +2,10 @@
 classdef PerformanceTests < matlab.unittest.TestCase
     methods (Static)
         function json_data = load_performance_metrics()
-            file_id = fopen("./performance_metrics.json","a+");
+            file_id = fopen("./co2sys-performance-metrics.json","a+");
             fclose(file_id);
 
-            file_contents = fileread("./performance_metrics.json");
+            file_contents = fileread("./co2sys-performance-metrics.json");
             if isempty(file_contents)
                 json_data = struct();
             else
@@ -13,7 +13,7 @@ classdef PerformanceTests < matlab.unittest.TestCase
             end
         end
         function save_performance_metrics(json_data)
-            file_id = fopen("./performance_metrics.json","w");
+            file_id = fopen("./co2sys-performance-metrics.json","w");
             fwrite(file_id,jsonencode(json_data));
             fclose(file_id);        
         end
@@ -41,7 +41,7 @@ classdef PerformanceTests < matlab.unittest.TestCase
             end
 
             average_time_taken = median(time_taken);
-            average_time_per_point = average_time_taken/number_of_points;
+            average_time_per_point = round((average_time_taken/number_of_points)*1e6,4,"significant");
 
             PerformanceTests.add_performance_metric("array",average_time_per_point*1e6);
         end
@@ -68,9 +68,9 @@ classdef PerformanceTests < matlab.unittest.TestCase
             end
 
             average_time_taken = median(time_taken);
-            average_time_per_point = average_time_taken/number_of_points;
+            average_time_per_point = round((average_time_taken/number_of_points)*1e6,4,"significant");
 
-            PerformanceTests.add_performance_metric("iterative",average_time_per_point*1e6);
+            PerformanceTests.add_performance_metric("iterative",average_time_per_point);
         end
     end
 end
