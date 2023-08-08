@@ -1,17 +1,36 @@
 %% Defines the class containing tests which use the GLODAP dataset
 classdef PerformanceTests < matlab.unittest.TestCase
     methods (Static)
-
+        function json_data = load_performance_metrics()
+            file_id = fopen("./performance_metrics.json","a+");
+            file_contents = fread(file_id);
+            if isempty(file_contents)
+                json_data = struct();
+            else
+                json_data = jsondecode(file_contents);
+            end
+            fclose(file_id);
+        end
+        function save_performance_metrics(json_data)
+            file_id = fopen("./performance_metrics.json","w");
+            fwrite(file_id,jsonencode(json_data));
+            fclose(file_id);        
+        end
+        function add_performance_metric(name,value)
+            json_data = PerformanceTests.load_performance_metrics();
+            json_data.(name) = value;
+            PerformanceTests.save_performance_metrics(json_data);
+        end
     end
     methods (Test)
         function test_array_temperature_salinity_pressure(testCase)
-            number_of_points = 100000;
+            number_of_points = 10000;
             [temperature,salinity,pressure] = RandomTests.generate_temperature_salinity_pressure_arrays(number_of_points);
 
             dic = 2000;
             alkalinity = 2300;
 
-            number_of_iterations = 100;
+            number_of_iterations = 10;
             time_taken = NaN(number_of_iterations,1);
     
             for iteration = 1:number_of_iterations
@@ -21,6 +40,9 @@ classdef PerformanceTests < matlab.unittest.TestCase
             end
 
             average_time_taken = median(time_taken);
+            average_time_per_point = average_time_taken/number_of_points;
+
+            PerformanceTests.add_performance_metric("array",average_time_per_point);
         end
         function test_iterative_temperature_salinity_pressure(testCase)
             number_of_points = 100;
@@ -29,7 +51,7 @@ classdef PerformanceTests < matlab.unittest.TestCase
             dic = 2000;
             alkalinity = 2300;
 
-            number_of_iterations = 100;
+            number_of_iterations = 10;
             time_taken = NaN(number_of_iterations,1);
     
             for iteration = 1:number_of_iterations
@@ -45,6 +67,9 @@ classdef PerformanceTests < matlab.unittest.TestCase
             end
 
             average_time_taken = median(time_taken);
+            average_time_per_point = average_time_taken/number_of_points;
+
+            PerformanceTests.add_performance_metric("iterative",average_time_per_point);
         end
     end
 end
