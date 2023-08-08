@@ -1,4 +1,22 @@
-ChangeLog
+version 3.2.0, 2023-19-01
+-----------------------------------
+	- Can accept input parameters of [CO3], [HCO3], and [CO2], and propagate their uncertainties
+	- Includes NH3 and HS as alkalinity contributors, and propagates their uncertainties
+	- Uses separate inputs to specify choices for characterizations of K1K2, KSO4, KF, and TB
+	- Does not evaluate input parameters equal to -999 or NaN
+	- Exits pH iteration loops that do not converge and indicates where a problem occurred
+	- Provides exactly identical pH results for a given input line, no matter the other lines of input parameters (this is not necessarily the case for prior versions of CO2SYS.m)
+	- Uses an updated definition of the ideal gas constant (https://physics.nist.gov/cgi-bin/cuu/Value?r)
+	- Fixes bugs in CO2SYS.m Revelle factor calculation and derivnum.m output conditions
+	- Includes K1 and K2 constants defined by Sulpis et al. (2020), K2 constant defined by Schockman and Byrne (2021), KF constant defined by Perez and Fraga (1987), and KSO4 constant of Waters and Millero (2013)
+	- Determines initial pH in iterative solvers using the approach of Munhoven (2013), detailed further in Humphreys et al. (submitted), rather than simply using an initial estimate of 8.0 each time.
+	- Obtains free scale pH properly within iterative pH solvers no matter the input scale, rather than making the simplification that input pH is always on the total scale.
+	- Includes substrate-inhibitor ratio (Bach, 2015) as an output argument from CO2SYS.
+	- Calculates uncertainties at output conditions that are associated with equilibrium constants with respect to equilibrium constants at output conditions, rather than input conditions as previously. This essentially assume pK uncertainty is constant regardless of temperature and pressure.
+	- Calculates derivatives and errors for the Revelle factor.
+	- errors.m includes optional calcium concentration uncertainty input as discussed in Dillon et al. (2020)
+	- Option added for pressure corrections to K0 and fugacity factor.
+
 
 version 2.0.5, 2018-11-23
 -----------------------------------
