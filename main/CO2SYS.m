@@ -1,4 +1,13 @@
-function [DATA,HEADERS,NICEHEADERS]=CO2SYS(PAR1,PAR2,PAR1TYPE,PAR2TYPE,SAL,TEMPIN,TEMPOUT,PRESIN,PRESOUT,SI,PO4,NH4,H2S,pHSCALEIN,K1K2CONSTANTS,KSO4CONSTANT,KFCONSTANT,BORON,varargin)
+function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
+                                            parameter_1_type,parameter_2_type, ...
+                                            salinity, ...
+                                            temperature_in,temperature_out, ...
+                                            pressure_in,pressure_out, ...
+                                            silicate,phosphate,ammonia,sulphide, ...
+                                            pH_scale_in, ...
+                                            k1_k2_constants,kso4_constant,kf_constant, ...
+                                            boron, ...
+                                            varargin)
 %**************************************************************************
 %
 % Current: CO2SYS.m v3.1.2   (Jan  2023: https://github.com/jonathansharp/CO2-System-Extd)
@@ -367,78 +376,78 @@ for i = 1:2:length(varargin)-1
 end
 
 % Determine lengths of input vectors
-veclengths=[length(PAR1) length(PAR2) length(PAR1TYPE)...
-            length(PAR2TYPE) length(SAL) length(TEMPIN)...
-            length(TEMPOUT) length(PRESIN) length(PRESOUT)...
-            length(SI) length(PO4) length(NH4) length(H2S)...
-            length(pHSCALEIN) length(K1K2CONSTANTS) length(KSO4CONSTANT)...
-	        length(KFCONSTANT) length(BORON)];
+veclengths=[length(parameter_1) length(parameter_2) length(parameter_1_type)...
+            length(parameter_2_type) length(salinity) length(temperature_in)...
+            length(temperature_out) length(pressure_in) length(pressure_out)...
+            length(silicate) length(phosphate) length(ammonia) length(sulphide)...
+            length(pH_scale_in) length(k1_k2_constants) length(kso4_constant)...
+	        length(kf_constant) length(boron)];
 
 if length(unique(veclengths))>2
 	disp(' '); disp('*** INPUT ERROR: Input vectors must all be of same length, or of length 1. ***'); disp(' '); return
 end
 
 % Make column vectors of all input vectors
-PAR1         =PAR1         (:);
-PAR2         =PAR2         (:);
-PAR1TYPE     =PAR1TYPE     (:);
-PAR2TYPE     =PAR2TYPE     (:);
-SAL          =SAL          (:);
-TEMPIN       =TEMPIN       (:);
-TEMPOUT      =TEMPOUT      (:);
-PRESIN       =PRESIN       (:);
-PRESOUT      =PRESOUT      (:);
-SI           =SI           (:);
-PO4          =PO4          (:);
-NH4          =NH4          (:);
-H2S          =H2S          (:);
-pHSCALEIN    =pHSCALEIN    (:);
-K1K2CONSTANTS=K1K2CONSTANTS(:);
-KSO4CONSTANT =KSO4CONSTANT (:);
-KFCONSTANT   =KFCONSTANT   (:);
-BORON        =BORON        (:);
+parameter_1         =parameter_1         (:);
+parameter_2         =parameter_2         (:);
+parameter_1_type     =parameter_1_type     (:);
+parameter_2_type     =parameter_2_type     (:);
+salinity          =salinity          (:);
+temperature_in       =temperature_in       (:);
+temperature_out      =temperature_out      (:);
+pressure_in       =pressure_in       (:);
+pressure_out      =pressure_out      (:);
+silicate           =silicate           (:);
+phosphate          =phosphate          (:);
+ammonia          =ammonia          (:);
+sulphide          =sulphide          (:);
+pH_scale_in    =pH_scale_in    (:);
+k1_k2_constants=k1_k2_constants(:);
+kso4_constant =kso4_constant (:);
+kf_constant   =kf_constant   (:);
+boron        =boron        (:);
 
 % Find the longest column vector:
 ntps = max(veclengths);
 
 % Populate column vectors
-PAR1(1:ntps,1)          = PAR1(:)          ;
-PAR2(1:ntps,1)          = PAR2(:)          ;
-PAR1TYPE(1:ntps,1)      = PAR1TYPE(:)      ;
-PAR2TYPE(1:ntps,1)      = PAR2TYPE(:)      ;
-SAL(1:ntps,1)           = SAL(:)           ;
-TEMPIN(1:ntps,1)        = TEMPIN(:)        ;
-TEMPOUT(1:ntps,1)       = TEMPOUT(:)       ;
-PRESIN(1:ntps,1)        = PRESIN(:)        ;
-PRESOUT(1:ntps,1)       = PRESOUT(:)       ;
-SI(1:ntps,1)            = SI(:)            ;
-PO4(1:ntps,1)           = PO4(:)           ;
-NH4(1:ntps,1)           = NH4(:)           ;
-H2S(1:ntps,1)           = H2S(:)           ;
-pHSCALEIN(1:ntps,1)     = pHSCALEIN(:)     ;
-K1K2CONSTANTS(1:ntps,1) = K1K2CONSTANTS(:) ;
-KSO4CONSTANT(1:ntps,1)  = KSO4CONSTANT(:)  ;
-KFCONSTANT(1:ntps,1)    = KFCONSTANT(:)    ;
-BORON(1:ntps,1)         = BORON(:)         ;
+parameter_1(1:ntps,1)          = parameter_1(:)          ;
+parameter_2(1:ntps,1)          = parameter_2(:)          ;
+parameter_1_type(1:ntps,1)      = parameter_1_type(:)      ;
+parameter_2_type(1:ntps,1)      = parameter_2_type(:)      ;
+salinity(1:ntps,1)           = salinity(:)           ;
+temperature_in(1:ntps,1)        = temperature_in(:)        ;
+temperature_out(1:ntps,1)       = temperature_out(:)       ;
+pressure_in(1:ntps,1)        = pressure_in(:)        ;
+pressure_out(1:ntps,1)       = pressure_out(:)       ;
+silicate(1:ntps,1)            = silicate(:)            ;
+phosphate(1:ntps,1)           = phosphate(:)           ;
+ammonia(1:ntps,1)           = ammonia(:)           ;
+sulphide(1:ntps,1)           = sulphide(:)           ;
+pH_scale_in(1:ntps,1)     = pH_scale_in(:)     ;
+k1_k2_constants(1:ntps,1) = k1_k2_constants(:) ;
+kso4_constant(1:ntps,1)  = kso4_constant(:)  ;
+kf_constant(1:ntps,1)    = kf_constant(:)    ;
+boron(1:ntps,1)         = boron(:)         ;
 
 % Assign input to the 'historical' variable names.
-pHScale      = pHSCALEIN;
-WhichKs      = K1K2CONSTANTS;
-WhoseKSO4    = KSO4CONSTANT;
-WhoseKF      = KFCONSTANT;
-WhoseTB      = BORON;
-p1           = PAR1TYPE;
-p2           = PAR2TYPE;
-TempCi       = TEMPIN;
-TempCo       = TEMPOUT;
-Pdbari       = PRESIN;
-Pdbaro       = PRESOUT;
-Sal          = SAL;
-sqrSal       = sqrt(SAL);
-TP           = PO4;
-TSi          = SI;
-TNH4         = NH4;
-TH2S         = H2S;
+pHScale      = pH_scale_in;
+WhichKs      = k1_k2_constants;
+WhoseKSO4    = kso4_constant;
+WhoseKF      = kf_constant;
+WhoseTB      = boron;
+p1           = parameter_1_type;
+p2           = parameter_2_type;
+TempCi       = temperature_in;
+TempCo       = temperature_out;
+Pdbari       = pressure_in;
+Pdbaro       = pressure_out;
+Sal          = salinity;
+sqrSal       = sqrt(salinity);
+TP           = phosphate;
+TSi          = silicate;
+TNH4         = ammonia;
+TH2S         = sulphide;
 
 RGasConstant = 83.14462618; % ml bar-1 K-1 mol-1,
 %                             recommended by NIST
@@ -458,22 +467,22 @@ CO3  = nan(ntps,1); % [CO3]
 CO2  = nan(ntps,1); % [CO2*]
 
 % Assign values to empty vectors.
-F=(p1==1 & PAR1~=-999);   TA(F)=PAR1(F)/1e6; % Convert from micromol/kg to mol/kg
-F=(p1==2 & PAR1~=-999);   TC(F)=PAR1(F)/1e6; % Convert from micromol/kg to mol/kg
-F=(p1==3 & PAR1~=-999);   PH(F)=PAR1(F);
-F=(p1==4 & PAR1~=-999);   PC(F)=PAR1(F)/1e6; % Convert from microatm. to atm.
-F=(p1==5 & PAR1~=-999);   FC(F)=PAR1(F)/1e6; % Convert from microatm. to atm.
-F=(p1==6 & PAR1~=-999); HCO3(F)=PAR1(F)/1e6; % Convert from micromol/kg to mol/kg
-F=(p1==7 & PAR1~=-999);  CO3(F)=PAR1(F)/1e6; % Convert from micromol/kg to mol/kg
-F=(p1==8 & PAR1~=-999);  CO2(F)=PAR1(F)/1e6; % Convert from micromol/kg to mol/kg
-F=(p2==1 & PAR2~=-999);   TA(F)=PAR2(F)/1e6; % Convert from micromol/kg to mol/kg
-F=(p2==2 & PAR2~=-999);   TC(F)=PAR2(F)/1e6; % Convert from micromol/kg to mol/kg
-F=(p2==3 & PAR2~=-999);   PH(F)=PAR2(F);
-F=(p2==4 & PAR2~=-999);   PC(F)=PAR2(F)/1e6; % Convert from microatm. to atm.
-F=(p2==5 & PAR2~=-999);   FC(F)=PAR2(F)/1e6; % Convert from microatm. to atm.
-F=(p2==6 & PAR2~=-999); HCO3(F)=PAR2(F)/1e6; % Convert from micromol/kg to mol/kg
-F=(p2==7 & PAR2~=-999);  CO3(F)=PAR2(F)/1e6; % Convert from micromol/kg to mol/kg
-F=(p2==8 & PAR2~=-999);  CO2(F)=PAR2(F)/1e6; % Convert from micromol/kg to mol/kg
+F=(p1==1 & parameter_1~=-999);   TA(F)=parameter_1(F)/1e6; % Convert from micromol/kg to mol/kg
+F=(p1==2 & parameter_1~=-999);   TC(F)=parameter_1(F)/1e6; % Convert from micromol/kg to mol/kg
+F=(p1==3 & parameter_1~=-999);   PH(F)=parameter_1(F);
+F=(p1==4 & parameter_1~=-999);   PC(F)=parameter_1(F)/1e6; % Convert from microatm. to atm.
+F=(p1==5 & parameter_1~=-999);   FC(F)=parameter_1(F)/1e6; % Convert from microatm. to atm.
+F=(p1==6 & parameter_1~=-999); HCO3(F)=parameter_1(F)/1e6; % Convert from micromol/kg to mol/kg
+F=(p1==7 & parameter_1~=-999);  CO3(F)=parameter_1(F)/1e6; % Convert from micromol/kg to mol/kg
+F=(p1==8 & parameter_1~=-999);  CO2(F)=parameter_1(F)/1e6; % Convert from micromol/kg to mol/kg
+F=(p2==1 & parameter_2~=-999);   TA(F)=parameter_2(F)/1e6; % Convert from micromol/kg to mol/kg
+F=(p2==2 & parameter_2~=-999);   TC(F)=parameter_2(F)/1e6; % Convert from micromol/kg to mol/kg
+F=(p2==3 & parameter_2~=-999);   PH(F)=parameter_2(F);
+F=(p2==4 & parameter_2~=-999);   PC(F)=parameter_2(F)/1e6; % Convert from microatm. to atm.
+F=(p2==5 & parameter_2~=-999);   FC(F)=parameter_2(F)/1e6; % Convert from microatm. to atm.
+F=(p2==6 & parameter_2~=-999); HCO3(F)=parameter_2(F)/1e6; % Convert from micromol/kg to mol/kg
+F=(p2==7 & parameter_2~=-999);  CO3(F)=parameter_2(F)/1e6; % Convert from micromol/kg to mol/kg
+F=(p2==8 & parameter_2~=-999);  CO2(F)=parameter_2(F)/1e6; % Convert from micromol/kg to mol/kg
 
 % Generate the columns holding Si, Phos, Amm, H2S and Sal.
 % Pure Water case:
@@ -759,7 +768,7 @@ KOVEC=[K0 K1 K2 -log10(K1) -log10(K2) KW KB KF KS KP1 KP2 KP3 KSi KNH4 KH2S];
 TVEC =[TB TF TS TP TSi TNH4 TH2S];
 
 % Saving data in array, 99 columns, as many rows as samples input
-DATA=[TAc*1e6         TCc*1e6        PHic           PCic*1e6        FCic*1e6...
+data=[TAc*1e6         TCc*1e6        PHic           PCic*1e6        FCic*1e6...
       HCO3ic*1e6      CO3ic*1e6      CO2ic*1e6      BAlkinp*1e6     OHinp*1e6...
       PAlkinp*1e6     SiAlkinp*1e6   AmmAlkinp*1e6  HSAlkinp*1e6    Hfreeinp*1e6... %%% Multiplied Hfreeinp *1e6, svh20100827
       Revelleinp      OmegaCainp     OmegaArinp     xCO2dryinp*1e6  SIRinp...
@@ -768,13 +777,13 @@ DATA=[TAc*1e6         TCc*1e6        PHic           PCic*1e6        FCic*1e6...
       AmmAlkout*1e6   HSAlkout*1e6   Hfreeout*1e6   Revelleout      OmegaCaout... %%% Multiplied Hfreeout *1e6, svh20100827
       OmegaArout      xCO2dryout*1e6 SIRout         pHicT           pHicS...
       pHicF           pHicN          pHocT          pHocS           pHocF...
-      pHocN           TEMPIN         TEMPOUT        PRESIN          PRESOUT...
-      PAR1TYPE        PAR2TYPE       K1K2CONSTANTS  KSO4CONSTANT    KFCONSTANT...
-      BORON           pHSCALEIN      SAL            PO4             SI...
-      NH4             H2S            KIVEC          KOVEC           TVEC*1e6];
-DATA(isnan(DATA))=-999;
+      pHocN           temperature_in         temperature_out        pressure_in          pressure_out...
+      parameter_1_type        parameter_2_type       k1_k2_constants  kso4_constant    kf_constant...
+      boron           pH_scale_in      salinity            phosphate             silicate...
+      ammonia             sulphide            KIVEC          KOVEC           TVEC*1e6];
+data(isnan(data))=-999;
 
-HEADERS={'TAlk';'TCO2';'pHin';'pCO2in';'fCO2in';'HCO3in';'CO3in';...
+headers={'TAlk';'TCO2';'pHin';'pCO2in';'fCO2in';'HCO3in';'CO3in';...
     'CO2in';'BAlkin';'OHin';'PAlkin';'SiAlkin';'AmmAlkin';'HSAlkin';...
     'Hfreein';'RFin';'OmegaCAin';'OmegaARin';'xCO2in';'SIRin';'pHout';...
     'pCO2out';'fCO2out';'HCO3out';'CO3out';'CO2out';'BAlkout';'OHout';...
@@ -790,7 +799,7 @@ HEADERS={'TAlk';'TCO2';'pHin';'pCO2in';'fCO2in';'HCO3in';'CO3in';...
     'KP3output';'KSioutput';'KNH4output';'KH2Soutput';'TB';'TF';'TS';...
     'TP';'TSi';'TNH4';'TH2S'};
 
-NICEHEADERS={...
+nice_headers={...
     '01 - TAlk             (umol/kgSW) ';
     '02 - TCO2             (umol/kgSW) ';
     '03 - pHin             ()          ';
