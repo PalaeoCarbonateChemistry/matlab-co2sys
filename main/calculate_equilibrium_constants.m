@@ -1,8 +1,7 @@
 
-function calculate_equilibrium_constants(TempC,Pdbar)
+function Ks = calculate_equilibrium_constants(TempC,Pdbar)
     global pH_scale_in_GLOBAL which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL sqrt_salinity_GLOBAL Pbar;
-    global K0 fH FugFac VPFac ntps temp_k_GLOBAL log_temp_k_GLOBAL;
-    global K1 K2 KW KB KF KS KP1 KP2 KP3 KSi KNH4 KH2S;
+    global fH FugFac VPFac ntps temp_k_GLOBAL log_temp_k_GLOBAL;
     global boron_concentration_GLOBAL fluorine_concentration_GLOBAL sulphate_concentration_GLOBAL CAL gas_constant_GLOBAL salinity_GLOBAL p_opt;
     
     % SUB Constants, version 04.01, 10-13-97, written by Ernie Lewis.
@@ -957,4 +956,7 @@ function calculate_equilibrium_constants(TempC,Pdbar)
     VPCorrWP = exp(-0.000544.*salinity_GLOBAL);
     VPSWWP = VPWP.*VPCorrWP;
     VPFac = 1 - VPSWWP; % this assumes 1 atmosphere
-end % end nested function
+
+    Ks = containers.Map(["K0","K1","K2","KW","KB","KF","KS","KP1","KP2","KP3","KSi","KNH4","KH2S"], ...
+                        {K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S});
+end
