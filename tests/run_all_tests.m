@@ -5,7 +5,8 @@ function result = run_all_tests()
     grid_tests = TestSuite.fromClass(?GridTests);
     random_tests = TestSuite.fromClass(?RandomTests);
     performace_tests = TestSuite.fromClass(?PerformanceTests);
+    chain_test = TestSuite.fromClass(?ChainTests);
     
-    fullSuite = [glodap_tests,grid_tests,random_tests,performace_tests];
+    fullSuite = [glodap_tests,grid_tests,random_tests,performace_tests,chain_test];
     result = run(fullSuite);
 end
