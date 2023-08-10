@@ -4,7 +4,8 @@ function result = run_small_tests()
     glodap_test_1 = TestSuite.fromMethod(?GlodapTests,"compare_glodap_subset");
     grid_tests = TestSuite.fromClass(?GridTests);
     random_tests = TestSuite.fromClass(?RandomTests);
+    chain_test = TestSuite.fromClass(?ChainTests);
     
-    fullSuite = [glodap_test_1,grid_tests,random_tests];
+    fullSuite = [glodap_test_1,grid_tests,random_tests,chain_test];
     result = run(fullSuite);
 end
