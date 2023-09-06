@@ -1,6 +1,6 @@
 
-function Ks = calculate_equilibrium_constants(TempC,Pdbar)
-    global pH_scale_in_GLOBAL which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL sqrt_salinity_GLOBAL Pbar;
+function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale)
+    global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL sqrt_salinity_GLOBAL Pbar;
     global fH FugFac VPFac ntps temp_k_GLOBAL log_temp_k_GLOBAL;
     global boron_concentration_GLOBAL fluorine_concentration_GLOBAL sulphate_concentration_GLOBAL CAL gas_constant_GLOBAL salinity_GLOBAL p_opt;
     
@@ -896,13 +896,13 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar)
     % FindpHScaleConversionFactor:
     % this is the scale they will be put on
     pHfactor  = nan(ntps,1);
-    selected_GLOBAL=(pH_scale_in_GLOBAL==1); %Total
+    selected_GLOBAL=(pH_scale==1); %Total
     pHfactor(selected_GLOBAL) = SWStoTOT(selected_GLOBAL);
-    selected_GLOBAL=(pH_scale_in_GLOBAL==2); %SWS, they are all on this now
+    selected_GLOBAL=(pH_scale==2); %SWS, they are all on this now
     pHfactor(selected_GLOBAL) = 1;
-    selected_GLOBAL=(pH_scale_in_GLOBAL==3); %pHfree
+    selected_GLOBAL=(pH_scale==3); %pHfree
     pHfactor(selected_GLOBAL) = SWStoTOT(selected_GLOBAL)./FREEtoTOT(selected_GLOBAL);
-    selected_GLOBAL=(pH_scale_in_GLOBAL==4); %pHNBS
+    selected_GLOBAL=(pH_scale==4); %pHNBS
     pHfactor(selected_GLOBAL) = fH(selected_GLOBAL);
     
     % ConvertFromSWSpHScaleToChosenScale:
