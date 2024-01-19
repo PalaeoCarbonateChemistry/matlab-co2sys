@@ -2,7 +2,7 @@
 function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_constant)
     global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL Pbar;
     global fH ntps temp_k_GLOBAL log_temp_k_GLOBAL;
-    global boron_concentration_GLOBAL fluorine_concentration_GLOBAL sulphate_concentration_GLOBAL CAL salinity_GLOBAL;
+    global fluorine_concentration_GLOBAL sulphate_concentration_GLOBAL CAL salinity_GLOBAL;
     
     % SUB Constants, version 04.01, 10-13-97, written by Ernie Lewis.
     % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4_constant_GLOBAL%, Sali, temperature_in_GLOBAL, Pdbar
@@ -27,42 +27,10 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
     Pbar     = Pdbar ./ 10;
     
     % Generate empty vectors for holding results
-    boron_concentration_GLOBAL = nan(ntps,1);
     fluorine_concentration_GLOBAL = nan(ntps,1);
     sulphate_concentration_GLOBAL = nan(ntps,1);
     CAL = nan(ntps,1);
     
-    % CalculateTB - Total Borate:
-    selected_GLOBAL=(which_k1_k2_constants_GLOBAL==8); % Pure water case.
-    if any(selected_GLOBAL)
-        boron_concentration_GLOBAL(selected_GLOBAL) = 0;
-    end
-    selected_GLOBAL=(which_k1_k2_constants_GLOBAL==6 | which_k1_k2_constants_GLOBAL==7);
-    if any(selected_GLOBAL)
-        boron_concentration_GLOBAL(selected_GLOBAL) = 0.0004106.*salinity_GLOBAL(selected_GLOBAL)./35; % in mol/kg-SW
-        % this is .00001173.*Sali
-        % this is about 1% lower than Uppstrom's value
-        % Culkin, selected_GLOBAL., in Chemical Oceanography,
-        % ed. Riley and Skirrow, 1965:
-        % GEOSECS references this, but this value is not explicitly
-        % given here
-    end
-    selected_GLOBAL=(which_k1_k2_constants_GLOBAL~=6 & which_k1_k2_constants_GLOBAL~=7 & which_k1_k2_constants_GLOBAL~=8); % All other cases
-    if any(selected_GLOBAL)
-	    FF=selected_GLOBAL&(which_boron_GLOBAL==1); % If user opted for Uppstrom's values:
-	    if any(FF)
-	        % Uppstrom, L., Deep-Sea Research 21:161-162, 1974:
-	        % this is .000416.*Sali./35. = .0000119.*Sali
-		    % boron_concentration_GLOBAL(FF) = (0.000232./10.811).*(salinity_GLOBAL(FF)./1.80655); % in mol/kg-SW
-	        boron_concentration_GLOBAL(FF) =  0.0004157.*salinity_GLOBAL(FF)./35; % in mol/kg-SW
-	    end
-	    FF=selected_GLOBAL&(which_boron_GLOBAL==2); % If user opted for the Lee et al. values:
-	    if any(FF)
-		    % Lee, Kim, Byrne, Millero, Feely, Yong-Ming Liu. 2010.	
-	 	    % Geochimica Et Cosmochimica Acta 74 (6): 1801-1811.
-		    boron_concentration_GLOBAL(FF) =  0.0004326.*salinity_GLOBAL(FF)./35; % in mol/kg-SW
-	    end
-    end
     
     % CalculateCAL - Total Calcium:
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL~=6 & which_k1_k2_constants_GLOBAL~=7);
@@ -711,7 +679,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
     %       case of P different from 0. GEOSECS did consider pressure, but didn't
     %       include Phos, Si, or OH, so including the factors here won't matter.
     % For which_k1_k2_constants_GLOBAL% = 8 (freshwater) the values are from Millero, 1983 (for K1, K2,
-    %       and KW). The other aren't used (boron_concentration_GLOBAL = sulphate_concentration_GLOBAL = fluorine_concentration_GLOBAL = phosphate_GLOBAL = silicate_GLOBAL = 0.), so
+    %       and KW). The other aren't used (boron_concentration = sulphate_concentration_GLOBAL = fluorine_concentration_GLOBAL = phosphate_GLOBAL = silicate_GLOBAL = 0.), so
     %       including the factors won't matter.
     %****************************************************************************
     %       deltaVs are in cm3/mole
@@ -735,7 +703,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
         deltaV(selected_GLOBAL)  = -29.81 + 0.115.*TempC(selected_GLOBAL) - 0.001816.*TempC(selected_GLOBAL).^2;
         Kappa(selected_GLOBAL)   = (-5.74 + 0.093.*TempC(selected_GLOBAL) - 0.001896.*TempC(selected_GLOBAL).^2)./1000;
         lnK2fac(selected_GLOBAL) = (-deltaV(selected_GLOBAL) + 0.5.*Kappa(selected_GLOBAL).*Pbar(selected_GLOBAL)).*Pbar(selected_GLOBAL)./RR(selected_GLOBAL);
-        lnKBfac(selected_GLOBAL) = 0 ;%; this doesn't matter since boron_concentration_GLOBAL = 0 for this case
+        lnKBfac(selected_GLOBAL) = 0 ;%; this doesn't matter since boron_concentration = 0 for this case
     end
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==6 | which_k1_k2_constants_GLOBAL==7);
     if any(selected_GLOBAL)
