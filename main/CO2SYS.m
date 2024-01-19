@@ -11,7 +11,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     % Declare global variables
     global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL
     global salinity_GLOBAL temperature_in_GLOBAL temperature_out_GLOBAL pressure_in_GLOBAL pressure_out_GLOBAL;
-    global FugFac VPFac peng_correction_GLOBAL number_of_points gas_constant_GLOBAL;
+    global VPFac peng_correction_GLOBAL number_of_points gas_constant_GLOBAL;
     global boron_concentration_GLOBAL fluorine_concentration_GLOBAL sulphate_concentration_GLOBAL phosphate_GLOBAL silicate_GLOBAL ammonia_GLOBAL sulphide_GLOBAL CAL selected_GLOBAL;
     
     % Added by JM Epitalon
@@ -129,6 +129,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     silicate_GLOBAL(selected_GLOBAL)  = silicate_GLOBAL(selected_GLOBAL)./1e6;
     ammonia_GLOBAL(selected_GLOBAL) = ammonia_GLOBAL(selected_GLOBAL)./1e6;
     sulphide_GLOBAL(selected_GLOBAL) = sulphide_GLOBAL(selected_GLOBAL)./1e6;
+
     
     % The vector 'peng_correction_GLOBAL' is used to modify the value of TA, for those
     % cases where which_k1_k2_constants_GLOBAL==7, since PAlk(Peng) = PAlk(Dickson) + phosphate_GLOBAL.
@@ -162,7 +163,8 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     K0_in = Ks_in("K0");
     
     % Make sure fCO2 is available for each sample that has pCO2 or CO2.
-    selected_GLOBAL = (~isnan(PC) & (parameter_1_type==4 | parameter_2_type==4));  FC(selected_GLOBAL) = PC(selected_GLOBAL).*FugFac(selected_GLOBAL);
+    fugacity_factor = calculate_fugacity_factor();
+    selected_GLOBAL = (~isnan(PC) & (parameter_1_type==4 | parameter_2_type==4));  FC(selected_GLOBAL) = PC(selected_GLOBAL).*fugacity_factor(selected_GLOBAL);
     selected_GLOBAL = (~isnan(CO2) & (parameter_1_type==8 | parameter_2_type==8)); FC(selected_GLOBAL) = CO2(selected_GLOBAL)./K0_in(selected_GLOBAL);
     
     % Generate vectors for results, and copy the raw input values into them
@@ -310,7 +312,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     % By now, an fCO2 value is available for each sample.
     % Generate the associated pCO2 value:
-    selected_GLOBAL = (isnan(PCic) & (parameter_1_type~=4 | parameter_2_type~=4)); PCic(selected_GLOBAL)  = FCic(selected_GLOBAL)./FugFac(selected_GLOBAL);
+    selected_GLOBAL = (isnan(PCic) & (parameter_1_type~=4 | parameter_2_type~=4)); PCic(selected_GLOBAL)  = FCic(selected_GLOBAL)./fugacity_factor(selected_GLOBAL);
     % Generate the associated CO2 value:
     selected_GLOBAL = (isnan(CO2ic) & (parameter_1_type~=8 | parameter_2_type~=8)); CO2ic(selected_GLOBAL) = FCic(selected_GLOBAL).*K0_in(selected_GLOBAL);
     
@@ -373,7 +375,8 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         [CO3oc(selected_GLOBAL),HCO3oc(selected_GLOBAL)] = CalculateCO3HCO3fromTCpH(TCc(selected_GLOBAL),PHoc(selected_GLOBAL), Ks_out);
     
     % Generate the associated pCO2 value:
-    PCoc  = FCoc./FugFac;
+    fugacity_factor = calculate_fugacity_factor();
+    PCoc  = FCoc./fugacity_factor;
     % Generate the associated CO2 value:
 
     K0_out = Ks_out("K0");
@@ -537,7 +540,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         '99 - sulphide_GLOBAL             (umol/kgSW) '};
     
     clear global selected_GLOBAL K2 KP3 pressure_in_GLOBAL salinity_GLOBAL sulphate_concentration_GLOBAL VPFac number_of_points 
-    clear global FugFac KB KS pressure_out_GLOBAL T silicate_GLOBAL BORON which_k1_k2_constants_GLOBAL 
+    clear global KB KS pressure_out_GLOBAL T silicate_GLOBAL BORON which_k1_k2_constants_GLOBAL 
     clear global K KF KSi KNH4 KH2S peng_correction_GLOBAL boron_concentration_GLOBAL temperature_in_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL 
     clear global K0 KP1 KW gas_constant_GLOBAL fluorine_concentration_GLOBAL temperature_out_GLOBAL fH 
     clear global K1 KP2 Pbar phosphate_GLOBAL temp_k_GLOBAL log_temp_k_GLOBAL

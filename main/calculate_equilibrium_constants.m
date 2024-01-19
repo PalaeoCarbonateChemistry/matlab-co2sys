@@ -1,12 +1,12 @@
 
 function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale)
     global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL Pbar;
-    global fH FugFac VPFac ntps temp_k_GLOBAL log_temp_k_GLOBAL;
+    global fH VPFac ntps temp_k_GLOBAL log_temp_k_GLOBAL;
     global boron_concentration_GLOBAL fluorine_concentration_GLOBAL sulphate_concentration_GLOBAL CAL gas_constant_GLOBAL salinity_GLOBAL p_opt;
     
     % SUB Constants, version 04.01, 10-13-97, written by Ernie Lewis.
     % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4_constant_GLOBAL%, Sali, temperature_in_GLOBAL, Pdbar
-    % Outputs: K0, K(), T(), fH, FugFac, VPFac
+    % Outputs: K0, K(), T(), fH, VPFac
     % This finds the Constants of the CO2 system in seawater or freshwater,
     % corrects them for pressure, and reports them on the chosen pH scale.
     % The process is as follows: the Constants (except KS, KF which stay on the
@@ -912,27 +912,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale)
     KP3  = KP3.*pHfactor;  KSi  = KSi.*pHfactor;
     KNH4 = KNH4.*pHfactor; KH2S = KH2S.*pHfactor;
     
-    % CalculateFugacityConstants:
-    % In previos versions of CO2SYS, the fugacity factor was calculated
-    % assuming pressure at one atmosphere, or close to it. Starting with
-    % v3.2.1, an option to use in situ pressure is provided.
-    %       Weiss, R. selected_GLOBAL., Marine Chemistry 2:203-215, 1974.
-    %       Delta and B in cm3/mol
-    FugFac=ones(ntps,1);
-    Delta = (57.7 - 0.118.*temp_k_GLOBAL);
-    b = -1636.75 + 12.0408.*temp_k_GLOBAL - 0.0327957.*temp_k_GLOBAL.^2 + 3.16528.*0.00001.*temp_k_GLOBAL.^3;
-    % For a mixture of CO2 and air at in situ pressure;
-    xc2 = 1; % assumed to be 1, though not strictly correct (xc2 = [1-xCO2]^2)
-    P1atm = 1.01325; % atmospheric pressure in bar
-    if p_opt == 0
-        FugFac = exp((b + 2.*xc2.*Delta).*P1atm./(gas_constant_GLOBAL.*temp_k_GLOBAL)); % FugFac at 1 atm
-    elseif p_opt == 1
-        FugFac = exp((b + 2.*xc2.*Delta).*(P1atm+Pbar)./(gas_constant_GLOBAL.*temp_k_GLOBAL)); % FugFac at in situ pressure
-    else
-        disp('co2_press must be set to either 0 or 1'); % Display error message
-    end
-    selected_GLOBAL=(which_k1_k2_constants_GLOBAL==6 | which_k1_k2_constants_GLOBAL==7); % GEOSECS and Peng assume pCO2 = fCO2, or FugFac = 1
-    FugFac(selected_GLOBAL) = 1;
+
     
     % CalculateVPFac:
     % Weiss, R. selected_GLOBAL., and Price, B. A., Nitrous oxide solubility in water and
