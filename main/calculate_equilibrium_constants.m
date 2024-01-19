@@ -1,12 +1,12 @@
 
 function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale)
     global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL Pbar;
-    global fH VPFac_GLOBAL ntps temp_k_GLOBAL log_temp_k_GLOBAL;
+    global fH ntps temp_k_GLOBAL log_temp_k_GLOBAL;
     global boron_concentration_GLOBAL fluorine_concentration_GLOBAL sulphate_concentration_GLOBAL CAL gas_constant_GLOBAL salinity_GLOBAL p_opt;
     
     % SUB Constants, version 04.01, 10-13-97, written by Ernie Lewis.
     % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4_constant_GLOBAL%, Sali, temperature_in_GLOBAL, Pdbar
-    % Outputs: K0, K(), T(), fH, VPFac
+    % Outputs: K0, K(), T(), fH
     % This finds the Constants of the CO2 system in seawater or freshwater,
     % corrects them for pressure, and reports them on the chosen pH scale.
     % The process is as follows: the Constants (except KS, KF which stay on the
@@ -913,29 +913,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale)
     KNH4 = KNH4.*pHfactor; KH2S = KH2S.*pHfactor;
     
 
-    
-    % CalculateVPFac:
-    % Weiss, R. selected_GLOBAL., and Price, B. A., Nitrous oxide solubility in water and
-    %       seawater, Marine Chemistry 8:347-359, 1980.
-    % They fit the data of Goff and Gratch (1946) with the vapor pressure
-    %       lowering by sea salt as given by Robinson (1954).
-    % This fits the more complicated Goff and Gratch, and Robinson equations
-    %       from 273 to 313 deg K and 0 to 40 Sali with a standard error
-    %       of .015%, about 5 uatm over this range.
-    % This may be on IPTS-29 since they didn't mention the temperature scale,
-    %       and the data of Goff and Gratch came before IPTS-48.
-    % The references are:
-    % Goff, J. A. and Gratch, S., Low pressure properties of water from -160 deg
-    %       to 212 deg selected_GLOBAL, Transactions of the American Society of Heating and
-    %       Ventilating Engineers 52:95-122, 1946.
-    % Robinson, Journal of the Marine Biological Association of the U. K.
-    %       33:449-455, 1954.
-    %       This is eq. 10 on p. 350.
-    %       This is in atmospheres.
-    VPWP = exp(24.4543 - 67.4509.*(100./temp_k_GLOBAL) - 4.8489.*log(temp_k_GLOBAL./100));
-    VPCorrWP = exp(-0.000544.*salinity_GLOBAL);
-    VPSWWP = VPWP.*VPCorrWP;
-    VPFac_GLOBAL = 1 - VPSWWP; % this assumes 1 atmosphere
+
 
     Ks = containers.Map(["K0","K1","K2","KW","KB","KF","KS","KP1","KP2","KP3","KSi","KNH4","KH2S"], ...
                         {K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S});
