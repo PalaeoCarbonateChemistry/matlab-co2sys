@@ -1,5 +1,5 @@
-function fugacity_factor = calculate_fugacity_factor(p_opt)
-    global temp_k_GLOBAL gas_constant_GLOBAL which_k1_k2_constants_GLOBAL number_of_points selected_GLOBAL
+function fugacity_factor = calculate_fugacity_factor(p_opt,gas_constant)
+    global temp_k_GLOBAL which_k1_k2_constants_GLOBAL number_of_points selected_GLOBAL
     % CalculateFugacityConstants:
     % In previos versions of CO2SYS, the fugacity factor was calculated
     % assuming pressure at one atmosphere, or close to it. Starting with
@@ -13,9 +13,9 @@ function fugacity_factor = calculate_fugacity_factor(p_opt)
     xc2 = 1; % assumed to be 1, though not strictly correct (xc2 = [1-xCO2]^2)
     P1atm = 1.01325; % atmospheric pressure in bar
     if p_opt == 0
-        fugacity_factor = exp((b + 2.*xc2.*Delta).*P1atm./(gas_constant_GLOBAL.*temp_k_GLOBAL)); % FugFac at 1 atm
+        fugacity_factor = exp((b + 2.*xc2.*Delta).*P1atm./(gas_constant.*temp_k_GLOBAL)); % FugFac at 1 atm
     elseif p_opt == 1
-        fugacity_factor = exp((b + 2.*xc2.*Delta).*(P1atm+Pbar)./(gas_constant_GLOBAL.*temp_k_GLOBAL)); % FugFac at in situ pressure
+        fugacity_factor = exp((b + 2.*xc2.*Delta).*(P1atm+Pbar)./(gas_constant.*temp_k_GLOBAL)); % FugFac at in situ pressure
     else
         disp('co2_press must be set to either 0 or 1'); % Display error message
     end

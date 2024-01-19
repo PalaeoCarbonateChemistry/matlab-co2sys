@@ -1,8 +1,8 @@
 
-function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt)
+function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_constant)
     global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL Pbar;
     global fH ntps temp_k_GLOBAL log_temp_k_GLOBAL;
-    global boron_concentration_GLOBAL fluorine_concentration_GLOBAL sulphate_concentration_GLOBAL CAL gas_constant_GLOBAL salinity_GLOBAL;
+    global boron_concentration_GLOBAL fluorine_concentration_GLOBAL sulphate_concentration_GLOBAL CAL salinity_GLOBAL;
     
     % SUB Constants, version 04.01, 10-13-97, written by Ernie Lewis.
     % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4_constant_GLOBAL%, Sali, temperature_in_GLOBAL, Pdbar
@@ -96,7 +96,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt)
     if p_opt == 0
         prscorr = 1; % Set pressure correction to 1
     elseif p_opt == 1
-        prscorr = exp((-Pbar).*vCO2./(gas_constant_GLOBAL.*temp_k_GLOBAL)); % Calculate pressure correction to K0
+        prscorr = exp((-Pbar).*vCO2./(gas_constant.*temp_k_GLOBAL)); % Calculate pressure correction to K0
     else
         disp('co2_press must be set to either 0 or 1'); % Display error message
     end         
@@ -723,7 +723,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt)
     lnK1fac   = nan(ntps,1); lnK2fac   = nan(ntps,1);
     lnKBfac   = nan(ntps,1);
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==8);
-    RR = (gas_constant_GLOBAL.*temp_k_GLOBAL);
+    RR = (gas_constant.*temp_k_GLOBAL);
     if any(selected_GLOBAL)
         %***PressureEffectsOnK1inFreshWater:
         %               This is from Millero, 1983.
@@ -828,13 +828,13 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt)
     %       It is assumed that KF is on the free pH scale.
     deltaV = -9.78 - 0.009.*TempC - 0.000942.*TempC.^2;
     Kappa = (-3.91 + 0.054.*TempC)./1000;
-    lnKFfac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant_GLOBAL.*temp_k_GLOBAL);
+    lnKFfac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant.*temp_k_GLOBAL);
     % PressureEffectsOnKS:
     %       This is from Millero, 1995, which is the same as Millero, 1983.
     %       It is assumed that KS is on the free pH scale.
     deltaV = -18.03 + 0.0466.*TempC + 0.000316.*TempC.^2;
     Kappa = (-4.53 + 0.09.*TempC)./1000;
-    lnKSfac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant_GLOBAL.*temp_k_GLOBAL);
+    lnKSfac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant.*temp_k_GLOBAL);
     
     % CorrectKP1KP2KP3KSiForPressure:
     % These corrections don't matter for the GEOSECS choice (which_k1_k2_constants_GLOBAL% = 6) and
@@ -845,15 +845,15 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt)
     % PressureEffectsOnKP1:
     deltaV = -14.51 + 0.1211.*TempC - 0.000321.*TempC.^2;
     Kappa  = (-2.67 + 0.0427.*TempC)./1000;
-    lnKP1fac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant_GLOBAL.*temp_k_GLOBAL);
+    lnKP1fac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant.*temp_k_GLOBAL);
     % PressureEffectsOnKP2:
     deltaV = -23.12 + 0.1758.*TempC - 0.002647.*TempC.^2;
     Kappa  = (-5.15 + 0.09  .*TempC)./1000;
-    lnKP2fac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant_GLOBAL.*temp_k_GLOBAL);
+    lnKP2fac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant.*temp_k_GLOBAL);
     % PressureEffectsOnKP3:
     deltaV = -26.57 + 0.202 .*TempC - 0.003042.*TempC.^2;
     Kappa  = (-4.08 + 0.0714.*TempC)./1000;
-    lnKP3fac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant_GLOBAL.*temp_k_GLOBAL);
+    lnKP3fac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant.*temp_k_GLOBAL);
     % PressureEffectsOnKSi:
     %  The only mention of this is Millero, 1995 where it is stated that the
     %    values have been estimated from the values of boric acid. HOWEVER,
@@ -861,15 +861,15 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt)
     %    I used the values for boric acid from above.
     deltaV = -29.48 + 0.1622.*TempC - 0.002608.*TempC.^2;
     Kappa  = -2.84./1000;
-    lnKSifac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant_GLOBAL.*temp_k_GLOBAL);
+    lnKSifac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant.*temp_k_GLOBAL);
     % PressureEffectsOnKNH4: added by J. Sharp
     deltaV = -26.43 + 0.0889.*TempC - 0.000905.*TempC.^2;
     Kappa  = (-5.03 + 0.0814.*TempC)./1000;
-    lnKNH4fac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant_GLOBAL.*temp_k_GLOBAL);
+    lnKNH4fac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant.*temp_k_GLOBAL);
     % PressureEffectsOnKH2S: added by J. Sharp
     deltaV = -11.07 - 0.009.*TempC - 0.000942.*TempC.^2;
     Kappa  = (-2.89 + 0.054 .*TempC)./1000;
-    lnKH2Sfac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant_GLOBAL.*temp_k_GLOBAL);
+    lnKH2Sfac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant.*temp_k_GLOBAL);
     
     % CorrectKsForPressureHere:
     K1fac  = exp(lnK1fac);  K1  = K1 .*K1fac;
