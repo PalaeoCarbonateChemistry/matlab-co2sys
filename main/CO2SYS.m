@@ -11,7 +11,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     % Declare global variables
     global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL
     global salinity_GLOBAL temperature_in_GLOBAL temperature_out_GLOBAL pressure_in_GLOBAL pressure_out_GLOBAL;
-    global VPFac peng_correction_GLOBAL number_of_points gas_constant_GLOBAL;
+    global VPFac_GLOBAL peng_correction_GLOBAL number_of_points gas_constant_GLOBAL;
     global boron_concentration_GLOBAL fluorine_concentration_GLOBAL sulphate_concentration_GLOBAL phosphate_GLOBAL silicate_GLOBAL ammonia_GLOBAL sulphide_GLOBAL CAL selected_GLOBAL;
     
     % Added by JM Epitalon
@@ -326,7 +326,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     PAlkinp(selected_GLOBAL)                = PAlkinp(selected_GLOBAL)+peng_correction_GLOBAL(selected_GLOBAL);
     Revelleinp(selected_GLOBAL)             = RevelleFactor(TAc(selected_GLOBAL)-peng_correction_GLOBAL(selected_GLOBAL), TCc(selected_GLOBAL),pH_scale_in,Ks_in);
     [OmegaCainp(selected_GLOBAL),OmegaArinp(selected_GLOBAL)] = CaSolubility(salinity_GLOBAL(selected_GLOBAL), temperature_in_GLOBAL(selected_GLOBAL), TCc(selected_GLOBAL), PHic(selected_GLOBAL), Ks_in, sqrt(salinity_GLOBAL(selected_GLOBAL)));
-    xCO2dryinp(~isnan(PCic),1) = PCic(~isnan(PCic),1)./VPFac(~isnan(PCic),1); % ' this assumes pTot = 1 atm
+    xCO2dryinp(~isnan(PCic),1) = PCic(~isnan(PCic),1)./VPFac_GLOBAL(~isnan(PCic),1); % ' this assumes pTot = 1 atm
     SIRinp = HCO3ic./(Hfreeinp.*1e6);
     
     % % Just for reference, convert pH at input conditions to the other scales
@@ -392,7 +392,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     PAlkout(selected_GLOBAL)                 = PAlkout(selected_GLOBAL)+peng_correction_GLOBAL(selected_GLOBAL);
     Revelleout(selected_GLOBAL)              = RevelleFactor(TAc(selected_GLOBAL)-peng_correction_GLOBAL(selected_GLOBAL), TCc(selected_GLOBAL),pH_scale_in,Ks_out);
     [OmegaCaout(selected_GLOBAL),OmegaArout(selected_GLOBAL)] = CaSolubility(salinity_GLOBAL(selected_GLOBAL), temperature_out_GLOBAL(selected_GLOBAL), TCc(selected_GLOBAL), PHoc(selected_GLOBAL), Ks_out, sqrt(salinity_GLOBAL(selected_GLOBAL)));
-    xCO2dryout(~isnan(PCoc),1)    = PCoc(~isnan(PCoc))./VPFac(~isnan(PCoc)); % ' this assumes pTot = 1 atm
+    xCO2dryout(~isnan(PCoc),1)    = PCoc(~isnan(PCoc))./VPFac_GLOBAL(~isnan(PCoc)); % ' this assumes pTot = 1 atm
     SIRout = HCO3oc./(Hfreeout.*1e6);
     
     % Just for reference, convert pH at output conditions to the other scales
@@ -539,7 +539,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         '98 - ammonia_GLOBAL             (umol/kgSW) ';
         '99 - sulphide_GLOBAL             (umol/kgSW) '};
     
-    clear global selected_GLOBAL K2 KP3 pressure_in_GLOBAL salinity_GLOBAL sulphate_concentration_GLOBAL VPFac number_of_points 
+    clear global selected_GLOBAL K2 KP3 pressure_in_GLOBAL salinity_GLOBAL sulphate_concentration_GLOBAL VPFac_GLOBAL number_of_points 
     clear global KB KS pressure_out_GLOBAL T silicate_GLOBAL BORON which_k1_k2_constants_GLOBAL 
     clear global K KF KSi KNH4 KH2S peng_correction_GLOBAL boron_concentration_GLOBAL temperature_in_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL 
     clear global K0 KP1 KW gas_constant_GLOBAL fluorine_concentration_GLOBAL temperature_out_GLOBAL fH 
