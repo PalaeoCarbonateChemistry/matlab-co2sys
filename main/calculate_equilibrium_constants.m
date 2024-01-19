@@ -1,8 +1,8 @@
 
-function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale)
+function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt)
     global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL Pbar;
     global fH ntps temp_k_GLOBAL log_temp_k_GLOBAL;
-    global boron_concentration_GLOBAL fluorine_concentration_GLOBAL sulphate_concentration_GLOBAL CAL gas_constant_GLOBAL salinity_GLOBAL p_opt;
+    global boron_concentration_GLOBAL fluorine_concentration_GLOBAL sulphate_concentration_GLOBAL CAL gas_constant_GLOBAL salinity_GLOBAL;
     
     % SUB Constants, version 04.01, 10-13-97, written by Ernie Lewis.
     % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4_constant_GLOBAL%, Sali, temperature_in_GLOBAL, Pdbar

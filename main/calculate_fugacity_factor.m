@@ -1,5 +1,5 @@
-function fugacity_factor = calculate_fugacity_factor()
-    global temp_k_GLOBAL p_opt gas_constant_GLOBAL which_k1_k2_constants_GLOBAL number_of_points selected_GLOBAL
+function fugacity_factor = calculate_fugacity_factor(p_opt)
+    global temp_k_GLOBAL gas_constant_GLOBAL which_k1_k2_constants_GLOBAL number_of_points selected_GLOBAL
     % CalculateFugacityConstants:
     % In previos versions of CO2SYS, the fugacity factor was calculated
     % assuming pressure at one atmosphere, or close to it. Starting with

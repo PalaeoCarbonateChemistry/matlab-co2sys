@@ -23,7 +23,6 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     % Input conditioning
     
     % set default for optional input argument
-    global p_opt
     p_opt = 0;
     % parse optional input argument
     for i = 1:2:length(varargin)-1
@@ -138,7 +137,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     % Calculate the constants for all samples at input conditions
     % The constants calculated for each sample will be on the appropriate pH scale!
-    Ks_in = calculate_equilibrium_constants(temperature_in_GLOBAL,pressure_in_GLOBAL,pH_scale_in);
+    Ks_in = calculate_equilibrium_constants(temperature_in_GLOBAL,pressure_in_GLOBAL,pH_scale_in,p_opt);
     
     % Added by JM Epitalon
     % For computing derivative with respect to Ks, one has to perturb the value of one K
@@ -163,7 +162,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     K0_in = Ks_in("K0");
     
     % Make sure fCO2 is available for each sample that has pCO2 or CO2.
-    fugacity_factor = calculate_fugacity_factor();
+    fugacity_factor = calculate_fugacity_factor(p_opt);
     selected_GLOBAL = (~isnan(PC) & (parameter_1_type==4 | parameter_2_type==4));  FC(selected_GLOBAL) = PC(selected_GLOBAL).*fugacity_factor(selected_GLOBAL);
     selected_GLOBAL = (~isnan(CO2) & (parameter_1_type==8 | parameter_2_type==8)); FC(selected_GLOBAL) = CO2(selected_GLOBAL)./K0_in(selected_GLOBAL);
     
@@ -344,7 +343,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     clear K0 K1 K2 KW KB KF KS KP1 KP2 KP3 KSi KNH4 KH2S
     
     % Calculate the constants for all samples at output conditions
-    Ks_out = calculate_equilibrium_constants(temperature_out_GLOBAL,pressure_out_GLOBAL,pH_scale_in);
+    Ks_out = calculate_equilibrium_constants(temperature_out_GLOBAL,pressure_out_GLOBAL,pH_scale_in,p_opt);
     
     % Added by JM Epitalon
     % For computing derivative with respect to Ks, one has to perturb the value of one K
@@ -376,7 +375,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         [CO3oc(selected_GLOBAL),HCO3oc(selected_GLOBAL)] = CalculateCO3HCO3fromTCpH(TCc(selected_GLOBAL),PHoc(selected_GLOBAL), Ks_out);
     
     % Generate the associated pCO2 value:
-    fugacity_factor = calculate_fugacity_factor();
+    fugacity_factor = calculate_fugacity_factor(p_opt);
     PCoc  = FCoc./fugacity_factor;
     % Generate the associated CO2 value:
 
