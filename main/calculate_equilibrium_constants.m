@@ -1,8 +1,8 @@
 
-function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_constant)
+function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_constant,fluorine_concentration)
     global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL Pbar;
     global fH ntps temp_k_GLOBAL log_temp_k_GLOBAL;
-    global fluorine_concentration_GLOBAL sulphate_concentration_GLOBAL CAL salinity_GLOBAL;
+    global sulphate_concentration_GLOBAL CAL salinity_GLOBAL;
     
     % SUB Constants, version 04.01, 10-13-97, written by Ernie Lewis.
     % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4_constant_GLOBAL%, Sali, temperature_in_GLOBAL, Pdbar
@@ -27,10 +27,8 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
     Pbar     = Pdbar ./ 10;
     
     % Generate empty vectors for holding results
-    fluorine_concentration_GLOBAL = nan(ntps,1);
     sulphate_concentration_GLOBAL = nan(ntps,1);
-    CAL = nan(ntps,1);
-    
+    CAL = nan(ntps,1);    
     
     % CalculateCAL - Total Calcium:
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL~=6 & which_k1_k2_constants_GLOBAL~=7);
@@ -43,11 +41,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
         % (quoted in Takahashi et al, GEOSECS Pacific Expedition v. 3, 1982) 
         CAL(selected_GLOBAL) = 0.01026.*salinity_GLOBAL(selected_GLOBAL)./35;
     
-    % CalculateTF;
-    % Riley, J. P., Deep-Sea Research 12:219-220, 1965:
-    % this is .000068.*Sali./35. = .00000195.*Sali
-    fluorine_concentration_GLOBAL = (0.000067./18.998).*(salinity_GLOBAL./1.80655); % in mol/kg-SW
-    
+
     % CalculateTS ;
     % Morris, A. W., and Riley, J. P., Deep-Sea Research 13:699-705, 1966:
     % this is .02824.*Sali./35. = .0008067.*Sali
@@ -141,7 +135,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
     
     % CalculatepHScaleConversionFactors:
     %       These are NOT pressure-corrected.
-    SWStoTOT  = (1 + sulphate_concentration_GLOBAL./KS)./(1 + sulphate_concentration_GLOBAL./KS + fluorine_concentration_GLOBAL./KF);
+    SWStoTOT  = (1 + sulphate_concentration_GLOBAL./KS)./(1 + sulphate_concentration_GLOBAL./KS + fluorine_concentration./KF);
     FREEtoTOT =  1 + sulphate_concentration_GLOBAL./KS;
     
     % CalculatefH
@@ -679,7 +673,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
     %       case of P different from 0. GEOSECS did consider pressure, but didn't
     %       include Phos, Si, or OH, so including the factors here won't matter.
     % For which_k1_k2_constants_GLOBAL% = 8 (freshwater) the values are from Millero, 1983 (for K1, K2,
-    %       and KW). The other aren't used (boron_concentration = sulphate_concentration_GLOBAL = fluorine_concentration_GLOBAL = phosphate_GLOBAL = silicate_GLOBAL = 0.), so
+    %       and KW). The other aren't used (boron_concentration = sulphate_concentration_GLOBAL = fluorine_concentration = phosphate_GLOBAL = silicate_GLOBAL = 0.), so
     %       including the factors won't matter.
     %****************************************************************************
     %       deltaVs are in cm3/mole
@@ -855,7 +849,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
     
     % CorrectpHScaleConversionsForPressure:
     % fH has been assumed to be independent of pressure.
-    SWStoTOT  = (1 + sulphate_concentration_GLOBAL./KS)./(1 + sulphate_concentration_GLOBAL./KS + fluorine_concentration_GLOBAL./KF);
+    SWStoTOT  = (1 + sulphate_concentration_GLOBAL./KS)./(1 + sulphate_concentration_GLOBAL./KS + fluorine_concentration./KF);
     FREEtoTOT =  1 + sulphate_concentration_GLOBAL./KS;
     
     %  The values KS and KF are already pressure-corrected, so the pH scale
