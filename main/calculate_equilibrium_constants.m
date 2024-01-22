@@ -4,7 +4,7 @@ function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pdbar,salin
     global fH temp_k_GLOBAL log_temp_k_GLOBAL;
     
     % SUB Constants, version 04.01, 10-13-97, written by Ernie Lewis.
-    % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4_constant_GLOBAL%, Sali, temperature_in_GLOBAL, Pdbar
+    % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4_constant_GLOBAL%, Sali, temperature_in, Pdbar
     % Outputs: K0, K(), T(), fH
     % This finds the Constants of the CO2 system in seawater or freshwater,
     % corrects them for pressure, and reports them on the chosen pH scale.
@@ -721,17 +721,17 @@ function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pdbar,salin
         %               It is from data of Culberson and Pytkowicz, 1968.
         deltaV(selected_GLOBAL)  = -29.48 + 0.1622.*TempC(selected_GLOBAL) - 0.002608.*TempC(selected_GLOBAL).^2;
         %               Millero, 1983 has:
-        %                 'deltaV = -28.56 + .1211.*temperature_in_GLOBAL - .000321.*temperature_in_GLOBAL.*temperature_in_GLOBAL
+        %                 'deltaV = -28.56 + .1211.*temperature_in - .000321.*temperature_in.*temperature_in
         %               Millero, 1992 has:
-        %                 'deltaV = -29.48 + .1622.*temperature_in_GLOBAL + .295.*(Sali - 34.8)
+        %                 'deltaV = -29.48 + .1622.*temperature_in + .295.*(Sali - 34.8)
         %               Millero, 1995 has:
-        %                 'deltaV = -29.48 - .1622.*temperature_in_GLOBAL - .002608.*temperature_in_GLOBAL.*temperature_in_GLOBAL
+        %                 'deltaV = -29.48 - .1622.*temperature_in - .002608.*temperature_in.*temperature_in
         %                 'deltaV = deltaV + .295.*(Sali - 34.8); % Millero, 1979
         Kappa(selected_GLOBAL)   = -2.84./1000; % Millero, 1979
         %               Millero, 1992 and Millero, 1995 also have this.
         %                 'Kappa = Kappa + .354.*(Sali - 34.8)./1000: % Millero,1979
         %               Millero, 1983 has:
-        %                 'Kappa = (-3 + .0427.*temperature_in_GLOBAL)./1000
+        %                 'Kappa = (-3 + .0427.*temperature_in)./1000
         lnKBfac(selected_GLOBAL) = (-deltaV(selected_GLOBAL) + 0.5.*Kappa(selected_GLOBAL).*Pbar(selected_GLOBAL)).*Pbar(selected_GLOBAL)./RR(selected_GLOBAL);
     end
     
