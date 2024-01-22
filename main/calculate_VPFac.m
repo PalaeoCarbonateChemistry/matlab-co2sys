@@ -1,5 +1,5 @@
-function VPFac = calculate_VPFac()
-    global temp_k_GLOBAL salinity_GLOBAL
+function VPFac = calculate_VPFac(salinity)
+    global temp_k_GLOBAL
     % CalculateVPFac:
     % Weiss, R. selected_GLOBAL., and Price, B. A., Nitrous oxide solubility in water and
     %       seawater, Marine Chemistry 8:347-359, 1980.
@@ -19,7 +19,7 @@ function VPFac = calculate_VPFac()
     %       This is eq. 10 on p. 350.
     %       This is in atmospheres.
     VPWP = exp(24.4543 - 67.4509.*(100./temp_k_GLOBAL) - 4.8489.*log(temp_k_GLOBAL./100));
-    VPCorrWP = exp(-0.000544.*salinity_GLOBAL);
+    VPCorrWP = exp(-0.000544.*salinity);
     VPSWWP = VPWP.*VPCorrWP;
     VPFac = 1 - VPSWWP; % this assumes 1 atmosphere
 end

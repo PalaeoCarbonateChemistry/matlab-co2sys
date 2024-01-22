@@ -1,8 +1,7 @@
 
-function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_constant,fluorine_concentration,sulphate_concentration)
+function Ks = calculate_equilibrium_constants(TempC,Pdbar,salinity,pH_scale,p_opt,gas_constant,fluorine_concentration,sulphate_concentration)
     global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL Pbar;
     global fH ntps temp_k_GLOBAL log_temp_k_GLOBAL;
-    global salinity_GLOBAL;
     
     % SUB Constants, version 04.01, 10-13-97, written by Ernie Lewis.
     % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4_constant_GLOBAL%, Sali, temperature_in_GLOBAL, Pdbar
@@ -29,7 +28,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
     % CalculateK0:
     % Weiss, R. selected_GLOBAL., Marine Chemistry 2:203-215, 1974.
     TempK100  = temp_k_GLOBAL./100;
-    lnK0 = -60.2409 + 93.4517 ./ TempK100 + 23.3585 .* log(TempK100) + salinity_GLOBAL .*...
+    lnK0 = -60.2409 + 93.4517 ./ TempK100 + 23.3585 .* log(TempK100) + salinity .*...
         (0.023517 - 0.023656 .* TempK100 + 0.0047036 .* TempK100 .^2);
     K0   = exp(lnK0);                 % this is in mol/kg-SW/atm
     vCO2 = 32.3;                      % partial molal volume of CO2 (cm3 / mol)
@@ -45,7 +44,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
     
     % CalculateIonS:
     % This is from the DOE handbook, Chapter 5, p. 13/22, eq. 7.2.4:
-    IonS         = 19.924 .* salinity_GLOBAL ./ (1000 - 1.005   .* salinity_GLOBAL);
+    IonS         = 19.924 .* salinity ./ (1000 - 1.005   .* salinity);
     
     % CalculateKS:
     lnKS   = nan(ntps,1); pKS  = nan(ntps,1); KS   = nan(ntps,1);
@@ -62,7 +61,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
           (35474./temp_k_GLOBAL(selected_GLOBAL) - 771.54 + 114.723.*log_temp_k_GLOBAL(selected_GLOBAL)).*IonS(selected_GLOBAL) +...           
           (-2698./temp_k_GLOBAL(selected_GLOBAL)).*sqrt(IonS(selected_GLOBAL)).*IonS(selected_GLOBAL) + (1776./temp_k_GLOBAL(selected_GLOBAL)).*IonS(selected_GLOBAL).^2; 
 	    KS(selected_GLOBAL) = exp(lnKS(selected_GLOBAL))...            % this is on the free pH scale in mol/kg-H2O
-            .* (1 - 0.001005 .* salinity_GLOBAL(selected_GLOBAL));   % convert to mol/kg-SW
+            .* (1 - 0.001005 .* salinity(selected_GLOBAL));   % convert to mol/kg-SW
     end
     selected_GLOBAL=(which_kso4_constant_GLOBAL==2);
     if any(selected_GLOBAL)
@@ -80,7 +79,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
         % This is equation 20 on p. 33:
         pKS(selected_GLOBAL) = 647.59 ./ temp_k_GLOBAL(selected_GLOBAL) - 6.3451 + 0.019085.*temp_k_GLOBAL(selected_GLOBAL) - 0.5208.*sqrt(IonS(selected_GLOBAL));
         KS(selected_GLOBAL) = 10.^(-pKS(selected_GLOBAL))...          % this is on the free pH scale in mol/kg-H2O
-            .* (1 - 0.001005.*salinity_GLOBAL(selected_GLOBAL));    % convert to mol/kg-SW
+            .* (1 - 0.001005.*salinity(selected_GLOBAL));    % convert to mol/kg-SW
     end
     selected_GLOBAL=(which_kso4_constant_GLOBAL==3);
     if any(selected_GLOBAL)
@@ -88,11 +87,11 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
         % Waters et al, Marine Chemistry, 165: 66-67, 2014
         logKS0(selected_GLOBAL) = 562.69486 - 102.5154.*log_temp_k_GLOBAL(selected_GLOBAL) - 0.0001117033.*temp_k_GLOBAL(selected_GLOBAL).*temp_k_GLOBAL(selected_GLOBAL) + ...
             0.2477538.*temp_k_GLOBAL(selected_GLOBAL) - 13273.76./temp_k_GLOBAL(selected_GLOBAL);
-        logKSK0(selected_GLOBAL) = (4.24666 - 0.152671.*temp_k_GLOBAL(selected_GLOBAL) + 0.0267059.*temp_k_GLOBAL(selected_GLOBAL).*log_temp_k_GLOBAL(selected_GLOBAL) - 0.000042128.*temp_k_GLOBAL(selected_GLOBAL).*temp_k_GLOBAL(selected_GLOBAL)).*salinity_GLOBAL(selected_GLOBAL).^0.5 + ...
-            (0.2542181 - 0.00509534.*temp_k_GLOBAL(selected_GLOBAL) + 0.00071589.*temp_k_GLOBAL(selected_GLOBAL).*log_temp_k_GLOBAL(selected_GLOBAL)).*salinity_GLOBAL(selected_GLOBAL) + (-0.00291179 + 0.0000209968.*temp_k_GLOBAL(selected_GLOBAL)).*salinity_GLOBAL(selected_GLOBAL).^1.5 + ...
-            -0.0000403724.*salinity_GLOBAL(selected_GLOBAL).^2;
+        logKSK0(selected_GLOBAL) = (4.24666 - 0.152671.*temp_k_GLOBAL(selected_GLOBAL) + 0.0267059.*temp_k_GLOBAL(selected_GLOBAL).*log_temp_k_GLOBAL(selected_GLOBAL) - 0.000042128.*temp_k_GLOBAL(selected_GLOBAL).*temp_k_GLOBAL(selected_GLOBAL)).*salinity(selected_GLOBAL).^0.5 + ...
+            (0.2542181 - 0.00509534.*temp_k_GLOBAL(selected_GLOBAL) + 0.00071589.*temp_k_GLOBAL(selected_GLOBAL).*log_temp_k_GLOBAL(selected_GLOBAL)).*salinity(selected_GLOBAL) + (-0.00291179 + 0.0000209968.*temp_k_GLOBAL(selected_GLOBAL)).*salinity(selected_GLOBAL).^1.5 + ...
+            -0.0000403724.*salinity(selected_GLOBAL).^2;
         KS(selected_GLOBAL) = ((10.^(logKSK0(selected_GLOBAL))).*(10.^logKS0(selected_GLOBAL))) ... % this is on the free pH scale in mol/kg-H2O
-            .* (1 - 0.001005.*salinity_GLOBAL(selected_GLOBAL));                    % convert to mol/kg-SW
+            .* (1 - 0.001005.*salinity(selected_GLOBAL));                    % convert to mol/kg-SW
     end
     
     % CalculateKF:
@@ -102,13 +101,13 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
         % Dickson, A. G. and Riley, J. P., Marine Chemistry 7:89-99, 1979:
         lnKF = 1590.2./temp_k_GLOBAL - 12.641 + 1.525.*IonS.^0.5;
         KF(selected_GLOBAL)   = exp(lnKF(selected_GLOBAL))...                 % this is on the free pH scale in mol/kg-H2O
-            .*(1 - 0.001005.*salinity_GLOBAL(selected_GLOBAL));          % convert to mol/kg-SW
+            .*(1 - 0.001005.*salinity(selected_GLOBAL));          % convert to mol/kg-SW
     end
     selected_GLOBAL=(which_kf_constant_GLOBAL==2);
     if any(selected_GLOBAL)
         % Perez and Fraga 1987 (to be used for S: 10-40, T: 9-33)
         % P&F87 might actually be better than the fit of D&R79 above, which is based on only three salinities: [0 26.7 34.6]
-        lnKF = 874./temp_k_GLOBAL - 9.68 + 0.111.*salinity_GLOBAL.^0.5;
+        lnKF = 874./temp_k_GLOBAL - 9.68 + 0.111.*salinity.^0.5;
         KF(selected_GLOBAL)   = exp(lnKF(selected_GLOBAL));                   % this is on the free pH scale in mol/kg-SW
     end
     
@@ -127,7 +126,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==7);
     if any(selected_GLOBAL)
         fH(selected_GLOBAL) = 1.29 - 0.00204.*  temp_k_GLOBAL(selected_GLOBAL) + (0.00046 -...
-            0.00000148.*temp_k_GLOBAL(selected_GLOBAL)).*salinity_GLOBAL(selected_GLOBAL).*salinity_GLOBAL(selected_GLOBAL);
+            0.00000148.*temp_k_GLOBAL(selected_GLOBAL)).*salinity(selected_GLOBAL).*salinity(selected_GLOBAL);
         % Peng et al, Tellus 39B:439-458, 1987:
         % They reference the GEOSECS report, but round the value
         % given there off so that it is about .008 (1%) lower. It
@@ -136,7 +135,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL~=7 & which_k1_k2_constants_GLOBAL~=8);
     if any(selected_GLOBAL)
         fH(selected_GLOBAL) = 1.2948 - 0.002036.*temp_k_GLOBAL(selected_GLOBAL) + (0.0004607 -...
-            0.000001475.*temp_k_GLOBAL(selected_GLOBAL)).*salinity_GLOBAL(selected_GLOBAL).^2;
+            0.000001475.*temp_k_GLOBAL(selected_GLOBAL)).*salinity(selected_GLOBAL).^2;
         % Takahashi et al, Chapter 3 in GEOSECS Pacific Expedition,
         % v. 3, 1982 (p. 80);
     end
@@ -153,18 +152,18 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
         % This is for GEOSECS and Peng et al.
         % Lyman, John, UCLA Thesis, 1957
         % fit by Li et al, JGR 74:5507-5525, 1969:
-        logKB(selected_GLOBAL) = -9.26 + 0.00886.*salinity_GLOBAL(selected_GLOBAL) + 0.01.*TempC(selected_GLOBAL);
+        logKB(selected_GLOBAL) = -9.26 + 0.00886.*salinity(selected_GLOBAL) + 0.01.*TempC(selected_GLOBAL);
         KB(selected_GLOBAL) = 10.^(logKB(selected_GLOBAL))...  % this is on the NBS scale
             ./fH(selected_GLOBAL);               % convert to the SWS scale
     end
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL~=6 & which_k1_k2_constants_GLOBAL~=7 & which_k1_k2_constants_GLOBAL~=8);
     if any(selected_GLOBAL)
         % Dickson, A. G., Deep-Sea Research 37:755-766, 1990:
-        lnKBtop(selected_GLOBAL) = -8966.9 - 2890.53.*sqrt(salinity_GLOBAL(selected_GLOBAL)) - 77.942.*salinity_GLOBAL(selected_GLOBAL) +...
-            1.728.*sqrt(salinity_GLOBAL(selected_GLOBAL)).*salinity_GLOBAL(selected_GLOBAL) - 0.0996.*salinity_GLOBAL(selected_GLOBAL).^2;
-        lnKB(selected_GLOBAL) = lnKBtop(selected_GLOBAL)./temp_k_GLOBAL(selected_GLOBAL) + 148.0248 + 137.1942.*sqrt(salinity_GLOBAL(selected_GLOBAL)) +...
-            1.62142.*salinity_GLOBAL(selected_GLOBAL) + (-24.4344 - 25.085.*sqrt(salinity_GLOBAL(selected_GLOBAL)) - 0.2474.*...
-            salinity_GLOBAL(selected_GLOBAL)).*log_temp_k_GLOBAL(selected_GLOBAL) + 0.053105.*sqrt(salinity_GLOBAL(selected_GLOBAL)).*temp_k_GLOBAL(selected_GLOBAL);
+        lnKBtop(selected_GLOBAL) = -8966.9 - 2890.53.*sqrt(salinity(selected_GLOBAL)) - 77.942.*salinity(selected_GLOBAL) +...
+            1.728.*sqrt(salinity(selected_GLOBAL)).*salinity(selected_GLOBAL) - 0.0996.*salinity(selected_GLOBAL).^2;
+        lnKB(selected_GLOBAL) = lnKBtop(selected_GLOBAL)./temp_k_GLOBAL(selected_GLOBAL) + 148.0248 + 137.1942.*sqrt(salinity(selected_GLOBAL)) +...
+            1.62142.*salinity(selected_GLOBAL) + (-24.4344 - 25.085.*sqrt(salinity(selected_GLOBAL)) - 0.2474.*...
+            salinity(selected_GLOBAL)).*log_temp_k_GLOBAL(selected_GLOBAL) + 0.053105.*sqrt(salinity(selected_GLOBAL)).*temp_k_GLOBAL(selected_GLOBAL);
         KB(selected_GLOBAL) = exp(lnKB(selected_GLOBAL))...    % this is on the total pH scale in mol/kg-SW
             ./SWStoTOT(selected_GLOBAL);         % convert to SWS pH scale
     end
@@ -176,7 +175,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
         % Millero, Geochemica et Cosmochemica Acta 43:1651-1661, 1979
         lnKW(selected_GLOBAL) = 148.9802 - 13847.26./temp_k_GLOBAL(selected_GLOBAL) - 23.6521.*log_temp_k_GLOBAL(selected_GLOBAL) +...
             (-79.2447 + 3298.72./temp_k_GLOBAL(selected_GLOBAL) + 12.0408.*log_temp_k_GLOBAL(selected_GLOBAL)).*...
-            sqrt(salinity_GLOBAL(selected_GLOBAL)) - 0.019813.*salinity_GLOBAL(selected_GLOBAL);
+            sqrt(salinity(selected_GLOBAL)) - 0.019813.*salinity(selected_GLOBAL);
     end
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==8);
     if any(selected_GLOBAL)
@@ -191,7 +190,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
         % his check value of 1.6 umol/kg-SW should be 6.2
         lnKW(selected_GLOBAL) = 148.9802 - 13847.26./temp_k_GLOBAL(selected_GLOBAL) - 23.6521.*log_temp_k_GLOBAL(selected_GLOBAL) +...
             (-5.977 + 118.67./temp_k_GLOBAL(selected_GLOBAL) + 1.0495.*log_temp_k_GLOBAL(selected_GLOBAL)).*...
-            sqrt(salinity_GLOBAL(selected_GLOBAL)) - 0.01615.*salinity_GLOBAL(selected_GLOBAL);
+            sqrt(salinity(selected_GLOBAL)) - 0.01615.*salinity(selected_GLOBAL);
     end
     KW = exp(lnKW); % this is on the SWS pH scale in (mol/kg-SW)^2
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==6);
@@ -235,19 +234,19 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
         % KP1, KP2, KP3 are on the SWS pH scale in mol/kg-SW.
         % KSi was given on the SWS pH scale in molal units.
         lnKP1(selected_GLOBAL) = -4576.752./temp_k_GLOBAL(selected_GLOBAL) + 115.54 - 18.453.*log_temp_k_GLOBAL(selected_GLOBAL) + (-106.736./temp_k_GLOBAL(selected_GLOBAL) +...
-            0.69171).*sqrt(salinity_GLOBAL(selected_GLOBAL)) + (-0.65643./temp_k_GLOBAL(selected_GLOBAL) - 0.01844).*salinity_GLOBAL(selected_GLOBAL);
+            0.69171).*sqrt(salinity(selected_GLOBAL)) + (-0.65643./temp_k_GLOBAL(selected_GLOBAL) - 0.01844).*salinity(selected_GLOBAL);
         KP1(selected_GLOBAL) = exp(lnKP1(selected_GLOBAL));
         lnKP2(selected_GLOBAL) = -8814.715./temp_k_GLOBAL(selected_GLOBAL) + 172.1033 - 27.927.*log_temp_k_GLOBAL(selected_GLOBAL) + (-160.34./temp_k_GLOBAL(selected_GLOBAL) +...
-            1.3566).*sqrt(salinity_GLOBAL(selected_GLOBAL)) + (0.37335./temp_k_GLOBAL(selected_GLOBAL) - 0.05778).*salinity_GLOBAL(selected_GLOBAL);
+            1.3566).*sqrt(salinity(selected_GLOBAL)) + (0.37335./temp_k_GLOBAL(selected_GLOBAL) - 0.05778).*salinity(selected_GLOBAL);
         KP2(selected_GLOBAL) = exp(lnKP2(selected_GLOBAL));
-        lnKP3(selected_GLOBAL) = -3070.75./temp_k_GLOBAL(selected_GLOBAL) - 18.126 + (17.27039./temp_k_GLOBAL(selected_GLOBAL) + 2.81197).*sqrt(salinity_GLOBAL(selected_GLOBAL)) +...
-            (-44.99486./temp_k_GLOBAL(selected_GLOBAL) - 0.09984).*salinity_GLOBAL(selected_GLOBAL);
+        lnKP3(selected_GLOBAL) = -3070.75./temp_k_GLOBAL(selected_GLOBAL) - 18.126 + (17.27039./temp_k_GLOBAL(selected_GLOBAL) + 2.81197).*sqrt(salinity(selected_GLOBAL)) +...
+            (-44.99486./temp_k_GLOBAL(selected_GLOBAL) - 0.09984).*salinity(selected_GLOBAL);
         KP3(selected_GLOBAL) = exp(lnKP3(selected_GLOBAL));
         lnKSi(selected_GLOBAL) = -8904.2./temp_k_GLOBAL(selected_GLOBAL) + 117.4 - 19.334.*log_temp_k_GLOBAL(selected_GLOBAL) + (-458.79./temp_k_GLOBAL(selected_GLOBAL) +...
             3.5913).*sqrt(IonS(selected_GLOBAL)) + (188.74./temp_k_GLOBAL(selected_GLOBAL) - 1.5998).*IonS(selected_GLOBAL) +...
             (-12.1652./temp_k_GLOBAL(selected_GLOBAL) + 0.07871).*IonS(selected_GLOBAL).^2;
         KSi(selected_GLOBAL) = exp(lnKSi(selected_GLOBAL))...                % this is on the SWS pH scale in mol/kg-H2O
-            .*(1 - 0.001005.*salinity_GLOBAL(selected_GLOBAL));        % convert to mol/kg-SW
+            .*(1 - 0.001005.*salinity(selected_GLOBAL));        % convert to mol/kg-SW
     end
     
     % Calculate KNH4 and KH2S: added by J. Sharp
@@ -262,26 +261,26 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
     if any(selected_GLOBAL)
     % Ammonia dissociation constant from Yao and Millero (1995)
     %   KNH4(selected_GLOBAL) = (exp(-6285.33./temp_k_GLOBAL(selected_GLOBAL)+0.0001635.*temp_k_GLOBAL(selected_GLOBAL)-0.25444+...
-    %             (0.46532-123.7184./temp_k_GLOBAL(selected_GLOBAL)).*salinity_GLOBAL(selected_GLOBAL).^0.5+(-0.01992+...
-    %             3.17556./temp_k_GLOBAL(selected_GLOBAL)).*salinity_GLOBAL(selected_GLOBAL)))...
+    %             (0.46532-123.7184./temp_k_GLOBAL(selected_GLOBAL)).*salinity(selected_GLOBAL).^0.5+(-0.01992+...
+    %             3.17556./temp_k_GLOBAL(selected_GLOBAL)).*salinity(selected_GLOBAL)))...
     %             ./SWStoTOT(selected_GLOBAL);                    % convert to SWS pH scale
     % Ammonia dissociation constant from Clegg and Whitfield (1995)
       PKNH4(selected_GLOBAL) = 9.244605-2729.33.*(1./298.15-1./temp_k_GLOBAL(selected_GLOBAL)) +...
-              (0.04203362-11.24742./temp_k_GLOBAL(selected_GLOBAL)).*salinity_GLOBAL(selected_GLOBAL).^0.25+...  % added missing (selected_GLOBAL) index on salinity_GLOBAL // MPH
+              (0.04203362-11.24742./temp_k_GLOBAL(selected_GLOBAL)).*salinity(selected_GLOBAL).^0.25+...  % added missing (selected_GLOBAL) index on salinity // MPH
               (-13.6416+1.176949.*temp_k_GLOBAL(selected_GLOBAL).^0.5-...
-              0.02860785.*temp_k_GLOBAL(selected_GLOBAL)+545.4834./temp_k_GLOBAL(selected_GLOBAL)).*salinity_GLOBAL(selected_GLOBAL).^0.5+...
+              0.02860785.*temp_k_GLOBAL(selected_GLOBAL)+545.4834./temp_k_GLOBAL(selected_GLOBAL)).*salinity(selected_GLOBAL).^0.5+...
               (-0.1462507+0.0090226468.*temp_k_GLOBAL(selected_GLOBAL).^0.5-...
-              0.0001471361.*temp_k_GLOBAL(selected_GLOBAL)+10.5425./temp_k_GLOBAL(selected_GLOBAL)).*salinity_GLOBAL(selected_GLOBAL).^1.5+...
+              0.0001471361.*temp_k_GLOBAL(selected_GLOBAL)+10.5425./temp_k_GLOBAL(selected_GLOBAL)).*salinity(selected_GLOBAL).^1.5+...
               (0.004669309-0.0001691742.*temp_k_GLOBAL(selected_GLOBAL).^0.5-...
-              0.5677934./temp_k_GLOBAL(selected_GLOBAL)).*salinity_GLOBAL(selected_GLOBAL).^2+...
-              (-2.354039E-05+0.009698623./temp_k_GLOBAL(selected_GLOBAL)).*salinity_GLOBAL(selected_GLOBAL).^2.5;
+              0.5677934./temp_k_GLOBAL(selected_GLOBAL)).*salinity(selected_GLOBAL).^2+...
+              (-2.354039E-05+0.009698623./temp_k_GLOBAL(selected_GLOBAL)).*salinity(selected_GLOBAL).^2.5;
       KNH4(selected_GLOBAL)  = 10.^-PKNH4(selected_GLOBAL);                    % total scale, mol/kg-H2O
-      KNH4(selected_GLOBAL)  = KNH4(selected_GLOBAL).*(1-0.001005.*salinity_GLOBAL(selected_GLOBAL)); % mol/kg-SW
+      KNH4(selected_GLOBAL)  = KNH4(selected_GLOBAL).*(1-0.001005.*salinity(selected_GLOBAL)); % mol/kg-SW
       KNH4(selected_GLOBAL)  = KNH4(selected_GLOBAL)./SWStoTOT(selected_GLOBAL);             % converts to SWS pH scale
     
     % First hydrogen sulfide dissociation constant from Millero et al. (1988)
       KH2S(selected_GLOBAL)  = (exp(225.838-13275.3./temp_k_GLOBAL(selected_GLOBAL)-34.6435.*log(temp_k_GLOBAL(selected_GLOBAL))+...
-                  0.3449.*salinity_GLOBAL(selected_GLOBAL).^0.5-0.0274.*salinity_GLOBAL(selected_GLOBAL)))...
+                  0.3449.*salinity(selected_GLOBAL).^0.5-0.0274.*salinity(selected_GLOBAL)))...
                   ./SWStoTOT(selected_GLOBAL);                    % convert to SWS pH scale
     
     end
@@ -308,17 +307,17 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
         % T:  0-45  S:  5-45. Total Scale. Artificial sewater.
         % This is eq. 29 on p. 254 and what they use in their abstract:
         lnK1(selected_GLOBAL) = 2.83655 - 2307.1266./temp_k_GLOBAL(selected_GLOBAL) - 1.5529413.*log_temp_k_GLOBAL(selected_GLOBAL) +...
-            (-0.20760841 - 4.0484./temp_k_GLOBAL(selected_GLOBAL)).*sqrt(salinity_GLOBAL(selected_GLOBAL)) + 0.08468345.*salinity_GLOBAL(selected_GLOBAL) -...
-            0.00654208.*sqrt(salinity_GLOBAL(selected_GLOBAL)).*salinity_GLOBAL(selected_GLOBAL);
+            (-0.20760841 - 4.0484./temp_k_GLOBAL(selected_GLOBAL)).*sqrt(salinity(selected_GLOBAL)) + 0.08468345.*salinity(selected_GLOBAL) -...
+            0.00654208.*sqrt(salinity(selected_GLOBAL)).*salinity(selected_GLOBAL);
         K1(selected_GLOBAL) = exp(lnK1(selected_GLOBAL))...            % this is on the total pH scale in mol/kg-H2O
-            .*(1 - 0.001005.*salinity_GLOBAL(selected_GLOBAL))...    % convert to mol/kg-SW
+            .*(1 - 0.001005.*salinity(selected_GLOBAL))...    % convert to mol/kg-SW
             ./SWStoTOT(selected_GLOBAL);                 % convert to SWS pH scale
         % This is eq. 30 on p. 254 and what they use in their abstract:
         lnK2(selected_GLOBAL) = -9.226508 - 3351.6106./temp_k_GLOBAL(selected_GLOBAL) - 0.2005743.*log_temp_k_GLOBAL(selected_GLOBAL) +...
-            (-0.106901773 - 23.9722./temp_k_GLOBAL(selected_GLOBAL)).*sqrt(salinity_GLOBAL(selected_GLOBAL)) + 0.1130822.*salinity_GLOBAL(selected_GLOBAL) -...
-            0.00846934.*sqrt(salinity_GLOBAL(selected_GLOBAL)).*salinity_GLOBAL(selected_GLOBAL);
+            (-0.106901773 - 23.9722./temp_k_GLOBAL(selected_GLOBAL)).*sqrt(salinity(selected_GLOBAL)) + 0.1130822.*salinity(selected_GLOBAL) -...
+            0.00846934.*sqrt(salinity(selected_GLOBAL)).*salinity(selected_GLOBAL);
         K2(selected_GLOBAL) = exp(lnK2(selected_GLOBAL))...            % this is on the total pH scale in mol/kg-H2O
-            .*(1 - 0.001005.*salinity_GLOBAL(selected_GLOBAL))...    % convert to mol/kg-SW
+            .*(1 - 0.001005.*salinity(selected_GLOBAL))...    % convert to mol/kg-SW
             ./SWStoTOT(selected_GLOBAL);                 % convert to SWS pH scale
     end
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==2);
@@ -327,12 +326,12 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
         % The 2s precision in pK1 is .011, or 2.5% in K1.
         % The 2s precision in pK2 is .02, or 4.5% in K2.
         % This is in Table 5 on p. 1652 and what they use in the abstract:
-        pK1(selected_GLOBAL) = 812.27./temp_k_GLOBAL(selected_GLOBAL) + 3.356 - 0.00171.*salinity_GLOBAL(selected_GLOBAL).*log_temp_k_GLOBAL(selected_GLOBAL)...
-            + 0.000091.*salinity_GLOBAL(selected_GLOBAL).^2;
+        pK1(selected_GLOBAL) = 812.27./temp_k_GLOBAL(selected_GLOBAL) + 3.356 - 0.00171.*salinity(selected_GLOBAL).*log_temp_k_GLOBAL(selected_GLOBAL)...
+            + 0.000091.*salinity(selected_GLOBAL).^2;
         K1(selected_GLOBAL) = 10.^(-pK1(selected_GLOBAL)); % this is on the SWS pH scale in mol/kg-SW
         % This is in Table 5 on p. 1652 and what they use in the abstract:
-        pK2(selected_GLOBAL) = 1450.87./temp_k_GLOBAL(selected_GLOBAL) + 4.604 - 0.00385.*salinity_GLOBAL(selected_GLOBAL).*log_temp_k_GLOBAL(selected_GLOBAL)...
-            + 0.000182.*salinity_GLOBAL(selected_GLOBAL).^2;
+        pK2(selected_GLOBAL) = 1450.87./temp_k_GLOBAL(selected_GLOBAL) + 4.604 - 0.00385.*salinity(selected_GLOBAL).*log_temp_k_GLOBAL(selected_GLOBAL)...
+            + 0.000182.*salinity(selected_GLOBAL).^2;
         K2(selected_GLOBAL) = 10.^(-pK2(selected_GLOBAL)); % this is on the SWS pH scale in mol/kg-SW
     end
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==3);
@@ -351,11 +350,11 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
         % The 2s precision in pK1 is .013, or 3% in K1.
         % The 2s precision in pK2 is .017, or 4.1% in K2.
         % This is from Table 4 on p. 1739.
-        pK1(selected_GLOBAL) = 851.4./temp_k_GLOBAL(selected_GLOBAL) + 3.237 - 0.0106.*salinity_GLOBAL(selected_GLOBAL) + 0.000105.*salinity_GLOBAL(selected_GLOBAL).^2;
+        pK1(selected_GLOBAL) = 851.4./temp_k_GLOBAL(selected_GLOBAL) + 3.237 - 0.0106.*salinity(selected_GLOBAL) + 0.000105.*salinity(selected_GLOBAL).^2;
         K1(selected_GLOBAL) = 10.^(-pK1(selected_GLOBAL)); % this is on the SWS pH scale in mol/kg-SW
         % This is from Table 4 on p. 1739.
         pK2(selected_GLOBAL) = -3885.4./temp_k_GLOBAL(selected_GLOBAL) + 125.844 - 18.141.*log_temp_k_GLOBAL(selected_GLOBAL)...
-            - 0.0192.*salinity_GLOBAL(selected_GLOBAL) + 0.000132.*salinity_GLOBAL(selected_GLOBAL).^2;
+            - 0.0192.*salinity(selected_GLOBAL) + 0.000132.*salinity(selected_GLOBAL).^2;
         K2(selected_GLOBAL) = 10.^(-pK2(selected_GLOBAL)); % this is on the SWS pH scale in mol/kg-SW
     end
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==4);
@@ -371,10 +370,10 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
 	    % Valid for salinity 20-40.
         % This is in Table 4 on p. 1739.
         pK1(selected_GLOBAL) = 3670.7./temp_k_GLOBAL(selected_GLOBAL) - 62.008 + 9.7944.*log_temp_k_GLOBAL(selected_GLOBAL)...
-                 - 0.0118.*salinity_GLOBAL(selected_GLOBAL) + 0.000116.*salinity_GLOBAL(selected_GLOBAL).^2;
+                 - 0.0118.*salinity(selected_GLOBAL) + 0.000116.*salinity(selected_GLOBAL).^2;
         K1(selected_GLOBAL) = 10.^(-pK1(selected_GLOBAL)); % this is on the SWS pH scale in mol/kg-SW
         % This is in Table 4 on p. 1739.
-        pK2(selected_GLOBAL) = 1394.7./temp_k_GLOBAL(selected_GLOBAL) + 4.777 - 0.0184.*salinity_GLOBAL(selected_GLOBAL) + 0.000118.*salinity_GLOBAL(selected_GLOBAL).^2;
+        pK2(selected_GLOBAL) = 1394.7./temp_k_GLOBAL(selected_GLOBAL) + 4.777 - 0.0184.*salinity(selected_GLOBAL) + 0.000118.*salinity(selected_GLOBAL).^2;
         K2(selected_GLOBAL) = 10.^(-pK2(selected_GLOBAL)); % this is on the SWS pH scale in mol/kg-SW
     end
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==5);
@@ -392,10 +391,10 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
         % The 2s precision in pK2 is .026, or 6% in K2.
 	    % Valid for salinity 20-40.
         % This is in Table 5 on p. 1740.
-        pK1(selected_GLOBAL) = 845./temp_k_GLOBAL(selected_GLOBAL) + 3.248 - 0.0098.*salinity_GLOBAL(selected_GLOBAL) + 0.000087.*salinity_GLOBAL(selected_GLOBAL).^2;
+        pK1(selected_GLOBAL) = 845./temp_k_GLOBAL(selected_GLOBAL) + 3.248 - 0.0098.*salinity(selected_GLOBAL) + 0.000087.*salinity(selected_GLOBAL).^2;
         K1(selected_GLOBAL) = 10.^(-pK1(selected_GLOBAL)); % this is on the SWS pH scale in mol/kg-SW
         % This is in Table 5 on p. 1740.
-        pK2(selected_GLOBAL) = 1377.3./temp_k_GLOBAL(selected_GLOBAL) + 4.824 - 0.0185.*salinity_GLOBAL(selected_GLOBAL) + 0.000122.*salinity_GLOBAL(selected_GLOBAL).^2;
+        pK2(selected_GLOBAL) = 1377.3./temp_k_GLOBAL(selected_GLOBAL) + 4.824 - 0.0185.*salinity(selected_GLOBAL) + 0.000122.*salinity(selected_GLOBAL).^2;
         K2(selected_GLOBAL) = 10.^(-pK2(selected_GLOBAL)); % this is on the SWS pH scale in mol/kg-SW
     end
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==6 | which_k1_k2_constants_GLOBAL==7);
@@ -406,12 +405,12 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
         % The 2s precision in pK1 is .005, or 1.2% in K1.
         % The 2s precision in pK2 is .008, or 2% in K2.
         pK1(selected_GLOBAL) = - 13.7201 + 0.031334.*temp_k_GLOBAL(selected_GLOBAL) + 3235.76./temp_k_GLOBAL(selected_GLOBAL)...
-            + 1.3e-5*salinity_GLOBAL(selected_GLOBAL).*temp_k_GLOBAL(selected_GLOBAL) - 0.1032.*salinity_GLOBAL(selected_GLOBAL).^0.5;
+            + 1.3e-5*salinity(selected_GLOBAL).*temp_k_GLOBAL(selected_GLOBAL) - 0.1032.*salinity(selected_GLOBAL).^0.5;
         K1(selected_GLOBAL) = 10.^(-pK1(selected_GLOBAL))...         % this is on the NBS scale
             ./fH(selected_GLOBAL);                     % convert to SWS scale
-        pK2(selected_GLOBAL) = 5371.9645 + 1.671221.*temp_k_GLOBAL(selected_GLOBAL) + 0.22913.*salinity_GLOBAL(selected_GLOBAL) + 18.3802.*log10(salinity_GLOBAL(selected_GLOBAL))...
-                 - 128375.28./temp_k_GLOBAL(selected_GLOBAL) - 2194.3055.*log10(temp_k_GLOBAL(selected_GLOBAL)) - 8.0944e-4.*salinity_GLOBAL(selected_GLOBAL).*temp_k_GLOBAL(selected_GLOBAL)...
-                 - 5617.11.*log10(salinity_GLOBAL(selected_GLOBAL))./temp_k_GLOBAL(selected_GLOBAL) + 2.136.*salinity_GLOBAL(selected_GLOBAL)./temp_k_GLOBAL(selected_GLOBAL); % pK2 is not defined for salinity_GLOBAL=0, since log10(0)=-inf
+        pK2(selected_GLOBAL) = 5371.9645 + 1.671221.*temp_k_GLOBAL(selected_GLOBAL) + 0.22913.*salinity(selected_GLOBAL) + 18.3802.*log10(salinity(selected_GLOBAL))...
+                 - 128375.28./temp_k_GLOBAL(selected_GLOBAL) - 2194.3055.*log10(temp_k_GLOBAL(selected_GLOBAL)) - 8.0944e-4.*salinity(selected_GLOBAL).*temp_k_GLOBAL(selected_GLOBAL)...
+                 - 5617.11.*log10(salinity(selected_GLOBAL))./temp_k_GLOBAL(selected_GLOBAL) + 2.136.*salinity(selected_GLOBAL)./temp_k_GLOBAL(selected_GLOBAL); % pK2 is not defined for salinity=0, since log10(0)=-inf
         K2(selected_GLOBAL) = 10.^(-pK2(selected_GLOBAL))...         % this is on the NBS scale
             ./fH(selected_GLOBAL);                     % convert to SWS scale
     end
@@ -423,7 +422,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
         % J American Chemical Society, 65:2030-2037, 1943.
         % K2 from refit data from Harned and Scholes,
         % J American Chemical Society, 43:1706-1709, 1941.
-	    % This is only to be used for salinity_GLOBAL=0 water (note the absence of S in the below formulations)
+	    % This is only to be used for salinity=0 water (note the absence of S in the below formulations)
         % These are the thermodynamic Constants:
         lnK1(selected_GLOBAL) = 290.9097 - 14554.21./temp_k_GLOBAL(selected_GLOBAL) - 45.0575.*log_temp_k_GLOBAL(selected_GLOBAL);
         K1(selected_GLOBAL) = exp(lnK1(selected_GLOBAL));
@@ -437,18 +436,18 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
 	    % K1: Mehrbach (1973) for S>15, for S<15: Mook and Keone (1975)
 	    % K2: Mehrbach (1973) for S>20, for S<20: Edmond and Gieskes (1970)
 	    % Sigma of residuals between fits and above data: ±0.015, +0.040 for K1 and K2, respectively.
-	    % salinity_GLOBAL 0-40, Temp 0.2-30
+	    % salinity 0-40, Temp 0.2-30
       % Limnol. Oceanogr. 43(4) (1998) 657-668
 	    % On the NBS scale
 	    % Their check values for F1 don't work out, not sure if this was correctly published...
 	    F1 = 200.1./temp_k_GLOBAL(selected_GLOBAL) + 0.3220;
-	    pK1(selected_GLOBAL) = 3404.71./temp_k_GLOBAL(selected_GLOBAL) + 0.032786.*temp_k_GLOBAL(selected_GLOBAL) - 14.8435 - 0.071692.*F1.*salinity_GLOBAL(selected_GLOBAL).^0.5 + 0.0021487.*salinity_GLOBAL(selected_GLOBAL);
+	    pK1(selected_GLOBAL) = 3404.71./temp_k_GLOBAL(selected_GLOBAL) + 0.032786.*temp_k_GLOBAL(selected_GLOBAL) - 14.8435 - 0.071692.*F1.*salinity(selected_GLOBAL).^0.5 + 0.0021487.*salinity(selected_GLOBAL);
         K1(selected_GLOBAL)  = 10.^-pK1(selected_GLOBAL)...         % this is on the NBS scale
-            ./fH(selected_GLOBAL);                    % convert to SWS scale (uncertain at low salinity_GLOBAL due to junction potential);
+            ./fH(selected_GLOBAL);                    % convert to SWS scale (uncertain at low salinity due to junction potential);
 	    F2 = -129.24./temp_k_GLOBAL(selected_GLOBAL) + 1.4381;
-	    pK2(selected_GLOBAL) = 2902.39./temp_k_GLOBAL(selected_GLOBAL) + 0.02379.*temp_k_GLOBAL(selected_GLOBAL) - 6.4980 - 0.3191.*F2.*salinity_GLOBAL(selected_GLOBAL).^0.5 + 0.0198.*salinity_GLOBAL(selected_GLOBAL);
+	    pK2(selected_GLOBAL) = 2902.39./temp_k_GLOBAL(selected_GLOBAL) + 0.02379.*temp_k_GLOBAL(selected_GLOBAL) - 6.4980 - 0.3191.*F2.*salinity(selected_GLOBAL).^0.5 + 0.0198.*salinity(selected_GLOBAL);
         K2(selected_GLOBAL)  = 10.^-pK2(selected_GLOBAL)...         % this is on the NBS scale
-            ./fH(selected_GLOBAL);                    % convert to SWS scale (uncertain at low salinity_GLOBAL due to junction potential); 
+            ./fH(selected_GLOBAL);                    % convert to SWS scale (uncertain at low salinity due to junction potential); 
     end
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==10);
     if any(selected_GLOBAL)
@@ -456,10 +455,10 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
 	    % This is Mehrbach's data refit after conversion to the total scale, for comparison with their equilibrator work. 
         % Mar. Chem. 70 (2000) 105-119
         % Total scale and kg-sw
-        pK1(selected_GLOBAL) = 3633.86./temp_k_GLOBAL(selected_GLOBAL)-61.2172+9.6777.*log(temp_k_GLOBAL(selected_GLOBAL))-0.011555.*salinity_GLOBAL(selected_GLOBAL)+0.0001152.*salinity_GLOBAL(selected_GLOBAL).^2;
+        pK1(selected_GLOBAL) = 3633.86./temp_k_GLOBAL(selected_GLOBAL)-61.2172+9.6777.*log(temp_k_GLOBAL(selected_GLOBAL))-0.011555.*salinity(selected_GLOBAL)+0.0001152.*salinity(selected_GLOBAL).^2;
 	    K1(selected_GLOBAL)  = 10.^-pK1(selected_GLOBAL)...           % this is on the total pH scale in mol/kg-SW
             ./SWStoTOT(selected_GLOBAL);                % convert to SWS pH scale
-        pK2(selected_GLOBAL) = 471.78./temp_k_GLOBAL(selected_GLOBAL)+25.929 -3.16967.*log(temp_k_GLOBAL(selected_GLOBAL))-0.01781 .*salinity_GLOBAL(selected_GLOBAL)+0.0001122.*salinity_GLOBAL(selected_GLOBAL).^2;
+        pK2(selected_GLOBAL) = 471.78./temp_k_GLOBAL(selected_GLOBAL)+25.929 -3.16967.*log(temp_k_GLOBAL(selected_GLOBAL))-0.01781 .*salinity(selected_GLOBAL)+0.0001122.*salinity(selected_GLOBAL).^2;
 	    K2(selected_GLOBAL)  = 10.^-pK2(selected_GLOBAL)...           % this is on the total pH scale in mol/kg-SW
             ./SWStoTOT(selected_GLOBAL);                % convert to SWS pH scale
     end
@@ -469,9 +468,9 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
 	    % sigma for pK1 is reported to be 0.0056
 	    % sigma for pK2 is reported to be 0.010
 	    % This is from the abstract and pages 2536-2537
-        pK1 =  -43.6977 - 0.0129037.*salinity_GLOBAL(selected_GLOBAL) + 1.364e-4.*salinity_GLOBAL(selected_GLOBAL).^2 + 2885.378./temp_k_GLOBAL(selected_GLOBAL) +  7.045159.*log(temp_k_GLOBAL(selected_GLOBAL));
-        pK2 = -452.0940 + 13.142162.*salinity_GLOBAL(selected_GLOBAL) - 8.101e-4.*salinity_GLOBAL(selected_GLOBAL).^2 + 21263.61./temp_k_GLOBAL(selected_GLOBAL) + 68.483143.*log(temp_k_GLOBAL(selected_GLOBAL))...
-				    + (-581.4428.*salinity_GLOBAL(selected_GLOBAL) + 0.259601.*salinity_GLOBAL(selected_GLOBAL).^2)./temp_k_GLOBAL(selected_GLOBAL) - 1.967035.*salinity_GLOBAL(selected_GLOBAL).*log(temp_k_GLOBAL(selected_GLOBAL));
+        pK1 =  -43.6977 - 0.0129037.*salinity(selected_GLOBAL) + 1.364e-4.*salinity(selected_GLOBAL).^2 + 2885.378./temp_k_GLOBAL(selected_GLOBAL) +  7.045159.*log(temp_k_GLOBAL(selected_GLOBAL));
+        pK2 = -452.0940 + 13.142162.*salinity(selected_GLOBAL) - 8.101e-4.*salinity(selected_GLOBAL).^2 + 21263.61./temp_k_GLOBAL(selected_GLOBAL) + 68.483143.*log(temp_k_GLOBAL(selected_GLOBAL))...
+				    + (-581.4428.*salinity(selected_GLOBAL) + 0.259601.*salinity(selected_GLOBAL).^2)./temp_k_GLOBAL(selected_GLOBAL) - 1.967035.*salinity(selected_GLOBAL).*log(temp_k_GLOBAL(selected_GLOBAL));
 	    K1(selected_GLOBAL) = 10.^-pK1; % this is on the SWS pH scale in mol/kg-SW
 	    K2(selected_GLOBAL) = 10.^-pK2; % this is on the SWS pH scale in mol/kg-SW
     end
@@ -482,8 +481,8 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
 	    % sigma for pK1 is reported to be 0.005
 	    % sigma for pK2 is reported to be 0.008
 	    % This is from page 1715
-        pK1 =  6.359 - 0.00664.*salinity_GLOBAL(selected_GLOBAL) - 0.01322.*TempC(selected_GLOBAL) + 4.989e-5.*TempC(selected_GLOBAL).^2;
-        pK2 =  9.867 - 0.01314.*salinity_GLOBAL(selected_GLOBAL) - 0.01904.*TempC(selected_GLOBAL) + 2.448e-5.*TempC(selected_GLOBAL).^2;
+        pK1 =  6.359 - 0.00664.*salinity(selected_GLOBAL) - 0.01322.*TempC(selected_GLOBAL) + 4.989e-5.*TempC(selected_GLOBAL).^2;
+        pK2 =  9.867 - 0.01314.*salinity(selected_GLOBAL) - 0.01904.*TempC(selected_GLOBAL) + 2.448e-5.*TempC(selected_GLOBAL).^2;
 	    K1(selected_GLOBAL) = 10.^-pK1; % this is on the SWS pH scale in mol/kg-SW
 	    K2(selected_GLOBAL) = 10.^-pK2; % this is on the SWS pH scale in mol/kg-SW
     end
@@ -493,15 +492,15 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
 	    % Millero, Graham, Huang, Bustos-Serrano, Pierrot. Mar.Chem. 100 (2006) 80-94.
         % S=1 to 50, T=0 to 50. On seawater scale (SWS). From titrations in Gulf Stream seawater.
 	    pK1_0 = -126.34048 + 6320.813./temp_k_GLOBAL(selected_GLOBAL) + 19.568224*log(temp_k_GLOBAL(selected_GLOBAL));
-	    A_1   = 13.4191*salinity_GLOBAL(selected_GLOBAL).^0.5 + 0.0331.*salinity_GLOBAL(selected_GLOBAL) - 5.33e-5.*salinity_GLOBAL(selected_GLOBAL).^2;
-	    B_1   = -530.123*salinity_GLOBAL(selected_GLOBAL).^0.5 - 6.103.*salinity_GLOBAL(selected_GLOBAL);
-	    C_1   = -2.06950.*salinity_GLOBAL(selected_GLOBAL).^0.5;
+	    A_1   = 13.4191*salinity(selected_GLOBAL).^0.5 + 0.0331.*salinity(selected_GLOBAL) - 5.33e-5.*salinity(selected_GLOBAL).^2;
+	    B_1   = -530.123*salinity(selected_GLOBAL).^0.5 - 6.103.*salinity(selected_GLOBAL);
+	    C_1   = -2.06950.*salinity(selected_GLOBAL).^0.5;
 	    pK1(selected_GLOBAL)= A_1 + B_1./temp_k_GLOBAL(selected_GLOBAL) + C_1.*log(temp_k_GLOBAL(selected_GLOBAL)) + pK1_0; % pK1 sigma = 0.0054
         K1(selected_GLOBAL) = 10.^-(pK1(selected_GLOBAL));
 	    pK2_0= -90.18333 + 5143.692./temp_k_GLOBAL(selected_GLOBAL) + 14.613358*log(temp_k_GLOBAL(selected_GLOBAL));	
-	    A_2   = 21.0894*salinity_GLOBAL(selected_GLOBAL).^0.5 + 0.1248.*salinity_GLOBAL(selected_GLOBAL) - 3.687e-4.*salinity_GLOBAL(selected_GLOBAL).^2;
-	    B_2   = -772.483*salinity_GLOBAL(selected_GLOBAL).^0.5 - 20.051.*salinity_GLOBAL(selected_GLOBAL);
-	    C_2   = -3.3336.*salinity_GLOBAL(selected_GLOBAL).^0.5;
+	    A_2   = 21.0894*salinity(selected_GLOBAL).^0.5 + 0.1248.*salinity(selected_GLOBAL) - 3.687e-4.*salinity(selected_GLOBAL).^2;
+	    B_2   = -772.483*salinity(selected_GLOBAL).^0.5 - 20.051.*salinity(selected_GLOBAL);
+	    C_2   = -3.3336.*salinity(selected_GLOBAL).^0.5;
 	    pK2(selected_GLOBAL)= A_2 + B_2./temp_k_GLOBAL(selected_GLOBAL) + C_2.*log(temp_k_GLOBAL(selected_GLOBAL)) + pK2_0; %pK2 sigma = 0.011
         K2(selected_GLOBAL) = 10.^-(pK2(selected_GLOBAL));
     end
@@ -515,17 +514,17 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
 	    % This is from page 141
 	    pK10 = -126.34048 + 6320.813./temp_k_GLOBAL(selected_GLOBAL) + 19.568224.*log(temp_k_GLOBAL(selected_GLOBAL));
 	    % This is from their table 2, page 140.
-	    A1 = 13.4038.*salinity_GLOBAL(selected_GLOBAL).^0.5 + 0.03206.*salinity_GLOBAL(selected_GLOBAL) - 5.242e-5.*salinity_GLOBAL(selected_GLOBAL).^2;
-	    B1 = -530.659.*salinity_GLOBAL(selected_GLOBAL).^0.5 - 5.8210.*salinity_GLOBAL(selected_GLOBAL);
-	    C1 = -2.0664*salinity_GLOBAL(selected_GLOBAL).^0.5;
+	    A1 = 13.4038.*salinity(selected_GLOBAL).^0.5 + 0.03206.*salinity(selected_GLOBAL) - 5.242e-5.*salinity(selected_GLOBAL).^2;
+	    B1 = -530.659.*salinity(selected_GLOBAL).^0.5 - 5.8210.*salinity(selected_GLOBAL);
+	    C1 = -2.0664*salinity(selected_GLOBAL).^0.5;
 	    pK1 = pK10 + A1 + B1./temp_k_GLOBAL(selected_GLOBAL) + C1.*log(temp_k_GLOBAL(selected_GLOBAL));
 	    K1(selected_GLOBAL) = 10.^-pK1;
 	    % This is from page 141
 	    pK20 =  -90.18333 + 5143.692./temp_k_GLOBAL(selected_GLOBAL) + 14.613358.*log(temp_k_GLOBAL(selected_GLOBAL));
 	    % This is from their table 3, page 140.
-	    A2 = 21.3728.*salinity_GLOBAL(selected_GLOBAL).^0.5 + 0.1218.*salinity_GLOBAL(selected_GLOBAL) - 3.688e-4.*salinity_GLOBAL(selected_GLOBAL).^2;
-	    B2 = -788.289.*salinity_GLOBAL(selected_GLOBAL).^0.5 - 19.189.*salinity_GLOBAL(selected_GLOBAL);
-	    C2 = -3.374.*salinity_GLOBAL(selected_GLOBAL).^0.5;
+	    A2 = 21.3728.*salinity(selected_GLOBAL).^0.5 + 0.1218.*salinity(selected_GLOBAL) - 3.688e-4.*salinity(selected_GLOBAL).^2;
+	    B2 = -788.289.*salinity(selected_GLOBAL).^0.5 - 19.189.*salinity(selected_GLOBAL);
+	    C2 = -3.374.*salinity(selected_GLOBAL).^0.5;
 	    pK2 = pK20 + A2 + B2./temp_k_GLOBAL(selected_GLOBAL) + C2.*log(temp_k_GLOBAL(selected_GLOBAL));
 	    K2(selected_GLOBAL) = 10.^-pK2;
     end
@@ -538,15 +537,15 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
 	    % Effectively, this is an update of Millero (2010) formulation (which_k1_k2_constants_GLOBAL==14)
 	    % Constants for K's on the SWS;
 	    pK10 = -126.34048 + 6320.813./temp_k_GLOBAL(selected_GLOBAL) + 19.568224.*log(temp_k_GLOBAL(selected_GLOBAL));
-	    A1 = 13.409160.*salinity_GLOBAL(selected_GLOBAL).^0.5 + 0.031646.*salinity_GLOBAL(selected_GLOBAL) - 5.1895e-5.*salinity_GLOBAL(selected_GLOBAL).^2;
-	    B1 = -531.3642.*salinity_GLOBAL(selected_GLOBAL).^0.5 - 5.713.*salinity_GLOBAL(selected_GLOBAL);
-	    C1 = -2.0669166.*salinity_GLOBAL(selected_GLOBAL).^0.5;
+	    A1 = 13.409160.*salinity(selected_GLOBAL).^0.5 + 0.031646.*salinity(selected_GLOBAL) - 5.1895e-5.*salinity(selected_GLOBAL).^2;
+	    B1 = -531.3642.*salinity(selected_GLOBAL).^0.5 - 5.713.*salinity(selected_GLOBAL);
+	    C1 = -2.0669166.*salinity(selected_GLOBAL).^0.5;
 	    pK1 = pK10 + A1 + B1./temp_k_GLOBAL(selected_GLOBAL) + C1.*log(temp_k_GLOBAL(selected_GLOBAL));
 	    K1(selected_GLOBAL) = 10.^-pK1;
 	    pK20 =  -90.18333 + 5143.692./temp_k_GLOBAL(selected_GLOBAL) + 14.613358.*log(temp_k_GLOBAL(selected_GLOBAL));
-	    A2 = 21.225890.*salinity_GLOBAL(selected_GLOBAL).^0.5 + 0.12450870.*salinity_GLOBAL(selected_GLOBAL) - 3.7243e-4.*salinity_GLOBAL(selected_GLOBAL).^2;
-	    B2 = -779.3444.*salinity_GLOBAL(selected_GLOBAL).^0.5 - 19.91739.*salinity_GLOBAL(selected_GLOBAL);
-	    C2 = -3.3534679.*salinity_GLOBAL(selected_GLOBAL).^0.5;
+	    A2 = 21.225890.*salinity(selected_GLOBAL).^0.5 + 0.12450870.*salinity(selected_GLOBAL) - 3.7243e-4.*salinity(selected_GLOBAL).^2;
+	    B2 = -779.3444.*salinity(selected_GLOBAL).^0.5 - 19.91739.*salinity(selected_GLOBAL);
+	    C2 = -3.3534679.*salinity(selected_GLOBAL).^0.5;
 	    pK2 = pK20 + A2 + B2./temp_k_GLOBAL(selected_GLOBAL) + C2.*log(temp_k_GLOBAL(selected_GLOBAL));
 	    K2(selected_GLOBAL) = 10.^-pK2;
     end
@@ -557,10 +556,10 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
 	    % Ocean Science Discussions, 16, 847-862
         % This study uses overdeterminations of the carbonate system to
         % iteratively fit K1 and K2
-        pK1(selected_GLOBAL) = 8510.63./temp_k_GLOBAL(selected_GLOBAL)-172.4493+26.32996.*log(temp_k_GLOBAL(selected_GLOBAL))-0.011555.*salinity_GLOBAL(selected_GLOBAL)+0.0001152.*salinity_GLOBAL(selected_GLOBAL).^2;
+        pK1(selected_GLOBAL) = 8510.63./temp_k_GLOBAL(selected_GLOBAL)-172.4493+26.32996.*log(temp_k_GLOBAL(selected_GLOBAL))-0.011555.*salinity(selected_GLOBAL)+0.0001152.*salinity(selected_GLOBAL).^2;
 	    K1(selected_GLOBAL)  = 10.^-pK1(selected_GLOBAL)...           % this is on the total pH scale in mol/kg-SW
             ./SWStoTOT(selected_GLOBAL);                % convert to SWS pH scale
-        pK2(selected_GLOBAL) = 4226.23./temp_k_GLOBAL(selected_GLOBAL)-59.4636+9.60817.*log(temp_k_GLOBAL(selected_GLOBAL))-0.01781 .*salinity_GLOBAL(selected_GLOBAL)+0.0001122.*salinity_GLOBAL(selected_GLOBAL).^2;
+        pK2(selected_GLOBAL) = 4226.23./temp_k_GLOBAL(selected_GLOBAL)-59.4636+9.60817.*log(temp_k_GLOBAL(selected_GLOBAL))-0.01781 .*salinity(selected_GLOBAL)+0.0001122.*salinity(selected_GLOBAL).^2;
 	    K2(selected_GLOBAL)  = 10.^-pK2(selected_GLOBAL)...           % this is on the total pH scale in mol/kg-SW
             ./SWStoTOT(selected_GLOBAL);                % convert to SWS pH scale
     end
@@ -575,16 +574,16 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
         % parameterization for K2 based on these determinations
         % K1 is taken from Waters, Millero, and Woosley, 2014, on the total pH scale:
         pK10 = -126.34048 + 6320.813./temp_k_GLOBAL(selected_GLOBAL) + 19.568224.*log(temp_k_GLOBAL(selected_GLOBAL));
-	    A1 = 13.568513.*salinity_GLOBAL(selected_GLOBAL).^0.5 + 0.031645.*salinity_GLOBAL(selected_GLOBAL) - 5.3834e-5.*salinity_GLOBAL(selected_GLOBAL).^2;
-	    B1 = -539.2304.*salinity_GLOBAL(selected_GLOBAL).^0.5 - 5.635.*salinity_GLOBAL(selected_GLOBAL);
-	    C1 = -2.0901396.*salinity_GLOBAL(selected_GLOBAL).^0.5;
+	    A1 = 13.568513.*salinity(selected_GLOBAL).^0.5 + 0.031645.*salinity(selected_GLOBAL) - 5.3834e-5.*salinity(selected_GLOBAL).^2;
+	    B1 = -539.2304.*salinity(selected_GLOBAL).^0.5 - 5.635.*salinity(selected_GLOBAL);
+	    C1 = -2.0901396.*salinity(selected_GLOBAL).^0.5;
 	    pK1 = pK10 + A1 + B1./temp_k_GLOBAL(selected_GLOBAL) + C1.*log(temp_k_GLOBAL(selected_GLOBAL));
 	    K1(selected_GLOBAL) = 10.^-pK1...               % this is on the total pH scale in mol/kg-sw
             ./SWStoTOT(selected_GLOBAL);                % convert to SWS pH scale
         % K2 is based on measurements of K1*K2:
         pK2 = 116.8067 - 3655.02./temp_k_GLOBAL(selected_GLOBAL) - 16.45817.*log(temp_k_GLOBAL(selected_GLOBAL)) + ...
-            0.04523.*salinity_GLOBAL(selected_GLOBAL) - 0.615.*salinity_GLOBAL(selected_GLOBAL).^0.5 - 0.0002799.*salinity_GLOBAL(selected_GLOBAL).^2 + ...
-            4.969.*(salinity_GLOBAL(selected_GLOBAL)./temp_k_GLOBAL(selected_GLOBAL));
+            0.04523.*salinity(selected_GLOBAL) - 0.615.*salinity(selected_GLOBAL).^0.5 - 0.0002799.*salinity(selected_GLOBAL).^2 + ...
+            4.969.*(salinity(selected_GLOBAL)./temp_k_GLOBAL(selected_GLOBAL));
         K2(selected_GLOBAL)  = 10.^-pK2...           % this is on the total pH scale in mol/kg-SW
             ./SWStoTOT(selected_GLOBAL);                % convert to SWS pH scale
     end

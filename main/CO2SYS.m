@@ -1,6 +1,6 @@
 function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
                                             parameter_1_type,parameter_2_type, ...
-                                            salinity, ...
+                                            salinity_in, ...
                                             temperature_in,temperature_out, ...
                                             pressure_in,pressure_out, ...
                                             silicate,phosphate,ammonia,sulphide, ...
@@ -10,7 +10,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
 
     % Declare global variables
     global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL
-    global salinity_GLOBAL temperature_in_GLOBAL temperature_out_GLOBAL pressure_in_GLOBAL pressure_out_GLOBAL;
+    global temperature_in_GLOBAL temperature_out_GLOBAL pressure_in_GLOBAL pressure_out_GLOBAL;
     global peng_correction_GLOBAL number_of_points;
     global selected_GLOBAL;
     
@@ -33,7 +33,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     % Determine lengths of input vectors
     veclengths=[length(parameter_1) length(parameter_2) length(parameter_1_type)...
-                length(parameter_2_type) length(salinity) length(temperature_in)...
+                length(parameter_2_type) length(salinity_in) length(temperature_in)...
                 length(temperature_out) length(pressure_in) length(pressure_out)...
                 length(silicate) length(phosphate) length(ammonia) length(sulphide)...
                 length(pH_scale_in) length(which_k1_k2_constants) length(which_kso4_constant)...
@@ -51,7 +51,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     parameter_2(1:number_of_points,1)          = parameter_2(:)          ;
     parameter_1_type(1:number_of_points,1)      = parameter_1_type(:)      ;
     parameter_2_type(1:number_of_points,1)      = parameter_2_type(:)      ;
-    salinity(1:number_of_points,1)           = salinity(:)           ;
+    salinity_in(1:number_of_points,1)           = salinity_in(:)           ;
     temperature_in(1:number_of_points,1)        = temperature_in(:)        ;
     temperature_out(1:number_of_points,1)       = temperature_out(:)       ;
     pressure_in(1:number_of_points,1)        = pressure_in(:)        ;
@@ -76,7 +76,6 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     temperature_out_GLOBAL       = temperature_out;
     pressure_in_GLOBAL       = pressure_in;
     pressure_out_GLOBAL       = pressure_out;
-    salinity_GLOBAL          = salinity;
     
     gas_constant = 83.14462618; % ml bar-1 K-1 mol-1,
     
@@ -89,6 +88,8 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     HCO3 = nan(number_of_points,1); % [HCO3]
     CO3  = nan(number_of_points,1); % [CO3]
     CO2  = nan(number_of_points,1); % [CO2*]
+
+    salinity = salinity_in;
     
     % Assign values to empty vectors.
     selected_GLOBAL=(parameter_1_type==1 & parameter_1~=-999);   TA(selected_GLOBAL)=parameter_1(selected_GLOBAL)/1e6; % Convert from micromol/kg to mol/kg
@@ -108,20 +109,21 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected_GLOBAL=(parameter_2_type==7 & parameter_2~=-999);  CO3(selected_GLOBAL)=parameter_2(selected_GLOBAL)/1e6; % Convert from micromol/kg to mol/kg
     selected_GLOBAL=(parameter_2_type==8 & parameter_2~=-999);  CO2(selected_GLOBAL)=parameter_2(selected_GLOBAL)/1e6; % Convert from micromol/kg to mol/kg
     
-    % Generate the columns holding Si, Phos, Amm, H2S and salinity_GLOBAL.
+    % Generate the columns holding Si, Phos, Amm, H2S and salinity.
     % Pure Water case:
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==8);
-    salinity_GLOBAL(selected_GLOBAL) = 0;
+    salinity(selected_GLOBAL) = 0;
+
     % GEOSECS and Pure Water:
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==8 | which_k1_k2_constants_GLOBAL==6);
     % All other cases
     selected_GLOBAL=~selected_GLOBAL;
 
 
-    boron_concentration = calculate_boron_concentration();
-    fluorine_concentration = calculate_fluorine_concentration();
-    sulphate_concentration = calculate_sulphate_concentration();
-    calcium_concentration = calculate_calcium_concentration();
+    boron_concentration = calculate_boron_concentration(salinity);
+    fluorine_concentration = calculate_fluorine_concentration(salinity);
+    sulphate_concentration = calculate_sulphate_concentration(salinity);
+    calcium_concentration = calculate_calcium_concentration(salinity);
     phosphate_concentration = calculate_phosphate_concentration(phosphate);
     silicate_concentration = calculate_silicate_concentration(silicate);
     ammonia_concentration = calculate_ammonia_concentration(ammonia);
@@ -134,7 +136,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     % Calculate the constants for all samples at input conditions
     % The constants calculated for each sample will be on the appropriate pH scale!
-    Ks_in = calculate_equilibrium_constants(temperature_in_GLOBAL,pressure_in_GLOBAL,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration);
+    Ks_in = calculate_equilibrium_constants(temperature_in_GLOBAL,pressure_in_GLOBAL,salinity,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration);
     
     % Added by JM Epitalon
     % For computing derivative with respect to Ks, one has to perturb the value of one K
@@ -321,8 +323,8 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         HSAlkinp(selected_GLOBAL), Hfreeinp(selected_GLOBAL),HSO4inp(selected_GLOBAL),HFinp(selected_GLOBAL)] = CalculateAlkParts(PHic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);
     PAlkinp(selected_GLOBAL)                = PAlkinp(selected_GLOBAL)+peng_correction_GLOBAL(selected_GLOBAL);
     Revelleinp(selected_GLOBAL)             = RevelleFactor(TAc(selected_GLOBAL)-peng_correction_GLOBAL(selected_GLOBAL), TCc(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);
-    [OmegaCainp(selected_GLOBAL),OmegaArinp(selected_GLOBAL)] = CaSolubility(salinity_GLOBAL(selected_GLOBAL), temperature_in_GLOBAL(selected_GLOBAL), TCc(selected_GLOBAL), PHic(selected_GLOBAL), Ks_in, sqrt(salinity_GLOBAL(selected_GLOBAL)),gas_constant,calcium_concentration);
-    VPFac = calculate_VPFac();
+    [OmegaCainp(selected_GLOBAL),OmegaArinp(selected_GLOBAL)] = CaSolubility(salinity(selected_GLOBAL), temperature_in_GLOBAL(selected_GLOBAL), TCc(selected_GLOBAL), PHic(selected_GLOBAL), Ks_in, sqrt(salinity(selected_GLOBAL)),gas_constant,calcium_concentration);
+    VPFac = calculate_VPFac(salinity);
     xCO2dryinp(~isnan(PCic),1) = PCic(~isnan(PCic),1)./VPFac(~isnan(PCic),1); % ' this assumes pTot = 1 atm
     SIRinp = HCO3ic./(Hfreeinp.*1e6);
     
@@ -340,7 +342,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     clear K0 K1 K2 KW KB KF KS KP1 KP2 KP3 KSi KNH4 KH2S
     
     % Calculate the constants for all samples at output conditions
-    Ks_out = calculate_equilibrium_constants(temperature_out_GLOBAL,pressure_out_GLOBAL,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration);
+    Ks_out = calculate_equilibrium_constants(temperature_out_GLOBAL,pressure_out_GLOBAL,salinity,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration);
     
     % Added by JM Epitalon
     % For computing derivative with respect to Ks, one has to perturb the value of one K
@@ -388,8 +390,8 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         HSAlkout(selected_GLOBAL), Hfreeout(selected_GLOBAL),HSO4out(selected_GLOBAL),HFout(selected_GLOBAL)] = CalculateAlkParts(PHoc(selected_GLOBAL),pH_scale_in,Ks_out,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);
     PAlkout(selected_GLOBAL)                 = PAlkout(selected_GLOBAL)+peng_correction_GLOBAL(selected_GLOBAL);
     Revelleout(selected_GLOBAL)              = RevelleFactor(TAc(selected_GLOBAL)-peng_correction_GLOBAL(selected_GLOBAL), TCc(selected_GLOBAL),pH_scale_in,Ks_out,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);
-    [OmegaCaout(selected_GLOBAL),OmegaArout(selected_GLOBAL)] = CaSolubility(salinity_GLOBAL(selected_GLOBAL), temperature_out_GLOBAL(selected_GLOBAL), TCc(selected_GLOBAL), PHoc(selected_GLOBAL), Ks_out, sqrt(salinity_GLOBAL(selected_GLOBAL)), gas_constant, calcium_concentration);
-    VPFac = calculate_VPFac();
+    [OmegaCaout(selected_GLOBAL),OmegaArout(selected_GLOBAL)] = CaSolubility(salinity(selected_GLOBAL), temperature_out_GLOBAL(selected_GLOBAL), TCc(selected_GLOBAL), PHoc(selected_GLOBAL), Ks_out, sqrt(salinity(selected_GLOBAL)), gas_constant, calcium_concentration);
+    VPFac = calculate_VPFac(salinity);
     xCO2dryout(~isnan(PCoc),1)    = PCoc(~isnan(PCoc))./VPFac(~isnan(PCoc)); % ' this assumes pTot = 1 atm
     SIRout = HCO3oc./(Hfreeout.*1e6);
     
@@ -416,7 +418,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
           pHicF           pHicN          pHocT          pHocS           pHocF...
           pHocN           temperature_in         temperature_out        pressure_in          pressure_out...
           parameter_1_type        parameter_2_type       which_k1_k2_constants  which_kso4_constant    which_kf_constant...
-          which_boron           pH_scale_in      salinity            phosphate             silicate...
+          which_boron           pH_scale_in      salinity_in            phosphate             silicate...
           ammonia             sulphide            KIVEC          KOVEC           TVEC*1e6];
     data(isnan(data))=-999;
     
@@ -537,7 +539,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         '98 - ammonia_concentration             (umol/kgSW) ';
         '99 - sulphide_concentration             (umol/kgSW) '};
     
-    clear global selected_GLOBAL K2 KP3 pressure_in_GLOBAL salinity_GLOBAL number_of_points 
+    clear global selected_GLOBAL K2 KP3 pressure_in_GLOBAL number_of_points 
     clear global KB KS pressure_out_GLOBAL T BORON which_k1_k2_constants_GLOBAL 
     clear global K KF KSi KNH4 KH2S peng_correction_GLOBAL temperature_in_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL 
     clear global K0 KP1 KW temperature_out_GLOBAL fH 
@@ -942,7 +944,7 @@ function varargout=CalculatepHfromfCO2HCO3(fCO2i, HCO3i, Ks)
     function varargout=CalculatepHfCO2fromTCHCO3(TCx, HCO3x, Ks)
     % Outputs pH fCO2, in that order
     % SUB CalculatepHfCO2fromTCHCO3, version 01.0, 3-19, added by J. Sharp
-    % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4_constant_GLOBAL%, TC, HCO3, salinity_GLOBAL, K(), T(), TempC, Pdbar
+    % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4_constant_GLOBAL%, TC, HCO3, salinity, K(), T(), TempC, Pdbar
     % Outputs: pH, fCO2
     % This calculates pH and fCO2 from TC and HCO3 at output conditions.
     pHx   = CalculatepHfromTCHCO3(TCx, HCO3x, Ks); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
@@ -1093,7 +1095,7 @@ end
 function varargout=CalculatepHfCO2fromTCCO3(TCx, CO3x, Ks)
     % Outputs pH fCO2, in that order
     % SUB CalculatepHfCO2fromTCCO3, version 01.0, 8-18, added by J. Sharp
-    % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4_constant_GLOBAL%, TC, CO3, salinity_GLOBAL, K(), T(), TempC, Pdbar
+    % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4_constant_GLOBAL%, TC, CO3, salinity, K(), T(), TempC, Pdbar
     % Outputs: pH, fCO2
     % This calculates pH and fCO2 from TC and CO3 at output conditions.
     pHx   = CalculatepHfromTCCO3(TCx, CO3x, Ks); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
@@ -1321,13 +1323,13 @@ function varargout=CalculateAlkParts(pH,pH_scale,Ks,boron_concentration,fluorine
 end
 
 
-function varargout=CaSolubility(salinity_GLOBAL, TempC, TC, pH, Ks, sqrt_salinity, gas_constant, calcium_concentration)
+function varargout=CaSolubility(salinity, TempC, TC, pH, Ks, sqrt_salinity, gas_constant, calcium_concentration)
     global temp_k_GLOBAL log_temp_k_GLOBAL Pbar which_k1_k2_constants_GLOBAL selected_GLOBAL
     global k_perturbation_GLOBAL    % Id of perturbed K
     global Perturb % perturbation
     % '***********************************************************************
     % ' SUB CaSolubility, version 01.05, 05-23-97, written by Ernie Lewis.
-    % ' Inputs: which_k1_k2_constants_GLOBAL%, salinity_GLOBAL, temperature_in_GLOBAL, pressure_in_GLOBAL, TCi, pHi, K1, K2
+    % ' Inputs: which_k1_k2_constants_GLOBAL%, salinity, temperature_in_GLOBAL, pressure_in_GLOBAL, TCi, pHi, K1, K2
     % ' Outputs: OmegaCa, OmegaAr
     % ' This calculates omega, the solubility ratio, for calcite and aragonite.
     % ' This is defined by: Omega = [CO3--]*[Ca++]./Ksp,
@@ -1372,16 +1374,16 @@ function varargout=CaSolubility(salinity_GLOBAL, TempC, TC, pH, Ks, sqrt_salinit
         logKCa = -171.9065 - 0.077993.*TempKx(FF) + 2839.319./TempKx(FF);
         logKCa = logKCa + 71.595.*logTempKx(FF)./log(10);
         logKCa = logKCa + (-0.77712 + 0.0028426.*TempKx(FF) + 178.34./TempKx(FF)).*sqrSalx(FF);
-        logKCa = logKCa - 0.07711.*salinity_GLOBAL(FF) + 0.0041249.*sqrSalx(FF).*salinity_GLOBAL(FF);
-        % '       sd fit = .01 (for salinity_GLOBAL part, not part independent of salinity_GLOBAL)
+        logKCa = logKCa - 0.07711.*salinity(FF) + 0.0041249.*sqrSalx(FF).*salinity(FF);
+        % '       sd fit = .01 (for salinity part, not part independent of salinity)
         KCa(FF) = 10.^(logKCa);% ' this is in (mol/kg-SW)^2
         % AragoniteSolubility:
         % '       Mucci, Alphonso, Amer. J. of Science 283:781-799, 1983.
         logKAr = -171.945 - 0.077993.*TempKx(FF) + 2903.293./TempKx(FF);
         logKAr = logKAr + 71.595.*logTempKx(FF)./log(10);
         logKAr = logKAr + (-0.068393 + 0.0017276.*TempKx(FF) + 88.135./TempKx(FF)).*sqrSalx(FF);
-        logKAr = logKAr - 0.10018.*salinity_GLOBAL(FF) + 0.0059415.*sqrSalx(FF).*salinity_GLOBAL(FF);
-        % '       sd fit = .009 (for salinity_GLOBAL part, not part independent of salinity_GLOBAL)
+        logKAr = logKAr - 0.10018.*salinity(FF) + 0.0059415.*sqrSalx(FF).*salinity(FF);
+        % '       sd fit = .009 (for salinity part, not part independent of salinity)
         KAr(FF)    = 10.^(logKAr);% ' this is in (mol/kg-SW)^2
         % PressureCorrectionForCalcite:
         % '       Ingle, Marine Chemistry 3:301-319, 1975
@@ -1406,8 +1408,8 @@ function varargout=CaSolubility(salinity_GLOBAL, TempC, TC, pH, Ks, sqrt_salinit
         % Ingle et al, Marine Chemistry 1:295-307, 1973 is referenced in
         % (quoted in Takahashi et al, GEOSECS Pacific Expedition v. 3, 1982
         % but the fit is actually from Ingle, Marine Chemistry 3:301-319, 1975)
-        KCa(FF) = 0.0000001.*(-34.452 - 39.866.*salinity_GLOBAL(FF).^(1./3) +...
-            110.21.*log(salinity_GLOBAL(FF))./log(10) - 0.0000075752.*TempKx(FF).^2);
+        KCa(FF) = 0.0000001.*(-34.452 - 39.866.*salinity(FF).^(1./3) +...
+            110.21.*log(salinity(FF))./log(10) - 0.0000075752.*TempKx(FF).^2);
         % this is in (mol/kg-SW)^2
         %
         % *** CalculateKArforGEOSECS:
