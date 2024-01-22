@@ -1,10 +1,10 @@
 
-function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pdbar,salinity,pH_scale,p_opt,gas_constant,fluorine_concentration,sulphate_concentration,which_kf)
-    global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL Pbar;
+function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pdbar,salinity,pH_scale,p_opt,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4)
+    global which_k1_k2_constants_GLOBAL Pbar;
     global fH temp_k_GLOBAL log_temp_k_GLOBAL;
     
     % SUB Constants, version 04.01, 10-13-97, written by Ernie Lewis.
-    % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4_constant_GLOBAL%, Sali, temperature_in, Pdbar
+    % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, Sali, temperature_in, Pdbar
     % Outputs: K0, K(), T(), fH
     % This finds the Constants of the CO2 system in seawater or freshwater,
     % corrects them for pressure, and reports them on the chosen pH scale.
@@ -49,7 +49,7 @@ function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pdbar,salin
     % CalculateKS:
     lnKS   = nan(number_of_points,1); pKS  = nan(number_of_points,1); KS   = nan(number_of_points,1);
     logKS0 = nan(number_of_points,1); logKSK0 = nan(number_of_points,1);
-    selected_GLOBAL=(which_kso4_constant_GLOBAL==1);
+    selected_GLOBAL=(which_kso4==1);
     if any(selected_GLOBAL)
         % Dickson, A. G., J. Chemical Thermodynamics, 22:113-127, 1990
         % The goodness of fit is .021.
@@ -63,7 +63,7 @@ function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pdbar,salin
 	    KS(selected_GLOBAL) = exp(lnKS(selected_GLOBAL))...            % this is on the free pH scale in mol/kg-H2O
             .* (1 - 0.001005 .* salinity(selected_GLOBAL));   % convert to mol/kg-SW
     end
-    selected_GLOBAL=(which_kso4_constant_GLOBAL==2);
+    selected_GLOBAL=(which_kso4==2);
     if any(selected_GLOBAL)
         % Khoo et al, Analytical Chemistry, 49(1):29-34, 1977
         % KS was found by titrations with a hydrogen electrode
@@ -81,7 +81,7 @@ function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pdbar,salin
         KS(selected_GLOBAL) = 10.^(-pKS(selected_GLOBAL))...          % this is on the free pH scale in mol/kg-H2O
             .* (1 - 0.001005.*salinity(selected_GLOBAL));    % convert to mol/kg-SW
     end
-    selected_GLOBAL=(which_kso4_constant_GLOBAL==3);
+    selected_GLOBAL=(which_kso4==3);
     if any(selected_GLOBAL)
         % Waters and Millero, Marine Chemistry, 149: 8-22, 2013, with corrections from
         % Waters et al, Marine Chemistry, 165: 66-67, 2014

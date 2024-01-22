@@ -5,11 +5,11 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
                                             pressure_in,pressure_out, ...
                                             silicate,phosphate,ammonia,sulphide, ...
                                             pH_scale_in, ...
-                                            which_k1_k2_constants,which_kso4_constant,which_kf, which_boron, ...
+                                            which_k1_k2_constants,which_kso4,which_kf, which_boron, ...
                                             varargin)
 
     % Declare global variables
-    global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL
+    global which_k1_k2_constants_GLOBAL
     global selected_GLOBAL;
     
     % Added by JM Epitalon
@@ -34,7 +34,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
                 length(parameter_2_type) length(salinity_in) length(temperature_in)...
                 length(temperature_out) length(pressure_in) length(pressure_out)...
                 length(silicate) length(phosphate) length(ammonia) length(sulphide)...
-                length(pH_scale_in) length(which_k1_k2_constants) length(which_kso4_constant)...
+                length(pH_scale_in) length(which_k1_k2_constants) length(which_kso4)...
 	            length(which_kf) length(which_boron)];
     
     if length(unique(veclengths))>2
@@ -60,14 +60,13 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     sulphide(1:number_of_points,1)           = sulphide(:)           ;
     pH_scale_in(1:number_of_points,1)     = pH_scale_in(:)     ;
     which_k1_k2_constants(1:number_of_points,1) = which_k1_k2_constants(:) ;
-    which_kso4_constant(1:number_of_points,1)  = which_kso4_constant(:)  ;
+    which_kso4(1:number_of_points,1)  = which_kso4(:)  ;
     which_kf(1:number_of_points,1)    = which_kf(:)    ;
     which_boron(1:number_of_points,1)         = which_boron(:)         ;
     
     % Assign input to the 'historical' variable names.
     % pH_scale_in_GLOBAL      = pH_scale_in;
     which_k1_k2_constants_GLOBAL      = which_k1_k2_constants;
-    which_kso4_constant_GLOBAL    = which_kso4_constant;
     
     gas_constant = 83.14462618; % ml bar-1 K-1 mol-1,
     
@@ -130,7 +129,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     % Calculate the constants for all samples at input conditions
     % The constants calculated for each sample will be on the appropriate pH scale!
-    Ks_in = calculate_equilibrium_constants(number_of_points,temperature_in,pressure_in,salinity,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration,which_kf);
+    Ks_in = calculate_equilibrium_constants(number_of_points,temperature_in,pressure_in,salinity,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4);
     
     % Added by JM Epitalon
     % For computing derivative with respect to Ks, one has to perturb the value of one K
@@ -336,7 +335,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     clear K0 K1 K2 KW KB KF KS KP1 KP2 KP3 KSi KNH4 KH2S
     
     % Calculate the constants for all samples at output conditions
-    Ks_out = calculate_equilibrium_constants(number_of_points,temperature_out,pressure_out,salinity,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration,which_kf);
+    Ks_out = calculate_equilibrium_constants(number_of_points,temperature_out,pressure_out,salinity,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4);
     
     % Added by JM Epitalon
     % For computing derivative with respect to Ks, one has to perturb the value of one K
@@ -411,7 +410,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
           OmegaArout      xCO2dryout*1e6 SIRout         pHicT           pHicS...
           pHicF           pHicN          pHocT          pHocS           pHocF...
           pHocN           temperature_in         temperature_out        pressure_in          pressure_out...
-          parameter_1_type        parameter_2_type       which_k1_k2_constants  which_kso4_constant    which_kf...
+          parameter_1_type        parameter_2_type       which_k1_k2_constants  which_kso4    which_kf...
           which_boron           pH_scale_in      salinity_in            phosphate             silicate...
           ammonia             sulphide            KIVEC          KOVEC           TVEC*1e6];
     data(isnan(data))=-999;
@@ -535,7 +534,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     clear global selected_GLOBAL K2 KP3 
     clear global KB KS T BORON which_k1_k2_constants_GLOBAL 
-    clear global K KF KSi KNH4 KH2S which_kso4_constant_GLOBAL 
+    clear global K KF KSi KNH4 KH2S 
     clear global K0 KP1 KW fH 
     clear global K1 KP2 Pbar temp_k_GLOBAL log_temp_k_GLOBAL
 	
@@ -938,7 +937,7 @@ function varargout=CalculatepHfromfCO2HCO3(fCO2i, HCO3i, Ks)
     function varargout=CalculatepHfCO2fromTCHCO3(TCx, HCO3x, Ks)
     % Outputs pH fCO2, in that order
     % SUB CalculatepHfCO2fromTCHCO3, version 01.0, 3-19, added by J. Sharp
-    % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4_constant_GLOBAL%, TC, HCO3, salinity, K(), T(), TempC, Pdbar
+    % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4%, TC, HCO3, salinity, K(), T(), TempC, Pdbar
     % Outputs: pH, fCO2
     % This calculates pH and fCO2 from TC and HCO3 at output conditions.
     pHx   = CalculatepHfromTCHCO3(TCx, HCO3x, Ks); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
@@ -1089,7 +1088,7 @@ end
 function varargout=CalculatepHfCO2fromTCCO3(TCx, CO3x, Ks)
     % Outputs pH fCO2, in that order
     % SUB CalculatepHfCO2fromTCCO3, version 01.0, 8-18, added by J. Sharp
-    % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4_constant_GLOBAL%, TC, CO3, salinity, K(), T(), TempC, Pdbar
+    % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4%, TC, CO3, salinity, K(), T(), TempC, Pdbar
     % Outputs: pH, fCO2
     % This calculates pH and fCO2 from TC and CO3 at output conditions.
     pHx   = CalculatepHfromTCCO3(TCx, CO3x, Ks); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
