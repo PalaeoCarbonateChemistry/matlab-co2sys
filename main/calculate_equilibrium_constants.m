@@ -2,7 +2,7 @@
 function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_constant,fluorine_concentration,sulphate_concentration)
     global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL Pbar;
     global fH ntps temp_k_GLOBAL log_temp_k_GLOBAL;
-    global CAL salinity_GLOBAL;
+    global salinity_GLOBAL;
     
     % SUB Constants, version 04.01, 10-13-97, written by Ernie Lewis.
     % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4_constant_GLOBAL%, Sali, temperature_in_GLOBAL, Pdbar
@@ -25,22 +25,6 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
     temp_k_GLOBAL    = TempC + 273.15;
     log_temp_k_GLOBAL = log(temp_k_GLOBAL);
     Pbar     = Pdbar ./ 10;
-    
-    % Generate empty vectors for holding results
-    CAL = nan(ntps,1);    
-    
-    % CalculateCAL - Total Calcium:
-    selected_GLOBAL=(which_k1_k2_constants_GLOBAL~=6 & which_k1_k2_constants_GLOBAL~=7);
-        % Riley, J. P. and Tongudai, M., Chemical Geology 2:263-269, 1967:
-        % this is .010285.*Sali./35
-        CAL(selected_GLOBAL) = 0.02128./40.087.*(salinity_GLOBAL(selected_GLOBAL)./1.80655);
-    selected_GLOBAL=(which_k1_k2_constants_GLOBAL==6 | which_k1_k2_constants_GLOBAL==7);
-        % *** CalculateCaforGEOSECS:
-        % Culkin, selected_GLOBAL, in Chemical Oceanography, ed. Riley and Skirrow, 1965:
-        % (quoted in Takahashi et al, GEOSECS Pacific Expedition v. 3, 1982) 
-        CAL(selected_GLOBAL) = 0.01026.*salinity_GLOBAL(selected_GLOBAL)./35;
-    
-
 
     % CalculateK0:
     % Weiss, R. selected_GLOBAL., Marine Chemistry 2:203-215, 1974.
