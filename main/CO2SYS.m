@@ -11,7 +11,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     % Declare global variables
     global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL
     global temperature_in_GLOBAL temperature_out_GLOBAL pressure_in_GLOBAL pressure_out_GLOBAL;
-    global peng_correction_GLOBAL number_of_points;
+    global peng_correction_GLOBAL;
     global selected_GLOBAL;
     
     % Added by JM Epitalon
@@ -120,14 +120,14 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected_GLOBAL=~selected_GLOBAL;
 
 
-    boron_concentration = calculate_boron_concentration(salinity);
+    boron_concentration = calculate_boron_concentration(salinity,number_of_points);
     fluorine_concentration = calculate_fluorine_concentration(salinity);
     sulphate_concentration = calculate_sulphate_concentration(salinity);
-    calcium_concentration = calculate_calcium_concentration(salinity);
-    phosphate_concentration = calculate_phosphate_concentration(phosphate);
-    silicate_concentration = calculate_silicate_concentration(silicate);
-    ammonia_concentration = calculate_ammonia_concentration(ammonia);
-    sulphide_concentration = calculate_sulphide_concentration(sulphide);
+    calcium_concentration = calculate_calcium_concentration(salinity,number_of_points);
+    phosphate_concentration = calculate_phosphate_concentration(phosphate,number_of_points);
+    silicate_concentration = calculate_silicate_concentration(silicate,number_of_points);
+    ammonia_concentration = calculate_ammonia_concentration(ammonia,number_of_points);
+    sulphide_concentration = calculate_sulphide_concentration(sulphide,number_of_points);
     
     % The vector 'peng_correction_GLOBAL' is used to modify the value of TA, for those
     % cases where which_k1_k2_constants_GLOBAL==7, since PAlk(Peng) = PAlk(Dickson) + phosphate.
@@ -136,7 +136,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     % Calculate the constants for all samples at input conditions
     % The constants calculated for each sample will be on the appropriate pH scale!
-    Ks_in = calculate_equilibrium_constants(temperature_in_GLOBAL,pressure_in_GLOBAL,salinity,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration);
+    Ks_in = calculate_equilibrium_constants(number_of_points,temperature_in_GLOBAL,pressure_in_GLOBAL,salinity,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration);
     
     % Added by JM Epitalon
     % For computing derivative with respect to Ks, one has to perturb the value of one K
@@ -161,7 +161,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     K0_in = Ks_in("K0");
     
     % Make sure fCO2 is available for each sample that has pCO2 or CO2.
-    fugacity_factor = calculate_fugacity_factor(p_opt,gas_constant);
+    fugacity_factor = calculate_fugacity_factor(p_opt,gas_constant,number_of_points);
     selected_GLOBAL = (~isnan(PC) & (parameter_1_type==4 | parameter_2_type==4));  FC(selected_GLOBAL) = PC(selected_GLOBAL).*fugacity_factor(selected_GLOBAL);
     selected_GLOBAL = (~isnan(CO2) & (parameter_1_type==8 | parameter_2_type==8)); FC(selected_GLOBAL) = CO2(selected_GLOBAL)./K0_in(selected_GLOBAL);
     
@@ -342,7 +342,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     clear K0 K1 K2 KW KB KF KS KP1 KP2 KP3 KSi KNH4 KH2S
     
     % Calculate the constants for all samples at output conditions
-    Ks_out = calculate_equilibrium_constants(temperature_out_GLOBAL,pressure_out_GLOBAL,salinity,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration);
+    Ks_out = calculate_equilibrium_constants(number_of_points,temperature_out_GLOBAL,pressure_out_GLOBAL,salinity,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration);
     
     % Added by JM Epitalon
     % For computing derivative with respect to Ks, one has to perturb the value of one K
@@ -374,7 +374,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         [CO3oc(selected_GLOBAL),HCO3oc(selected_GLOBAL)] = CalculateCO3HCO3fromTCpH(TCc(selected_GLOBAL),PHoc(selected_GLOBAL), Ks_out);
     
     % Generate the associated pCO2 value:
-    fugacity_factor = calculate_fugacity_factor(p_opt,gas_constant);
+    fugacity_factor = calculate_fugacity_factor(p_opt,gas_constant,number_of_points);
     PCoc  = FCoc./fugacity_factor;
     % Generate the associated CO2 value:
 
@@ -539,7 +539,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         '98 - ammonia_concentration             (umol/kgSW) ';
         '99 - sulphide_concentration             (umol/kgSW) '};
     
-    clear global selected_GLOBAL K2 KP3 pressure_in_GLOBAL number_of_points 
+    clear global selected_GLOBAL K2 KP3 pressure_in_GLOBAL 
     clear global KB KS pressure_out_GLOBAL T BORON which_k1_k2_constants_GLOBAL 
     clear global K KF KSi KNH4 KH2S peng_correction_GLOBAL temperature_in_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL 
     clear global K0 KP1 KW temperature_out_GLOBAL fH 

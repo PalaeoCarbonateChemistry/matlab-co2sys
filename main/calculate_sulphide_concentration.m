@@ -1,5 +1,5 @@
-function sulphide_concentration = calculate_sulphide_concentration(sulphide_input)
-global which_k1_k2_constants_GLOBAL number_of_points
+function sulphide_concentration = calculate_sulphide_concentration(sulphide_input,number_of_points)
+global which_k1_k2_constants_GLOBAL
 
     sulphide_concentration = nan(number_of_points,1);
 

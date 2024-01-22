@@ -1,5 +1,5 @@
-function calcium_concentration = calculate_calcium_concentration(salinity)
-global which_k1_k2_constants_GLOBAL selected_GLOBAL number_of_points
+function calcium_concentration = calculate_calcium_concentration(salinity,number_of_points)
+global which_k1_k2_constants_GLOBAL selected_GLOBAL
     % Generate empty vectors for holding results
     calcium_concentration = nan(number_of_points,1);    
     

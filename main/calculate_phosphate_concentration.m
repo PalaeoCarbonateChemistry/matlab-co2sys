@@ -1,5 +1,5 @@
-function phosphate_concentration = calculate_phosphate_concentration(phosphate_input)
-global which_k1_k2_constants_GLOBAL number_of_points
+function phosphate_concentration = calculate_phosphate_concentration(phosphate_input,number_of_points)
+global which_k1_k2_constants_GLOBAL
 
     phosphate_concentration = nan(number_of_points,1);
 

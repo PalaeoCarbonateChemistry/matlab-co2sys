@@ -1,7 +1,7 @@
 
-function Ks = calculate_equilibrium_constants(TempC,Pdbar,salinity,pH_scale,p_opt,gas_constant,fluorine_concentration,sulphate_concentration)
+function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pdbar,salinity,pH_scale,p_opt,gas_constant,fluorine_concentration,sulphate_concentration)
     global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL Pbar;
-    global fH ntps temp_k_GLOBAL log_temp_k_GLOBAL;
+    global fH temp_k_GLOBAL log_temp_k_GLOBAL;
     
     % SUB Constants, version 04.01, 10-13-97, written by Ernie Lewis.
     % Inputs: pHScale%, which_k1_k2_constants_GLOBAL%, which_kso4_constant_GLOBAL%, Sali, temperature_in_GLOBAL, Pdbar
@@ -47,8 +47,8 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,salinity,pH_scale,p_op
     IonS         = 19.924 .* salinity ./ (1000 - 1.005   .* salinity);
     
     % CalculateKS:
-    lnKS   = nan(ntps,1); pKS  = nan(ntps,1); KS   = nan(ntps,1);
-    logKS0 = nan(ntps,1); logKSK0 = nan(ntps,1);
+    lnKS   = nan(number_of_points,1); pKS  = nan(number_of_points,1); KS   = nan(number_of_points,1);
+    logKS0 = nan(number_of_points,1); logKSK0 = nan(number_of_points,1);
     selected_GLOBAL=(which_kso4_constant_GLOBAL==1);
     if any(selected_GLOBAL)
         % Dickson, A. G., J. Chemical Thermodynamics, 22:113-127, 1990
@@ -95,7 +95,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,salinity,pH_scale,p_op
     end
     
     % CalculateKF:
-    KF = NaN(ntps, 1);  % added preallocation here and selected_GLOBAL-indexing below // MPH
+    KF = NaN(number_of_points, 1);  % added preallocation here and selected_GLOBAL-indexing below // MPH
     selected_GLOBAL=(which_kf_constant_GLOBAL==1);
     if any(selected_GLOBAL)
         % Dickson, A. G. and Riley, J. P., Marine Chemistry 7:89-99, 1979:
@@ -117,7 +117,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,salinity,pH_scale,p_op
     FREEtoTOT =  1 + sulphate_concentration./KS;
     
     % CalculatefH
-    fH = nan(ntps,1);
+    fH = nan(number_of_points,1);
     % Use GEOSECS's value for cases 1,2,3,4,5 (and 6) to convert pH scales.
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==8);
     if any(selected_GLOBAL)
@@ -141,8 +141,8 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,salinity,pH_scale,p_op
     end
     
     % CalculateKB:
-    KB      = nan(ntps,1); logKB   = nan(ntps,1);
-    lnKBtop = nan(ntps,1); lnKB    = nan(ntps,1);
+    KB      = nan(number_of_points,1); logKB   = nan(number_of_points,1);
+    lnKBtop = nan(number_of_points,1); lnKB    = nan(number_of_points,1);
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==8); % Pure water case
     if any(selected_GLOBAL)
         KB(selected_GLOBAL) = 0;
@@ -169,7 +169,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,salinity,pH_scale,p_op
     end
     
     % CalculateKW:
-    lnKW = nan(ntps,1); KW = nan(ntps,1);
+    lnKW = nan(number_of_points,1); KW = nan(number_of_points,1);
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==7);
     if any(selected_GLOBAL)
         % Millero, Geochemica et Cosmochemica Acta 43:1651-1661, 1979
@@ -199,10 +199,10 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,salinity,pH_scale,p_op
     end
     
     % CalculateKP1KP2KP3KSi:
-    KP1      = nan(ntps,1); KP2      = nan(ntps,1);
-    KP3      = nan(ntps,1); KSi      = nan(ntps,1);
-    lnKP1    = nan(ntps,1); lnKP2    = nan(ntps,1);
-    lnKP3    = nan(ntps,1); lnKSi    = nan(ntps,1);
+    KP1      = nan(number_of_points,1); KP2      = nan(number_of_points,1);
+    KP3      = nan(number_of_points,1); KSi      = nan(number_of_points,1);
+    lnKP1    = nan(number_of_points,1); lnKP2    = nan(number_of_points,1);
+    lnKP3    = nan(number_of_points,1); lnKSi    = nan(number_of_points,1);
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==7);
     if any(selected_GLOBAL)
         KP1(selected_GLOBAL) = 0.02;
@@ -250,8 +250,8 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,salinity,pH_scale,p_op
     end
     
     % Calculate KNH4 and KH2S: added by J. Sharp
-    KNH4           = nan(ntps,1); KH2S       = nan(ntps,1);
-    PKNH4expCW     = nan(ntps,1); lnKH2S     = nan(ntps,1);
+    KNH4           = nan(number_of_points,1); KH2S       = nan(number_of_points,1);
+    PKNH4expCW     = nan(number_of_points,1); lnKH2S     = nan(number_of_points,1);
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==6 | which_k1_k2_constants_GLOBAL==7 | which_k1_k2_constants_GLOBAL==8); % GEOSECS or freshwater cases
     if any(selected_GLOBAL)
         KNH4(selected_GLOBAL) = 0;
@@ -286,10 +286,10 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,salinity,pH_scale,p_op
     end
     
     % CalculateK1K2:
-    logK1    = nan(ntps,1); lnK1     = nan(ntps,1);
-    pK1      = nan(ntps,1); K1       = nan(ntps,1);
-    logK2    = nan(ntps,1); lnK2     = nan(ntps,1);
-    pK2      = nan(ntps,1); K2       = nan(ntps,1);
+    logK1    = nan(number_of_points,1); lnK1     = nan(number_of_points,1);
+    pK1      = nan(number_of_points,1); K1       = nan(number_of_points,1);
+    logK2    = nan(number_of_points,1); lnK2     = nan(number_of_points,1);
+    pK2      = nan(number_of_points,1); K2       = nan(number_of_points,1);
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==1);
     if any(selected_GLOBAL)
         % ROY et al, Marine Chemistry, 44:249-267, 1993
@@ -659,9 +659,9 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,salinity,pH_scale,p_op
     %****************************************************************************
     
     %CorrectK1K2KBForPressure:
-    deltaV    = nan(ntps,1); Kappa     = nan(ntps,1);
-    lnK1fac   = nan(ntps,1); lnK2fac   = nan(ntps,1);
-    lnKBfac   = nan(ntps,1);
+    deltaV    = nan(number_of_points,1); Kappa     = nan(number_of_points,1);
+    lnK1fac   = nan(number_of_points,1); lnK2fac   = nan(number_of_points,1);
+    lnKBfac   = nan(number_of_points,1);
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==8);
     RR = (gas_constant.*temp_k_GLOBAL);
     if any(selected_GLOBAL)
@@ -736,7 +736,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,salinity,pH_scale,p_op
     end
     
     % CorrectKWForPressure:
-    lnKWfac   = nan(ntps,1);
+    lnKWfac   = nan(number_of_points,1);
     selected_GLOBAL=(which_k1_k2_constants_GLOBAL==8);
     if any(selected_GLOBAL)
         % PressureEffectsOnKWinFreshWater:
@@ -835,7 +835,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,salinity,pH_scale,p_op
     
     % FindpHScaleConversionFactor:
     % this is the scale they will be put on
-    pHfactor  = nan(ntps,1);
+    pHfactor  = nan(number_of_points,1);
     selected_GLOBAL=(pH_scale==1); %Total
     pHfactor(selected_GLOBAL) = SWStoTOT(selected_GLOBAL);
     selected_GLOBAL=(pH_scale==2); %SWS, they are all on this now

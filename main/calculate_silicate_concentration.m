@@ -1,5 +1,5 @@
-function silicate_concentration = calculate_silicate_concentration(silicate_input)
-global which_k1_k2_constants_GLOBAL number_of_points
+function silicate_concentration = calculate_silicate_concentration(silicate_input,number_of_points)
+global which_k1_k2_constants_GLOBAL
 
     silicate_concentration = nan(number_of_points,1);
 

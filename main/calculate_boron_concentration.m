@@ -1,5 +1,5 @@
-function boron_concentration = calculate_boron_concentration(salinity)
-    global selected_GLOBAL which_k1_k2_constants_GLOBAL which_boron_GLOBAL number_of_points
+function boron_concentration = calculate_boron_concentration(salinity,number_of_points)
+    global selected_GLOBAL which_k1_k2_constants_GLOBAL which_boron_GLOBAL
 
     boron_concentration = NaN(number_of_points,1);
     % CalculateTB - Total Borate:
