@@ -652,7 +652,7 @@ function Ks = calculate_equilibrium_constants(TempC,Pdbar,pH_scale,p_opt,gas_con
     %       case of P different from 0. GEOSECS did consider pressure, but didn't
     %       include Phos, Si, or OH, so including the factors here won't matter.
     % For which_k1_k2_constants_GLOBAL% = 8 (freshwater) the values are from Millero, 1983 (for K1, K2,
-    %       and KW). The other aren't used (boron_concentration = sulphate_concentration = fluorine_concentration = phosphate = silicate_GLOBAL = 0.), so
+    %       and KW). The other aren't used (boron_concentration = sulphate_concentration = fluorine_concentration = phosphate = silicate = 0.), so
     %       including the factors won't matter.
     %****************************************************************************
     %       deltaVs are in cm3/mole
