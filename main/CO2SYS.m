@@ -10,7 +10,6 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
 
     % Declare global variables
     global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL
-    global pressure_in_GLOBAL pressure_out_GLOBAL;
     global selected_GLOBAL;
     
     % Added by JM Epitalon
@@ -71,8 +70,6 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     which_kso4_constant_GLOBAL    = which_kso4_constant;
     which_kf_constant_GLOBAL      = which_kf_constant;
     which_boron_GLOBAL      = which_boron;
-    pressure_in_GLOBAL       = pressure_in;
-    pressure_out_GLOBAL       = pressure_out;
     
     gas_constant = 83.14462618; % ml bar-1 K-1 mol-1,
     
@@ -135,7 +132,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     % Calculate the constants for all samples at input conditions
     % The constants calculated for each sample will be on the appropriate pH scale!
-    Ks_in = calculate_equilibrium_constants(number_of_points,temperature_in,pressure_in_GLOBAL,salinity,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration);
+    Ks_in = calculate_equilibrium_constants(number_of_points,temperature_in,pressure_in,salinity,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration);
     
     % Added by JM Epitalon
     % For computing derivative with respect to Ks, one has to perturb the value of one K
@@ -341,7 +338,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     clear K0 K1 K2 KW KB KF KS KP1 KP2 KP3 KSi KNH4 KH2S
     
     % Calculate the constants for all samples at output conditions
-    Ks_out = calculate_equilibrium_constants(number_of_points,temperature_out,pressure_out_GLOBAL,salinity,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration);
+    Ks_out = calculate_equilibrium_constants(number_of_points,temperature_out,pressure_out,salinity,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration);
     
     % Added by JM Epitalon
     % For computing derivative with respect to Ks, one has to perturb the value of one K
@@ -538,8 +535,8 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         '98 - ammonia_concentration             (umol/kgSW) ';
         '99 - sulphide_concentration             (umol/kgSW) '};
     
-    clear global selected_GLOBAL K2 KP3 pressure_in_GLOBAL 
-    clear global KB KS pressure_out_GLOBAL T BORON which_k1_k2_constants_GLOBAL 
+    clear global selected_GLOBAL K2 KP3 
+    clear global KB KS T BORON which_k1_k2_constants_GLOBAL 
     clear global K KF KSi KNH4 KH2S which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL 
     clear global K0 KP1 KW fH 
     clear global K1 KP2 Pbar temp_k_GLOBAL log_temp_k_GLOBAL
@@ -1328,7 +1325,7 @@ function varargout=CaSolubility(salinity, TempC, TC, pH, Ks, sqrt_salinity, gas_
     global Perturb % perturbation
     % '***********************************************************************
     % ' SUB CaSolubility, version 01.05, 05-23-97, written by Ernie Lewis.
-    % ' Inputs: which_k1_k2_constants_GLOBAL%, salinity, temperature_in, pressure_in_GLOBAL, TCi, pHi, K1, K2
+    % ' Inputs: which_k1_k2_constants_GLOBAL%, salinity, temperature_in, pressure_in, TCi, pHi, K1, K2
     % ' Outputs: OmegaCa, OmegaAr
     % ' This calculates omega, the solubility ratio, for calcite and aragonite.
     % ' This is defined by: Omega = [CO3--]*[Ca++]./Ksp,
