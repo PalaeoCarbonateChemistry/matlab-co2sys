@@ -1,6 +1,6 @@
 
-function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pdbar,salinity,pH_scale,p_opt,gas_constant,fluorine_concentration,sulphate_concentration)
-    global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL Pbar;
+function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pdbar,salinity,pH_scale,p_opt,gas_constant,fluorine_concentration,sulphate_concentration,which_kf)
+    global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL Pbar;
     global fH temp_k_GLOBAL log_temp_k_GLOBAL;
     
     % SUB Constants, version 04.01, 10-13-97, written by Ernie Lewis.
@@ -96,14 +96,14 @@ function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pdbar,salin
     
     % CalculateKF:
     KF = NaN(number_of_points, 1);  % added preallocation here and selected_GLOBAL-indexing below // MPH
-    selected_GLOBAL=(which_kf_constant_GLOBAL==1);
+    selected_GLOBAL=(which_kf==1);
     if any(selected_GLOBAL)
         % Dickson, A. G. and Riley, J. P., Marine Chemistry 7:89-99, 1979:
         lnKF = 1590.2./temp_k_GLOBAL - 12.641 + 1.525.*IonS.^0.5;
         KF(selected_GLOBAL)   = exp(lnKF(selected_GLOBAL))...                 % this is on the free pH scale in mol/kg-H2O
             .*(1 - 0.001005.*salinity(selected_GLOBAL));          % convert to mol/kg-SW
     end
-    selected_GLOBAL=(which_kf_constant_GLOBAL==2);
+    selected_GLOBAL=(which_kf==2);
     if any(selected_GLOBAL)
         % Perez and Fraga 1987 (to be used for S: 10-40, T: 9-33)
         % P&F87 might actually be better than the fit of D&R79 above, which is based on only three salinities: [0 26.7 34.6]
