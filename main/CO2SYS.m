@@ -9,7 +9,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
                                             varargin)
 
     % Declare global variables
-    global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL
+    global which_k1_k2_constants_GLOBAL which_kso4_constant_GLOBAL which_kf_constant_GLOBAL
     global selected_GLOBAL;
     
     % Added by JM Epitalon
@@ -69,7 +69,6 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     which_k1_k2_constants_GLOBAL      = which_k1_k2_constants;
     which_kso4_constant_GLOBAL    = which_kso4_constant;
     which_kf_constant_GLOBAL      = which_kf_constant;
-    which_boron_GLOBAL      = which_boron;
     
     gas_constant = 83.14462618; % ml bar-1 K-1 mol-1,
     
@@ -114,7 +113,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected_GLOBAL=~selected_GLOBAL;
 
 
-    boron_concentration = calculate_boron_concentration(salinity,number_of_points);
+    boron_concentration = calculate_boron_concentration(salinity,number_of_points,which_boron);
     fluorine_concentration = calculate_fluorine_concentration(salinity);
     sulphate_concentration = calculate_sulphate_concentration(salinity);
     calcium_concentration = calculate_calcium_concentration(salinity,number_of_points);
@@ -537,7 +536,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     clear global selected_GLOBAL K2 KP3 
     clear global KB KS T BORON which_k1_k2_constants_GLOBAL 
-    clear global K KF KSi KNH4 KH2S which_kso4_constant_GLOBAL which_kf_constant_GLOBAL which_boron_GLOBAL 
+    clear global K KF KSi KNH4 KH2S which_kso4_constant_GLOBAL which_kf_constant_GLOBAL 
     clear global K0 KP1 KW fH 
     clear global K1 KP2 Pbar temp_k_GLOBAL log_temp_k_GLOBAL
 	
