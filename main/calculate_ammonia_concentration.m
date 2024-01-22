@@ -1,9 +1,8 @@
-function ammonia_concentration = calculate_ammonia_concentration(ammonia_input,number_of_points)
-global which_k1_k2_constants_GLOBAL
+function ammonia_concentration = calculate_ammonia_concentration(ammonia_input,number_of_points,which_k1_k2)
 
     ammonia_concentration = nan(number_of_points,1);
 
-    selected=(which_k1_k2_constants_GLOBAL==8 | which_k1_k2_constants_GLOBAL==6);  
+    selected=(which_k1_k2==8 | which_k1_k2==6);  
     ammonia_concentration(selected)  = 0;
 
 

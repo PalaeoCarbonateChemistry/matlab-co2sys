@@ -1,5 +1,5 @@
-function fugacity_factor = calculate_fugacity_factor(p_opt,gas_constant,number_of_points)
-    global temp_k_GLOBAL which_k1_k2_constants_GLOBAL selected_GLOBAL
+function fugacity_factor = calculate_fugacity_factor(p_opt,gas_constant,number_of_points,which_k1_k2)
+    global temp_k_GLOBAL selected_GLOBAL
     % CalculateFugacityConstants:
     % In previos versions of CO2SYS, the fugacity factor was calculated
     % assuming pressure at one atmosphere, or close to it. Starting with
@@ -19,6 +19,6 @@ function fugacity_factor = calculate_fugacity_factor(p_opt,gas_constant,number_o
     else
         disp('co2_press must be set to either 0 or 1'); % Display error message
     end
-    selected_GLOBAL=(which_k1_k2_constants_GLOBAL==6 | which_k1_k2_constants_GLOBAL==7); % GEOSECS and Peng assume pCO2 = fCO2, or FugFac = 1
+    selected_GLOBAL=(which_k1_k2==6 | which_k1_k2==7); % GEOSECS and Peng assume pCO2 = fCO2, or FugFac = 1
     fugacity_factor(selected_GLOBAL) = 1;
 end
