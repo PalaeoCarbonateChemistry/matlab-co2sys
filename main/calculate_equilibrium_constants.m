@@ -1,6 +1,5 @@
 
-function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pdbar,salinity,pH_scale,p_opt,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2)
-    global Pbar;
+function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pbar,salinity,pH_scale,p_opt,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2)
     global fH temp_k_GLOBAL log_temp_k_GLOBAL;
     
     % SUB Constants, version 04.01, 10-13-97, written by Ernie Lewis.
@@ -23,7 +22,6 @@ function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pdbar,salin
     %               and KW is in units of (mol/kg-SW)^2
     temp_k_GLOBAL    = TempC + 273.15;
     log_temp_k_GLOBAL = log(temp_k_GLOBAL);
-    Pbar     = Pdbar ./ 10;
 
     % CalculateK0:
     % Weiss, R. selected_GLOBAL., Marine Chemistry 2:203-215, 1974.
