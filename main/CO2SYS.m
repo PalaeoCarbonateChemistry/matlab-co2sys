@@ -534,7 +534,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     clear global KB KS T BORON 
     clear global K KF KSi KNH4 KH2S 
     clear global K0 KP1 KW fH 
-    clear global K1 KP2 temp_k_GLOBAL log_temp_k_GLOBAL
+    clear global K1 KP2 temp_k_GLOBAL
 	
 end 
 
@@ -1315,7 +1315,7 @@ end
 
 
 function varargout=CaSolubility(salinity, TempC, TC, pH, Ks, sqrt_salinity, gas_constant, calcium_concentration,which_k1_k2,Pbar)
-    global temp_k_GLOBAL log_temp_k_GLOBAL selected_GLOBAL
+    global temp_k_GLOBAL selected_GLOBAL
     global k_perturbation_GLOBAL    % Id of perturbed K
     global Perturb % perturbation
     % '***********************************************************************
@@ -1346,12 +1346,14 @@ function varargout=CaSolubility(salinity, TempC, TC, pH, Ks, sqrt_salinity, gas_
     % '***********************************************************************
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
 
+    log_temp_k = log(temp_k_GLOBAL);
+
     Ca=calcium_concentration(selected_GLOBAL);
     Ar=nan(sum(selected_GLOBAL),1);
     KCa=nan(sum(selected_GLOBAL),1);
     KAr=nan(sum(selected_GLOBAL),1);
     TempKx=temp_k_GLOBAL(selected_GLOBAL);
-    logTempKx=log_temp_k_GLOBAL(selected_GLOBAL);
+    logTempKx=log_temp_k(selected_GLOBAL);
     sqrSalx=sqrt_salinity;
     Pbarx=Pbar(selected_GLOBAL);
     RR = (gas_constant.*temp_k_GLOBAL);
