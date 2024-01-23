@@ -7,9 +7,6 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
                                             pH_scale_in, ...
                                             which_k1_k2,which_kso4,which_kf, which_boron, ...
                                             varargin)
-
-    % Declare global variables
-    global selected_GLOBAL;
     
     % Added by JM Epitalon
     % For computing derivative with respect to Ks, one has to call CO2sys with a perturbed K
@@ -81,33 +78,58 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     salinity = salinity_in;
     
     % Assign values to empty vectors.
-    selected_GLOBAL=(parameter_1_type==1 & parameter_1~=-999);   TA(selected_GLOBAL)=parameter_1(selected_GLOBAL)/1e6; % Convert from micromol/kg to mol/kg
-    selected_GLOBAL=(parameter_1_type==2 & parameter_1~=-999);   TC(selected_GLOBAL)=parameter_1(selected_GLOBAL)/1e6; % Convert from micromol/kg to mol/kg
-    selected_GLOBAL=(parameter_1_type==3 & parameter_1~=-999);   PH(selected_GLOBAL)=parameter_1(selected_GLOBAL);
-    selected_GLOBAL=(parameter_1_type==4 & parameter_1~=-999);   PC(selected_GLOBAL)=parameter_1(selected_GLOBAL)/1e6; % Convert from microatm. to atm.
-    selected_GLOBAL=(parameter_1_type==5 & parameter_1~=-999);   FC(selected_GLOBAL)=parameter_1(selected_GLOBAL)/1e6; % Convert from microatm. to atm.
-    selected_GLOBAL=(parameter_1_type==6 & parameter_1~=-999); HCO3(selected_GLOBAL)=parameter_1(selected_GLOBAL)/1e6; % Convert from micromol/kg to mol/kg
-    selected_GLOBAL=(parameter_1_type==7 & parameter_1~=-999);  CO3(selected_GLOBAL)=parameter_1(selected_GLOBAL)/1e6; % Convert from micromol/kg to mol/kg
-    selected_GLOBAL=(parameter_1_type==8 & parameter_1~=-999);  CO2(selected_GLOBAL)=parameter_1(selected_GLOBAL)/1e6; % Convert from micromol/kg to mol/kg
-    selected_GLOBAL=(parameter_2_type==1 & parameter_2~=-999);   TA(selected_GLOBAL)=parameter_2(selected_GLOBAL)/1e6; % Convert from micromol/kg to mol/kg
-    selected_GLOBAL=(parameter_2_type==2 & parameter_2~=-999);   TC(selected_GLOBAL)=parameter_2(selected_GLOBAL)/1e6; % Convert from micromol/kg to mol/kg
-    selected_GLOBAL=(parameter_2_type==3 & parameter_2~=-999);   PH(selected_GLOBAL)=parameter_2(selected_GLOBAL);
-    selected_GLOBAL=(parameter_2_type==4 & parameter_2~=-999);   PC(selected_GLOBAL)=parameter_2(selected_GLOBAL)/1e6; % Convert from microatm. to atm.
-    selected_GLOBAL=(parameter_2_type==5 & parameter_2~=-999);   FC(selected_GLOBAL)=parameter_2(selected_GLOBAL)/1e6; % Convert from microatm. to atm.
-    selected_GLOBAL=(parameter_2_type==6 & parameter_2~=-999); HCO3(selected_GLOBAL)=parameter_2(selected_GLOBAL)/1e6; % Convert from micromol/kg to mol/kg
-    selected_GLOBAL=(parameter_2_type==7 & parameter_2~=-999);  CO3(selected_GLOBAL)=parameter_2(selected_GLOBAL)/1e6; % Convert from micromol/kg to mol/kg
-    selected_GLOBAL=(parameter_2_type==8 & parameter_2~=-999);  CO2(selected_GLOBAL)=parameter_2(selected_GLOBAL)/1e6; % Convert from micromol/kg to mol/kg
+    selected=(parameter_1_type==1 & parameter_1~=-999);   
+    TA(selected)=parameter_1(selected)/1e6; % Convert from micromol/kg to mol/kg
+
+    selected=(parameter_1_type==2 & parameter_1~=-999);   
+    TC(selected)=parameter_1(selected)/1e6; % Convert from micromol/kg to mol/kg
+
+    selected=(parameter_1_type==3 & parameter_1~=-999);   
+    PH(selected)=parameter_1(selected);
+
+    selected=(parameter_1_type==4 & parameter_1~=-999);   
+    PC(selected)=parameter_1(selected)/1e6; % Convert from microatm. to atm.
+
+    selected=(parameter_1_type==5 & parameter_1~=-999);   
+    FC(selected)=parameter_1(selected)/1e6; % Convert from microatm. to atm.
+
+    selected=(parameter_1_type==6 & parameter_1~=-999); 
+    HCO3(selected)=parameter_1(selected)/1e6; % Convert from micromol/kg to mol/kg
+    
+    selected=(parameter_1_type==7 & parameter_1~=-999);  
+    CO3(selected)=parameter_1(selected)/1e6; % Convert from micromol/kg to mol/kg
+    
+    selected=(parameter_1_type==8 & parameter_1~=-999);  
+    CO2(selected)=parameter_1(selected)/1e6; % Convert from micromol/kg to mol/kg
+    
+    selected=(parameter_2_type==1 & parameter_2~=-999);   
+    TA(selected)=parameter_2(selected)/1e6; % Convert from micromol/kg to mol/kg
+    
+    selected=(parameter_2_type==2 & parameter_2~=-999);   
+    TC(selected)=parameter_2(selected)/1e6; % Convert from micromol/kg to mol/kg
+    
+    selected=(parameter_2_type==3 & parameter_2~=-999);   
+    PH(selected)=parameter_2(selected);
+    
+    selected=(parameter_2_type==4 & parameter_2~=-999);   
+    PC(selected)=parameter_2(selected)/1e6; % Convert from microatm. to atm.
+    
+    selected=(parameter_2_type==5 & parameter_2~=-999);   
+    FC(selected)=parameter_2(selected)/1e6; % Convert from microatm. to atm.
+    
+    selected=(parameter_2_type==6 & parameter_2~=-999); 
+    HCO3(selected)=parameter_2(selected)/1e6; % Convert from micromol/kg to mol/kg
+    
+    selected=(parameter_2_type==7 & parameter_2~=-999);  
+    CO3(selected)=parameter_2(selected)/1e6; % Convert from micromol/kg to mol/kg
+    
+    selected=(parameter_2_type==8 & parameter_2~=-999);  
+    CO2(selected)=parameter_2(selected)/1e6; % Convert from micromol/kg to mol/kg
     
     % Generate the columns holding Si, Phos, Amm, H2S and salinity.
     % Pure Water case:
-    selected_GLOBAL=(which_k1_k2==8);
-    salinity(selected_GLOBAL) = 0;
-
-    % GEOSECS and Pure Water:
-    selected_GLOBAL=(which_k1_k2==8 | which_k1_k2==6);
-    % All other cases
-    selected_GLOBAL=~selected_GLOBAL;
-
+    selected=(which_k1_k2==8);
+    salinity(selected) = 0;
 
     boron_concentration = calculate_boron_concentration(salinity,number_of_points,which_boron,which_k1_k2);
     fluorine_concentration = calculate_fluorine_concentration(salinity);
@@ -122,8 +144,8 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     % cases where which_k1_k2==7, since PAlk(Peng) = PAlk(Dickson) + phosphate.
     % Thus, peng_correction is 0 for all cases where which_k1_k2 is not 7
     peng_correction=zeros(number_of_points,1); 
-    selected_GLOBAL=which_k1_k2==7; 
-    peng_correction(selected_GLOBAL)=phosphate_concentration(selected_GLOBAL);
+    selected=which_k1_k2==7; 
+    peng_correction(selected)=phosphate_concentration(selected);
     
     % Calculate the constants for all samples at input conditions
     % The constants calculated for each sample will be on the appropriate pH scale!
@@ -154,8 +176,12 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     % Make sure fCO2 is available for each sample that has pCO2 or CO2.
     temp_k = temperature_in+273.15;
     fugacity_factor = calculate_fugacity_factor(p_opt,gas_constant,number_of_points,which_k1_k2,temp_k);
-    selected_GLOBAL = (~isnan(PC) & (parameter_1_type==4 | parameter_2_type==4));  FC(selected_GLOBAL) = PC(selected_GLOBAL).*fugacity_factor(selected_GLOBAL);
-    selected_GLOBAL = (~isnan(CO2) & (parameter_1_type==8 | parameter_2_type==8)); FC(selected_GLOBAL) = CO2(selected_GLOBAL)./K0_in(selected_GLOBAL);
+    
+    selected = (~isnan(PC) & (parameter_1_type==4 | parameter_2_type==4));  
+    FC(selected) = PC(selected).*fugacity_factor(selected);
+
+    selected = (~isnan(CO2) & (parameter_1_type==8 | parameter_2_type==8)); 
+    FC(selected) = CO2(selected)./K0_in(selected);
     
     % Generate vectors for results, and copy the raw input values into them
     TAc    = TA;
@@ -174,148 +200,148 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     % Calculate missing values for AT,CT,PH,FC,HCO3,CO3,CO2:
     % pCO2 will be calculated later on, routines work with fCO2.
-    selected_GLOBAL=combination==12; % input TA, TC
-    if any(selected_GLOBAL)
-    selected_GLOBAL=(~isnan(TAc) & ~isnan(TCc) & selected_GLOBAL);
-        PHic(selected_GLOBAL)                = CalculatepHfromTATC(TAc(selected_GLOBAL)-peng_correction(selected_GLOBAL),TCc(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);
-        selected_GLOBAL=(~isnan(PHic) & selected_GLOBAL);
-        if any(selected_GLOBAL)
-           FCic(selected_GLOBAL)              = CalculatefCO2fromTCpH(TCc(selected_GLOBAL), PHic(selected_GLOBAL),Ks_in);
-           [CO3ic(selected_GLOBAL),HCO3ic(selected_GLOBAL)] = CalculateCO3HCO3fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL),Ks_in);
+    selected=combination==12; % input TA, TC
+    if any(selected)
+    selected=(~isnan(TAc) & ~isnan(TCc) & selected);
+        PHic(selected)                = CalculatepHfromTATC(TAc(selected)-peng_correction(selected),TCc(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected);
+        selected=(~isnan(PHic) & selected);
+        if any(selected)
+           FCic(selected)              = CalculatefCO2fromTCpH(TCc(selected), PHic(selected),Ks_in,selected);
+           [CO3ic(selected),HCO3ic(selected)] = CalculateCO3HCO3fromTCpH(TCc(selected),PHic(selected),Ks_in,selected);
         end
     end
-    selected_GLOBAL=combination==13; % input TA, pH
-    if any(selected_GLOBAL)
-    selected_GLOBAL=(~isnan(TAc) & ~isnan(PHic) & selected_GLOBAL);
-        TCc(selected_GLOBAL)                 = CalculateTCfromTApH(TAc(selected_GLOBAL)-peng_correction(selected_GLOBAL),PHic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);
-        FCic(selected_GLOBAL)                = CalculatefCO2fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL),Ks_in);
-        [CO3ic(selected_GLOBAL),HCO3ic(selected_GLOBAL)]   = CalculateCO3HCO3fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL),Ks_in);
+    selected=combination==13; % input TA, pH
+    if any(selected)
+    selected=(~isnan(TAc) & ~isnan(PHic) & selected);
+        TCc(selected)                 = CalculateTCfromTApH(TAc(selected)-peng_correction(selected),PHic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected);
+        FCic(selected)                = CalculatefCO2fromTCpH(TCc(selected),PHic(selected),Ks_in,selected);
+        [CO3ic(selected),HCO3ic(selected)]   = CalculateCO3HCO3fromTCpH(TCc(selected),PHic(selected),Ks_in,selected);
     end
-    selected_GLOBAL=combination==14 | combination==15 | combination==18; % input TA, (pCO2 or fCO2 or CO2)
-    if any(selected_GLOBAL)
-    selected_GLOBAL=(~isnan(TAc) & ~isnan(FCic) & selected_GLOBAL);
-        PHic(selected_GLOBAL)                = CalculatepHfromTAfCO2(TAc(selected_GLOBAL)-peng_correction(selected_GLOBAL),FCic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);
-        selected_GLOBAL=(~isnan(PHic) & selected_GLOBAL);
-        if any(selected_GLOBAL)
-           TCc(selected_GLOBAL)              = CalculateTCfromTApH(TAc(selected_GLOBAL)-peng_correction(selected_GLOBAL),PHic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);
-           [CO3ic(selected_GLOBAL),HCO3ic(selected_GLOBAL)]= CalculateCO3HCO3fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL),Ks_in);
+    selected=combination==14 | combination==15 | combination==18; % input TA, (pCO2 or fCO2 or CO2)
+    if any(selected)
+    selected=(~isnan(TAc) & ~isnan(FCic) & selected);
+        PHic(selected)                = CalculatepHfromTAfCO2(TAc(selected)-peng_correction(selected),FCic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected);
+        selected=(~isnan(PHic) & selected);
+        if any(selected)
+           TCc(selected)              = CalculateTCfromTApH(TAc(selected)-peng_correction(selected),PHic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected);
+           [CO3ic(selected),HCO3ic(selected)]= CalculateCO3HCO3fromTCpH(TCc(selected),PHic(selected),Ks_in,selected);
         end
     end
-    selected_GLOBAL=combination==16; % input TA, HCO3
-    if any(selected_GLOBAL)
-    selected_GLOBAL=(~isnan(TAc) & ~isnan(HCO3ic) & selected_GLOBAL);
-        PHic(selected_GLOBAL)                = CalculatepHfromTAHCO3(TAc(selected_GLOBAL)-peng_correction(selected_GLOBAL),HCO3ic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);  % added Peng correction // MPH
-        selected_GLOBAL=(~isnan(PHic) & selected_GLOBAL);
-        if any(selected_GLOBAL)
-           TCc(selected_GLOBAL)              = CalculateTCfromTApH(TAc(selected_GLOBAL)-peng_correction(selected_GLOBAL),PHic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);
-           FCic(selected_GLOBAL)             = CalculatefCO2fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL), Ks_in); 
-           CO3ic(selected_GLOBAL)            = CalculateCO3fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL), Ks_in);
+    selected=combination==16; % input TA, HCO3
+    if any(selected)
+    selected=(~isnan(TAc) & ~isnan(HCO3ic) & selected);
+        PHic(selected)                = CalculatepHfromTAHCO3(TAc(selected)-peng_correction(selected),HCO3ic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected);  % added Peng correction // MPH
+        selected=(~isnan(PHic) & selected);
+        if any(selected)
+           TCc(selected)              = CalculateTCfromTApH(TAc(selected)-peng_correction(selected),PHic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected);
+           FCic(selected)             = CalculatefCO2fromTCpH(TCc(selected),PHic(selected), Ks_in,selected); 
+           CO3ic(selected)            = CalculateCO3fromTCpH(TCc(selected),PHic(selected), Ks_in,selected);
         end
     end
-    selected_GLOBAL=combination==17; % input TA, CO3
-    if any(selected_GLOBAL)
-    selected_GLOBAL=(~isnan(TAc) & ~isnan(CO3ic) & selected_GLOBAL);
-        PHic(selected_GLOBAL)                 = CalculatepHfromTACO3(TAc(selected_GLOBAL)-peng_correction(selected_GLOBAL),CO3ic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);  % added Peng correction // MPH
-        selected_GLOBAL=(~isnan(PHic) & selected_GLOBAL);
-        if any(selected_GLOBAL)
-           TCc(selected_GLOBAL)               = CalculateTCfromTApH(TAc(selected_GLOBAL)-peng_correction(selected_GLOBAL),PHic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);
-           FCic(selected_GLOBAL)              = CalculatefCO2fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL), Ks_in); 
-           HCO3ic(selected_GLOBAL)            = CalculateHCO3fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL), Ks_in);
+    selected=combination==17; % input TA, CO3
+    if any(selected)
+    selected=(~isnan(TAc) & ~isnan(CO3ic) & selected);
+        PHic(selected)                 = CalculatepHfromTACO3(TAc(selected)-peng_correction(selected),CO3ic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected);  % added Peng correction // MPH
+        selected=(~isnan(PHic) & selected);
+        if any(selected)
+           TCc(selected)               = CalculateTCfromTApH(TAc(selected)-peng_correction(selected),PHic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected);
+           FCic(selected)              = CalculatefCO2fromTCpH(TCc(selected),PHic(selected), Ks_in,selected); 
+           HCO3ic(selected)            = CalculateHCO3fromTCpH(TCc(selected),PHic(selected), Ks_in,selected);
         end
     end
-    selected_GLOBAL=combination==23; % input TC, pH
-    if any(selected_GLOBAL)
-    selected_GLOBAL=(~isnan(TCc) & ~isnan(PHic) & selected_GLOBAL);
-        TAc(selected_GLOBAL)                  = CalculateTAfromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration) + peng_correction(selected_GLOBAL);
-        FCic(selected_GLOBAL)                 = CalculatefCO2fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL),Ks_in);
-        [CO3ic(selected_GLOBAL),HCO3ic(selected_GLOBAL)]    = CalculateCO3HCO3fromTCpH(TCc(selected_GLOBAL), PHic(selected_GLOBAL),Ks_in);
+    selected=combination==23; % input TC, pH
+    if any(selected)
+    selected=(~isnan(TCc) & ~isnan(PHic) & selected);
+        TAc(selected)                  = CalculateTAfromTCpH(TCc(selected),PHic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected) + peng_correction(selected);
+        FCic(selected)                 = CalculatefCO2fromTCpH(TCc(selected),PHic(selected),Ks_in,selected);
+        [CO3ic(selected),HCO3ic(selected)]    = CalculateCO3HCO3fromTCpH(TCc(selected), PHic(selected),Ks_in,selected);
     end
-    selected_GLOBAL=combination==24 | combination==25 | combination==28;  % input TC, (pCO2 or fCO2 or CO2)
-    if any(selected_GLOBAL)
-    selected_GLOBAL=(~isnan(TCc) & ~isnan(FCic) & selected_GLOBAL);
-        PHic(selected_GLOBAL)                 = CalculatepHfromTCfCO2(TCc(selected_GLOBAL),FCic(selected_GLOBAL), Ks_in);
-        TAc(selected_GLOBAL)                  = CalculateTAfromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration) + peng_correction(selected_GLOBAL);
-        [CO3ic(selected_GLOBAL),HCO3ic(selected_GLOBAL)]    = CalculateCO3HCO3fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL), Ks_in);
+    selected=combination==24 | combination==25 | combination==28;  % input TC, (pCO2 or fCO2 or CO2)
+    if any(selected)
+    selected=(~isnan(TCc) & ~isnan(FCic) & selected);
+        PHic(selected)                 = CalculatepHfromTCfCO2(TCc(selected),FCic(selected), Ks_in,selected);
+        TAc(selected)                  = CalculateTAfromTCpH(TCc(selected),PHic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected) + peng_correction(selected);
+        [CO3ic(selected),HCO3ic(selected)]    = CalculateCO3HCO3fromTCpH(TCc(selected),PHic(selected), Ks_in,selected);
     end
-    selected_GLOBAL=combination==26; % input TC, HCO3
-    if any(selected_GLOBAL)
-    selected_GLOBAL=(~isnan(TCc) & ~isnan(HCO3ic) & selected_GLOBAL);
-        [PHic(selected_GLOBAL),FCic(selected_GLOBAL)]       = CalculatepHfCO2fromTCHCO3(TCc(selected_GLOBAL),HCO3ic(selected_GLOBAL), Ks_in);
-        TAc(selected_GLOBAL)                  = CalculateTAfromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration) + peng_correction(selected_GLOBAL);
-        CO3ic(selected_GLOBAL)                = CalculateCO3fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL),Ks_in);
+    selected=combination==26; % input TC, HCO3
+    if any(selected)
+    selected=(~isnan(TCc) & ~isnan(HCO3ic) & selected);
+        [PHic(selected),FCic(selected)]       = CalculatepHfCO2fromTCHCO3(TCc(selected),HCO3ic(selected), Ks_in,selected);
+        TAc(selected)                  = CalculateTAfromTCpH(TCc(selected),PHic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected) + peng_correction(selected);
+        CO3ic(selected)                = CalculateCO3fromTCpH(TCc(selected),PHic(selected),Ks_in,selected);
     end
-    selected_GLOBAL=combination==27; % input TC, CO3
-    if any(selected_GLOBAL)
-    selected_GLOBAL=(~isnan(TCc) & ~isnan(CO3ic) & selected_GLOBAL);
-        [PHic(selected_GLOBAL),FCic(selected_GLOBAL)]       = CalculatepHfCO2fromTCCO3(TCc(selected_GLOBAL),CO3ic(selected_GLOBAL), Ks_in);
-        TAc(selected_GLOBAL)                  = CalculateTAfromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration) + peng_correction(selected_GLOBAL);
-        HCO3ic(selected_GLOBAL)               = CalculateHCO3fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL), Ks_in);
+    selected=combination==27; % input TC, CO3
+    if any(selected)
+    selected=(~isnan(TCc) & ~isnan(CO3ic) & selected);
+        [PHic(selected),FCic(selected)]       = CalculatepHfCO2fromTCCO3(TCc(selected),CO3ic(selected), Ks_in,selected);
+        TAc(selected)                  = CalculateTAfromTCpH(TCc(selected),PHic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected) + peng_correction(selected);
+        HCO3ic(selected)               = CalculateHCO3fromTCpH(TCc(selected),PHic(selected), Ks_in,selected);
     end
-    selected_GLOBAL=combination==34 | combination==35 | combination==38; % input pH, (pCO2 or fCO2 or CO2)
-    if any(selected_GLOBAL)
-    selected_GLOBAL=(~isnan(PHic) & ~isnan(FCic) & selected_GLOBAL);
-        TCc(selected_GLOBAL)                  = CalculateTCfrompHfCO2(PHic(selected_GLOBAL),FCic(selected_GLOBAL), Ks_in);
-        TAc(selected_GLOBAL)                  = CalculateTAfromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration) + peng_correction(selected_GLOBAL);
-        [CO3ic(selected_GLOBAL),HCO3ic(selected_GLOBAL)]    = CalculateCO3HCO3fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL), Ks_in);
+    selected=combination==34 | combination==35 | combination==38; % input pH, (pCO2 or fCO2 or CO2)
+    if any(selected)
+    selected=(~isnan(PHic) & ~isnan(FCic) & selected);
+        TCc(selected)                  = CalculateTCfrompHfCO2(PHic(selected),FCic(selected), Ks_in,selected);
+        TAc(selected)                  = CalculateTAfromTCpH(TCc(selected),PHic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected) + peng_correction(selected);
+        [CO3ic(selected),HCO3ic(selected)]    = CalculateCO3HCO3fromTCpH(TCc(selected),PHic(selected), Ks_in,selected);
     end
-    selected_GLOBAL=combination==36; % input pH, HCO3
-    if any(selected_GLOBAL)
-    selected_GLOBAL=(~isnan(PHic) & ~isnan(HCO3ic) & selected_GLOBAL);
-        TAc(selected_GLOBAL)                  = CalculateTAfrompHHCO3(PHic(selected_GLOBAL),HCO3ic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration) + peng_correction(selected_GLOBAL);
-        TCc(selected_GLOBAL)                  = CalculateTCfromTApH(TAc(selected_GLOBAL)-peng_correction(selected_GLOBAL),PHic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);
-        FCic(selected_GLOBAL)                 = CalculatefCO2fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL), Ks_in);
-        CO3ic(selected_GLOBAL)                = CalculateCO3fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL), Ks_in);
+    selected=combination==36; % input pH, HCO3
+    if any(selected)
+    selected=(~isnan(PHic) & ~isnan(HCO3ic) & selected);
+        TAc(selected)                  = CalculateTAfrompHHCO3(PHic(selected),HCO3ic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected) + peng_correction(selected);
+        TCc(selected)                  = CalculateTCfromTApH(TAc(selected)-peng_correction(selected),PHic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected);
+        FCic(selected)                 = CalculatefCO2fromTCpH(TCc(selected),PHic(selected), Ks_in,selected);
+        CO3ic(selected)                = CalculateCO3fromTCpH(TCc(selected),PHic(selected), Ks_in,selected);
     end
-    selected_GLOBAL=combination==37; % input pH, CO3
-    if any(selected_GLOBAL)
-    selected_GLOBAL=(~isnan(PHic) & ~isnan(CO3ic) & selected_GLOBAL);
-        TAc(selected_GLOBAL)                  = CalculateTAfrompHCO3(PHic(selected_GLOBAL),CO3ic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration) + peng_correction(selected_GLOBAL);
-        TCc(selected_GLOBAL)                  = CalculateTCfromTApH(TAc(selected_GLOBAL)-peng_correction(selected_GLOBAL),PHic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);
-        FCic(selected_GLOBAL)                 = CalculatefCO2fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL), Ks_in);
-        HCO3ic(selected_GLOBAL)               = CalculateHCO3fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL), Ks_in);
+    selected=combination==37; % input pH, CO3
+    if any(selected)
+    selected=(~isnan(PHic) & ~isnan(CO3ic) & selected);
+        TAc(selected)                  = CalculateTAfrompHCO3(PHic(selected),CO3ic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected) + peng_correction(selected);
+        TCc(selected)                  = CalculateTCfromTApH(TAc(selected)-peng_correction(selected),PHic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected);
+        FCic(selected)                 = CalculatefCO2fromTCpH(TCc(selected),PHic(selected), Ks_in,selected);
+        HCO3ic(selected)               = CalculateHCO3fromTCpH(TCc(selected),PHic(selected), Ks_in,selected);
     end
-    selected_GLOBAL=combination==46 | combination==56 | combination==68; % input (pCO2 or fCO2 or CO2), HCO3
-    if any(selected_GLOBAL)
-    selected_GLOBAL=(~isnan(FCic) & ~isnan(HCO3ic) & selected_GLOBAL);
-        PHic(selected_GLOBAL)                 = CalculatepHfromfCO2HCO3(FCic(selected_GLOBAL),HCO3ic(selected_GLOBAL), Ks_in);
-        TCc(selected_GLOBAL)                  = CalculateTCfrompHfCO2(PHic(selected_GLOBAL),FCic(selected_GLOBAL), Ks_in);
-        TAc(selected_GLOBAL)                  = CalculateTAfromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration) + peng_correction(selected_GLOBAL);
-        CO3ic(selected_GLOBAL)                = CalculateCO3fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL), Ks_in);
+    selected=combination==46 | combination==56 | combination==68; % input (pCO2 or fCO2 or CO2), HCO3
+    if any(selected)
+    selected=(~isnan(FCic) & ~isnan(HCO3ic) & selected);
+        PHic(selected)                 = CalculatepHfromfCO2HCO3(FCic(selected),HCO3ic(selected), Ks_in,selected);
+        TCc(selected)                  = CalculateTCfrompHfCO2(PHic(selected),FCic(selected), Ks_in,selected);
+        TAc(selected)                  = CalculateTAfromTCpH(TCc(selected),PHic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected) + peng_correction(selected);
+        CO3ic(selected)                = CalculateCO3fromTCpH(TCc(selected),PHic(selected), Ks_in,selected);
     end
-    selected_GLOBAL=combination==47 | combination==57 | combination==78; % input (pCO2 or fCO2 or CO2), CO3
-    if any(selected_GLOBAL)
-    selected_GLOBAL=(~isnan(FCic) & ~isnan(CO3ic) & selected_GLOBAL);
-        PHic(selected_GLOBAL)                 = CalculatepHfromfCO2CO3(FCic(selected_GLOBAL),CO3ic(selected_GLOBAL), Ks_in);
-        TCc(selected_GLOBAL)                  = CalculateTCfrompHfCO2 (PHic(selected_GLOBAL),FCic(selected_GLOBAL), Ks_in);
-        TAc(selected_GLOBAL)                  = CalculateTAfromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration) + peng_correction(selected_GLOBAL);
-        HCO3ic(selected_GLOBAL)               = CalculateHCO3fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL), Ks_in);
+    selected=combination==47 | combination==57 | combination==78; % input (pCO2 or fCO2 or CO2), CO3
+    if any(selected)
+    selected=(~isnan(FCic) & ~isnan(CO3ic) & selected);
+        PHic(selected)                 = CalculatepHfromfCO2CO3(FCic(selected),CO3ic(selected), Ks_in,selected);
+        TCc(selected)                  = CalculateTCfrompHfCO2 (PHic(selected),FCic(selected), Ks_in,selected);
+        TAc(selected)                  = CalculateTAfromTCpH(TCc(selected),PHic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected) + peng_correction(selected);
+        HCO3ic(selected)               = CalculateHCO3fromTCpH(TCc(selected),PHic(selected), Ks_in,selected);
     end
-    selected_GLOBAL=combination==67; % input HCO3, CO3
-    if any(selected_GLOBAL)
-    selected_GLOBAL=(~isnan(HCO3ic) & ~isnan(CO3ic) & selected_GLOBAL);
-        PHic(selected_GLOBAL)                 = CalculatepHfromCO3HCO3(CO3ic(selected_GLOBAL),HCO3ic(selected_GLOBAL), Ks_in);
-        TAc(selected_GLOBAL)                  = CalculateTAfrompHCO3(PHic(selected_GLOBAL),CO3ic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration) + peng_correction(selected_GLOBAL);
-        TCc(selected_GLOBAL)                  = CalculateTCfromTApH(TAc(selected_GLOBAL)-peng_correction(selected_GLOBAL),PHic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);
-        FCic(selected_GLOBAL)                 = CalculatefCO2fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL), Ks_in);
-        %CO2ic(selected_GLOBAL)                = CalculateCO2fromTCpH(TCc(selected_GLOBAL),PHic(selected_GLOBAL));
+    selected=combination==67; % input HCO3, CO3
+    if any(selected)
+    selected=(~isnan(HCO3ic) & ~isnan(CO3ic) & selected);
+        PHic(selected)                 = CalculatepHfromCO3HCO3(CO3ic(selected),HCO3ic(selected), Ks_in,selected);
+        TAc(selected)                  = CalculateTAfrompHCO3(PHic(selected),CO3ic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected) + peng_correction(selected);
+        TCc(selected)                  = CalculateTCfromTApH(TAc(selected)-peng_correction(selected),PHic(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected);
+        FCic(selected)                 = CalculatefCO2fromTCpH(TCc(selected),PHic(selected), Ks_in,selected);
+        %CO2ic(selected)                = CalculateCO2fromTCpH(TCc(selected),PHic(selected));
     end
     
     % By now, an fCO2 value is available for each sample.
     % Generate the associated pCO2 value:
-    selected_GLOBAL = (isnan(PCic) & (parameter_1_type~=4 | parameter_2_type~=4)); PCic(selected_GLOBAL)  = FCic(selected_GLOBAL)./fugacity_factor(selected_GLOBAL);
+    selected = (isnan(PCic) & (parameter_1_type~=4 | parameter_2_type~=4)); PCic(selected)  = FCic(selected)./fugacity_factor(selected);
     % Generate the associated CO2 value:
-    selected_GLOBAL = (isnan(CO2ic) & (parameter_1_type~=8 | parameter_2_type~=8)); CO2ic(selected_GLOBAL) = FCic(selected_GLOBAL).*K0_in(selected_GLOBAL);
+    selected = (isnan(CO2ic) & (parameter_1_type~=8 | parameter_2_type~=8)); CO2ic(selected) = FCic(selected).*K0_in(selected);
     
     % Calculate Other Params At Input Conditions:
     BAlkinp    = nan(number_of_points,1); % Generate empty vectors
     [OHinp,PAlkinp,SiAlkinp,AmmAlkinp,HSAlkinp,Hfreeinp,HSO4inp,HFinp,...
         Revelleinp,OmegaCainp,OmegaArinp,xCO2dryinp] = deal(BAlkinp);
-    selected_GLOBAL=(~isnan(PHic)); % if PHic = NaN, pH calculation was not performed or did not converge
-    [BAlkinp(selected_GLOBAL),OHinp(selected_GLOBAL), PAlkinp(selected_GLOBAL),SiAlkinp(selected_GLOBAL),AmmAlkinp(selected_GLOBAL),...
-        HSAlkinp(selected_GLOBAL), Hfreeinp(selected_GLOBAL),HSO4inp(selected_GLOBAL),HFinp(selected_GLOBAL)] = CalculateAlkParts(PHic(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);
-    PAlkinp(selected_GLOBAL)                = PAlkinp(selected_GLOBAL)+peng_correction(selected_GLOBAL);
-    Revelleinp(selected_GLOBAL)             = RevelleFactor(TAc(selected_GLOBAL)-peng_correction(selected_GLOBAL), TCc(selected_GLOBAL),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);
-    [OmegaCainp(selected_GLOBAL),OmegaArinp(selected_GLOBAL)] = CaSolubility(salinity(selected_GLOBAL), temperature_in(selected_GLOBAL), TCc(selected_GLOBAL), PHic(selected_GLOBAL), Ks_in, sqrt(salinity(selected_GLOBAL)),gas_constant,calcium_concentration,which_k1_k2,pressure_in/10);
+    selected=(~isnan(PHic)); % if PHic = NaN, pH calculation was not performed or did not converge
+    [BAlkinp(selected),OHinp(selected), PAlkinp(selected),SiAlkinp(selected),AmmAlkinp(selected),...
+        HSAlkinp(selected), Hfreeinp(selected),HSO4inp(selected),HFinp(selected)] = CalculateAlkParts(PHic,pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected);
+    PAlkinp(selected)                = PAlkinp(selected)+peng_correction(selected);
+    Revelleinp(selected)             = RevelleFactor(TAc(selected)-peng_correction(selected), TCc(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected);
+    [OmegaCainp(selected),OmegaArinp(selected)] = CaSolubility(salinity(selected), temperature_in(selected), TCc(selected), PHic(selected), Ks_in, sqrt(salinity(selected)),gas_constant,calcium_concentration,which_k1_k2,pressure_in/10,selected);
     VPFac = calculate_VPFac(salinity,temp_k);
     xCO2dryinp(~isnan(PCic),1) = PCic(~isnan(PCic),1)./VPFac(~isnan(PCic),1); % ' this assumes pTot = 1 atm
     SIRinp = HCO3ic./(Hfreeinp.*1e6);
@@ -325,7 +351,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     pHicS = nan(number_of_points,1);
     pHicF = nan(number_of_points,1);
     pHicN = nan(number_of_points,1);
-    [pHicT(selected_GLOBAL),pHicS(selected_GLOBAL),pHicF(selected_GLOBAL),pHicN(selected_GLOBAL)]=FindpHOnAllScales(PHic(selected_GLOBAL),pH_scale_in,Ks_in,fluorine_concentration,sulphate_concentration);
+    [pHicT(selected),pHicS(selected),pHicF(selected),pHicN(selected)]=FindpHOnAllScales(PHic(selected),pH_scale_in,Ks_in,fluorine_concentration,sulphate_concentration,selected);
     
     % Merge the Ks at input into an array. Ks at output will be glued to this later.
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks_in);
@@ -359,12 +385,12 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     % For output conditions, using conservative TA and TC, calculate pH, fCO2
     % and pCO2, HCO3, CO3, and CO2
     temp_k = temperature_out+273.15;
-    selected_GLOBAL=(~isnan(TAc) & ~isnan(TCc)); % i.e., do for all samples that have TA and TC values
+    selected=(~isnan(TAc) & ~isnan(TCc)); % i.e., do for all samples that have TA and TC values
     PHoc=nan(number_of_points,1);
     [CO3oc,HCO3oc,FCoc] = deal(PHoc);
-    PHoc(selected_GLOBAL) = CalculatepHfromTATC(TAc(selected_GLOBAL)-peng_correction(selected_GLOBAL), TCc(selected_GLOBAL),pH_scale_in,Ks_out,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
-        FCoc(selected_GLOBAL) = CalculatefCO2fromTCpH(TCc(selected_GLOBAL), PHoc(selected_GLOBAL), Ks_out);
-        [CO3oc(selected_GLOBAL),HCO3oc(selected_GLOBAL)] = CalculateCO3HCO3fromTCpH(TCc(selected_GLOBAL),PHoc(selected_GLOBAL), Ks_out);
+    PHoc(selected) = CalculatepHfromTATC(TAc(selected)-peng_correction(selected), TCc(selected),pH_scale_in,Ks_out,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
+        FCoc(selected) = CalculatefCO2fromTCpH(TCc(selected), PHoc(selected), Ks_out,selected);
+        [CO3oc(selected),HCO3oc(selected)] = CalculateCO3HCO3fromTCpH(TCc(selected),PHoc(selected), Ks_out,selected);
     
     % Generate the associated pCO2 value:
     fugacity_factor = calculate_fugacity_factor(p_opt,gas_constant,number_of_points,which_k1_k2,temp_k);
@@ -378,12 +404,12 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     BAlkout    = nan(number_of_points,1); % Generate empty vectors
     [OHout,PAlkout,SiAlkout,AmmAlkout,HSAlkout,Hfreeout,HSO4out,HFout,...
         Revelleout,OmegaCaout,OmegaArout,xCO2dryout] = deal(BAlkout);
-    selected_GLOBAL=(~isnan(PHoc)); % if PHoc = NaN, pH calculation was not performed or did not converge
-    [BAlkout(selected_GLOBAL),OHout(selected_GLOBAL),PAlkout(selected_GLOBAL),SiAlkout(selected_GLOBAL),AmmAlkout(selected_GLOBAL),...
-        HSAlkout(selected_GLOBAL), Hfreeout(selected_GLOBAL),HSO4out(selected_GLOBAL),HFout(selected_GLOBAL)] = CalculateAlkParts(PHoc(selected_GLOBAL),pH_scale_in,Ks_out,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);
-    PAlkout(selected_GLOBAL)                 = PAlkout(selected_GLOBAL)+peng_correction(selected_GLOBAL);
-    Revelleout(selected_GLOBAL)              = RevelleFactor(TAc(selected_GLOBAL)-peng_correction(selected_GLOBAL), TCc(selected_GLOBAL),pH_scale_in,Ks_out,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);
-    [OmegaCaout(selected_GLOBAL),OmegaArout(selected_GLOBAL)] = CaSolubility(salinity(selected_GLOBAL), temperature_out(selected_GLOBAL), TCc(selected_GLOBAL), PHoc(selected_GLOBAL), Ks_out, sqrt(salinity(selected_GLOBAL)), gas_constant, calcium_concentration,which_k1_k2,pressure_out/10);
+    selected=(~isnan(PHoc)); % if PHoc = NaN, pH calculation was not performed or did not converge
+    [BAlkout(selected),OHout(selected),PAlkout(selected),SiAlkout(selected),AmmAlkout(selected),...
+        HSAlkout(selected), Hfreeout(selected),HSO4out(selected),HFout(selected)] = CalculateAlkParts(PHoc,pH_scale_in,Ks_out,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected);
+    PAlkout(selected)                 = PAlkout(selected)+peng_correction(selected);
+    Revelleout(selected)              = RevelleFactor(TAc(selected)-peng_correction(selected), TCc(selected),pH_scale_in,Ks_out,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected);
+    [OmegaCaout(selected),OmegaArout(selected)] = CaSolubility(salinity(selected), temperature_out(selected), TCc(selected), PHoc(selected), Ks_out, sqrt(salinity(selected)), gas_constant, calcium_concentration,which_k1_k2,pressure_out/10,selected);
     VPFac = calculate_VPFac(salinity,temp_k);
     xCO2dryout(~isnan(PCoc),1)    = PCoc(~isnan(PCoc))./VPFac(~isnan(PCoc)); % ' this assumes pTot = 1 atm
     SIRout = HCO3oc./(Hfreeout.*1e6);
@@ -393,7 +419,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     pHocS = nan(number_of_points,1);
     pHocF = nan(number_of_points,1);
     pHocN = nan(number_of_points,1);
-    [pHocT(selected_GLOBAL),pHocS(selected_GLOBAL),pHocF(selected_GLOBAL),pHocN(selected_GLOBAL)]=FindpHOnAllScales(PHoc(selected_GLOBAL),pH_scale_in,Ks_out,fluorine_concentration,sulphate_concentration);
+    [pHocT(selected),pHocS(selected),pHocF(selected),pHocN(selected)]=FindpHOnAllScales(PHoc(selected),pH_scale_in,Ks_out,fluorine_concentration,sulphate_concentration,selected);
     
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks_out);
     KOVEC=[K0 K1 K2 -log10(K1) -log10(K2) KW KB KF KS KP1 KP2 KP3 KSi KNH4 KH2S];
@@ -532,7 +558,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         '98 - ammonia_concentration             (umol/kgSW) ';
         '99 - sulphide_concentration             (umol/kgSW) '};
     
-    clear global selected_GLOBAL K2 KP3 
+    clear global K2 KP3 
     clear global KB KS T BORON 
     clear global K KF KSi KNH4 KH2S 
     clear global K0 KP1 KW fH 
@@ -540,8 +566,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
 	
 end 
 
-function varargout=CalculatepHfromTATC(TAi, TCi, pH_scale_in, Ks, boron_concentration, fluorine_concentration, sulphate_concentration, phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration)
-    global selected_GLOBAL;
+function varargout=CalculatepHfromTATC(TAi, TCi, pH_scale_in, Ks, boron_concentration, fluorine_concentration, sulphate_concentration, phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected)
     % ' SUB CalculatepHfromTATC, version 04.01, 10-13-96, written by Ernie Lewis
     % ' with modifications from Denis Pierrot.
     % ' Inputs: TA, TC, K(), T()
@@ -560,14 +585,14 @@ function varargout=CalculatepHfromTATC(TAi, TCi, pH_scale_in, Ks, boron_concentr
 
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
 
-    K1F=K1(selected_GLOBAL);     K2F=K2(selected_GLOBAL);     KWF =KW(selected_GLOBAL);
-    KP1F=KP1(selected_GLOBAL);   KP2F=KP2(selected_GLOBAL);   KP3F=KP3(selected_GLOBAL);   TPF=phosphate_concentration(selected_GLOBAL);
-    TSiF=silicate_concentration(selected_GLOBAL);   KSiF=KSi(selected_GLOBAL);   TNH4F=ammonia_concentration(selected_GLOBAL); KNH4F=KNH4(selected_GLOBAL);
-    TH2SF=sulphide_concentration(selected_GLOBAL); KH2SF=KH2S(selected_GLOBAL); TBF =boron_concentration(selected_GLOBAL);    KBF=KB(selected_GLOBAL);
-    TSF =sulphate_concentration(selected_GLOBAL);    KSF =KS(selected_GLOBAL);    TFF =fluorine_concentration(selected_GLOBAL);    KFF=KF(selected_GLOBAL);
-    vl          = sum(selected_GLOBAL);  % VectorLength
+    K1F=K1(selected);     K2F=K2(selected);     KWF =KW(selected);
+    KP1F=KP1(selected);   KP2F=KP2(selected);   KP3F=KP3(selected);   TPF=phosphate_concentration(selected);
+    TSiF=silicate_concentration(selected);   KSiF=KSi(selected);   TNH4F=ammonia_concentration(selected); KNH4F=KNH4(selected);
+    TH2SF=sulphide_concentration(selected); KH2SF=KH2S(selected); TBF =boron_concentration(selected);    KBF=KB(selected);
+    TSF =sulphate_concentration(selected);    KSF =KS(selected);    TFF =fluorine_concentration(selected);    KFF=KF(selected);
+    vl          = sum(selected);  % VectorLength
     % Find initital pH guess using method of Munhoven (2013)
-    pHGuess         = CalculatepHfromTATCMunhoven(TAi, TCi, Ks, boron_concentration);
+    pHGuess         = CalculatepHfromTATCMunhoven(TAi, TCi, Ks, boron_concentration,selected);
     ln10            = log(10);
     pH              = pHGuess;
     pHTol           = 0.0001;  % tolerance for iterations end
@@ -586,7 +611,7 @@ function varargout=CalculatepHfromTATC(TAi, TCi, pH_scale_in, Ks, boron_concentr
         SiAlk     = TSiF.*KSiF./(KSiF + H);
         AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
         HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-        [~,~,pHfree,~] = FindpHOnAllScales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration); % this converts pH to pHfree no matter the scale
+        [~,~,pHfree,~] = FindpHOnAllScales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected); % this converts pH to pHfree no matter the scale
         Hfree     = 10.^-pHfree; % this converts pHfree to Hfree
         HSO4      = TSF./(1 + KSF./Hfree); % since KS is on the free scale
         HF        = TFF./(1 + KFF./Hfree); % since KF is on the free scale
@@ -612,8 +637,7 @@ function varargout=CalculatepHfromTATC(TAi, TCi, pH_scale_in, Ks, boron_concentr
     varargout{1}=pH;
 end
 
-function varargout=CalculatefCO2fromTCpH(TCx, pHx, Ks)
-    global selected_GLOBAL
+function varargout=CalculatefCO2fromTCpH(TCx, pHx, Ks,selected)
     % ' SUB CalculatefCO2fromTCpH, version 02.02, 12-13-96, written by Ernie Lewis.
     % ' Inputs: TC, pH, K0, K1, K2
     % ' Output: fCO2
@@ -621,20 +645,18 @@ function varargout=CalculatefCO2fromTCpH(TCx, pHx, Ks)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
 
     H            = 10.^(-pHx);
-    fCO2x        = TCx.*H.*H./(H.*H + K1(selected_GLOBAL).*H + K1(selected_GLOBAL).*K2(selected_GLOBAL))./K0(selected_GLOBAL);
+    fCO2x        = TCx.*H.*H./(H.*H + K1(selected).*H + K1(selected).*K2(selected))./K0(selected);
     varargout{1} = fCO2x;
     end % end nested function
     
-function varargout=CalculateTCfromTApH(TAx, pHx,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration)
-    global selected_GLOBAL
-    
+function varargout=CalculateTCfromTApH(TAx, pHx,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
     
-    K1F=K1(selected_GLOBAL);     K2F=K2(selected_GLOBAL);     KWF =KW(selected_GLOBAL);
-    KP1F=KP1(selected_GLOBAL);   KP2F=KP2(selected_GLOBAL);   KP3F=KP3(selected_GLOBAL);   TPF=phosphate_concentration(selected_GLOBAL);
-    TSiF=silicate_concentration(selected_GLOBAL);   KSiF=KSi(selected_GLOBAL);   TNH4F=ammonia_concentration(selected_GLOBAL); KNH4F=KNH4(selected_GLOBAL);
-    TH2SF=sulphide_concentration(selected_GLOBAL); KH2SF=KH2S(selected_GLOBAL); TBF =boron_concentration(selected_GLOBAL);    KBF=KB(selected_GLOBAL);
-    TSF =sulphate_concentration(selected_GLOBAL);    KSF =KS(selected_GLOBAL);    TFF =fluorine_concentration(selected_GLOBAL);    KFF=KF(selected_GLOBAL);
+    K1F=K1(selected);     K2F=K2(selected);     KWF =KW(selected);
+    KP1F=KP1(selected);   KP2F=KP2(selected);   KP3F=KP3(selected);   TPF=phosphate_concentration(selected);
+    TSiF=silicate_concentration(selected);   KSiF=KSi(selected);   TNH4F=ammonia_concentration(selected); KNH4F=KNH4(selected);
+    TH2SF=sulphide_concentration(selected); KH2SF=KH2S(selected); TBF =boron_concentration(selected);    KBF=KB(selected);
+    TSF =sulphate_concentration(selected);    KSF =KS(selected);    TFF =fluorine_concentration(selected);    KFF=KF(selected);
     % ' SUB CalculateTCfromTApH, version 02.03, 10-10-97, written by Ernie Lewis.
     % ' Inputs: TA, pH, K(), T()
     % ' Output: TC
@@ -648,7 +670,7 @@ function varargout=CalculateTCfromTApH(TAx, pHx,pH_scale_in,Ks,boron_concentrati
     SiAlk     = TSiF.*KSiF./(KSiF + H);
     AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
     HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-    [~,~,pHfree,~] = FindpHOnAllScales(pHx,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration); % this converts pH to pHfree no matter the scale
+    [~,~,pHfree,~] = FindpHOnAllScales(pHx,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected); % this converts pH to pHfree no matter the scale
     Hfree     = 10.^-pHfree; % this converts pHfree to Hfree
     HSO4      = TSF./(1 + KSF./Hfree); %' since KS is on the free scale
     HF        = TFF./(1 + KFF./Hfree); %' since KF is on the free scale
@@ -657,8 +679,7 @@ function varargout=CalculateTCfromTApH(TAx, pHx,pH_scale_in,Ks,boron_concentrati
     varargout{1} = TCxtemp;
 end % end nested function
 
-function varargout=CalculatepHfromTAfCO2(TAi, fCO2i, pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration)
-    global selected_GLOBAL
+function varargout=CalculatepHfromTAfCO2(TAi, fCO2i, pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected)
     % ' SUB CalculatepHfromTAfCO2, version 04.01, 10-13-97, written by Ernie
     % ' Lewis with modifications from Denis Pierrot.
     % ' Inputs: TA, fCO2, K0, K(), T()
@@ -674,15 +695,15 @@ function varargout=CalculatepHfromTAfCO2(TAi, fCO2i, pH_scale_in,Ks,boron_concen
     % ' will be locked in. This avoids erroneous contributions to results from
     % ' other lines of input.
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    K0F=K0(selected_GLOBAL);     K1F=K1(selected_GLOBAL);     K2F=K2(selected_GLOBAL);     KWF =KW(selected_GLOBAL);
-    KP1F=KP1(selected_GLOBAL);   KP2F=KP2(selected_GLOBAL);   KP3F=KP3(selected_GLOBAL);   TPF=phosphate_concentration(selected_GLOBAL);
-    TSiF=silicate_concentration(selected_GLOBAL);   KSiF=KSi(selected_GLOBAL);   TNH4F=ammonia_concentration(selected_GLOBAL); KNH4F=KNH4(selected_GLOBAL);
-    TH2SF=sulphide_concentration(selected_GLOBAL); KH2SF=KH2S(selected_GLOBAL); TBF =boron_concentration(selected_GLOBAL);    KBF=KB(selected_GLOBAL);
-    TSF =sulphate_concentration(selected_GLOBAL);    KSF =KS(selected_GLOBAL);    TFF =fluorine_concentration(selected_GLOBAL);    KFF=KF(selected_GLOBAL);
-    vl         = sum(selected_GLOBAL); % vectorlength
+    K0F=K0(selected);     K1F=K1(selected);     K2F=K2(selected);     KWF =KW(selected);
+    KP1F=KP1(selected);   KP2F=KP2(selected);   KP3F=KP3(selected);   TPF=phosphate_concentration(selected);
+    TSiF=silicate_concentration(selected);   KSiF=KSi(selected);   TNH4F=ammonia_concentration(selected); KNH4F=KNH4(selected);
+    TH2SF=sulphide_concentration(selected); KH2SF=KH2S(selected); TBF =boron_concentration(selected);    KBF=KB(selected);
+    TSF =sulphate_concentration(selected);    KSF =KS(selected);    TFF =fluorine_concentration(selected);    KFF=KF(selected);
+    vl         = sum(selected); % vectorlength
     % Find initital pH guess using method of Munhoven (2013)
     CO2i       = fCO2i.*K0F; % Convert fCO2 to CO2
-    pHGuess    = CalculatepHfromTACO2Munhoven(TAi, CO2i, Ks,boron_concentration);
+    pHGuess    = CalculatepHfromTACO2Munhoven(TAi, CO2i, Ks,boron_concentration,selected);
     ln10       = log(10);
     pH         = pHGuess;
     pHTol      = 0.0001; % tolerance
@@ -702,7 +723,7 @@ function varargout=CalculatepHfromTAfCO2(TAi, fCO2i, pH_scale_in,Ks,boron_concen
         SiAlk     = TSiF.*KSiF./(KSiF + H);
         AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
         HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-        [~,~,pHfree,~] = FindpHOnAllScales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration); % this converts pH to pHfree no matter the scale
+        [~,~,pHfree,~] = FindpHOnAllScales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected); % this converts pH to pHfree no matter the scale
         Hfree     = 10.^-pHfree; % this converts pHfree to Hfree
         HSO4      = TSF./(1 + KSF./Hfree); %' since KS is on the free scale
         HF        = TFF./(1 + KFF./Hfree);% ' since KF is on the free scale
@@ -728,19 +749,18 @@ function varargout=CalculatepHfromTAfCO2(TAi, fCO2i, pH_scale_in,Ks,boron_concen
     varargout{1}=pH;
 end
 
-function varargout=CalculateTAfromTCpH(TCi, pHi,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration)
-    global selected_GLOBAL
+function varargout=CalculateTAfromTCpH(TCi, pHi,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected)
     % ' SUB CalculateTAfromTCpH, version 02.02, 10-10-97, written by Ernie Lewis.
     % ' Inputs: TC, pH, K(), T()
     % ' Output: TA
     % ' This calculates TA from TC and pH.
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
 
-    K1F=K1(selected_GLOBAL);     K2F=K2(selected_GLOBAL);     KWF =KW(selected_GLOBAL);
-    KP1F=KP1(selected_GLOBAL);   KP2F=KP2(selected_GLOBAL);   KP3F=KP3(selected_GLOBAL);   TPF=phosphate_concentration(selected_GLOBAL);
-    TSiF=silicate_concentration(selected_GLOBAL);   KSiF=KSi(selected_GLOBAL);   TNH4F=ammonia_concentration(selected_GLOBAL); KNH4F=KNH4(selected_GLOBAL);
-    TH2SF=sulphide_concentration(selected_GLOBAL); KH2SF=KH2S(selected_GLOBAL); TBF =boron_concentration(selected_GLOBAL);    KBF=KB(selected_GLOBAL);
-    TSF =sulphate_concentration(selected_GLOBAL);    KSF =KS(selected_GLOBAL);    TFF =fluorine_concentration(selected_GLOBAL);    KFF=KF(selected_GLOBAL);
+    K1F=K1(selected);     K2F=K2(selected);     KWF =KW(selected);
+    KP1F=KP1(selected);   KP2F=KP2(selected);   KP3F=KP3(selected);   TPF=phosphate_concentration(selected);
+    TSiF=silicate_concentration(selected);   KSiF=KSi(selected);   TNH4F=ammonia_concentration(selected); KNH4F=KNH4(selected);
+    TH2SF=sulphide_concentration(selected); KH2SF=KH2S(selected); TBF =boron_concentration(selected);    KBF=KB(selected);
+    TSF =sulphate_concentration(selected);    KSF =KS(selected);    TFF =fluorine_concentration(selected);    KFF=KF(selected);
     H         = 10.^(-pHi);
     CAlk      = TCi.*K1F.*(H + 2.*K2F)./(H.*H + K1F.*H + K1F.*K2F);
     BAlk      = TBF.*KBF./(KBF + H);
@@ -751,7 +771,7 @@ function varargout=CalculateTAfromTCpH(TCi, pHi,pH_scale_in,Ks,boron_concentrati
     SiAlk     = TSiF.*KSiF./(KSiF + H);
     AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
     HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-    [~,~,pHfree,~] = FindpHOnAllScales(pHi,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration); % this converts pH to pHfree no matter the scale
+    [~,~,pHfree,~] = FindpHOnAllScales(pHi,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected); % this converts pH to pHfree no matter the scale
     Hfree = 10.^-pHfree; % this converts pHfree to Hfree
     HSO4      = TSF./(1 + KSF./Hfree);% ' since KS is on the free scale
     HF        = TFF./(1 + KFF./Hfree);% ' since KF is on the free scale
@@ -759,8 +779,7 @@ function varargout=CalculateTAfromTCpH(TCi, pHi,pH_scale_in,Ks,boron_concentrati
     varargout{1}=TActemp;
 end
 
-function varargout=CalculatepHfromTCfCO2(TCi, fCO2i, Ks)
-    global selected_GLOBAL;
+function varargout=CalculatepHfromTCfCO2(TCi, fCO2i, Ks,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
     % ' SUB CalculatepHfromTCfCO2, version 02.02, 11-12-96, written by Ernie Lewis.
     % ' Inputs: TC, fCO2, K0, K1, K2
@@ -768,14 +787,14 @@ function varargout=CalculatepHfromTCfCO2(TCi, fCO2i, Ks)
     % ' This calculates pH from TC and fCO2 using K0, K1, and K2 by solving the
     % '       quadratic in H: fCO2.*K0 = TC.*H.*H./(K1.*H + H.*H + K1.*K2).
     % ' if there is not a real root, then pH is returned as missingn.
-    RR = K0(selected_GLOBAL).*fCO2i./TCi;
+    RR = K0(selected).*fCO2i./TCi;
     %       if RR >= 1
     %          varargout{1}= missingn;
     %          disp('nein!');return;
     %       end
     % check after sub to see if pH = missingn.
-    Discr = (K1(selected_GLOBAL).*RR).*(K1(selected_GLOBAL).*RR) + 4.*(1 - RR).*(K1(selected_GLOBAL).*K2(selected_GLOBAL).*RR);
-    H     = 0.5.*(K1(selected_GLOBAL).*RR + sqrt(Discr))./(1 - RR);
+    Discr = (K1(selected).*RR).*(K1(selected).*RR) + 4.*(1 - RR).*(K1(selected).*K2(selected).*RR);
+    H     = 0.5.*(K1(selected).*RR + sqrt(Discr))./(1 - RR);
     %       if (H <= 0)
     %           pHctemp = missingn;
     %       else
@@ -784,30 +803,28 @@ function varargout=CalculatepHfromTCfCO2(TCi, fCO2i, Ks)
     varargout{1}=pHctemp;
 end
 
-function varargout=CalculateTCfrompHfCO2(pHi, fCO2i, Ks)
-    global selected_GLOBAL;
+function varargout=CalculateTCfrompHfCO2(pHi, fCO2i, Ks,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
     % ' SUB CalculateTCfrompHfCO2, version 01.02, 12-13-96, written by Ernie Lewis.
     % ' Inputs: pH, fCO2, K0, K1, K2
     % ' Output: TC
     % ' This calculates TC from pH and fCO2, using K0, K1, and K2.
     H       = 10.^(-pHi);
-    TCctemp = K0(selected_GLOBAL).*fCO2i.*(H.*H + K1(selected_GLOBAL).*H + K1(selected_GLOBAL).*K2(selected_GLOBAL))./(H.*H);
+    TCctemp = K0(selected).*fCO2i.*(H.*H + K1(selected).*H + K1(selected).*K2(selected))./(H.*H);
     varargout{1}=TCctemp;
 end
 
-function varargout=CalculateTAfrompHHCO3(pHi, HCO3i,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration)
-    global selected_GLOBAL
+function varargout=CalculateTAfrompHHCO3(pHi, HCO3i,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected)
     % ' SUB CalculateTAfrompHCO3, version 01.0, 3-19, added by J. Sharp
     % ' Inputs: pH, HCO3, K(), T()
     % ' Output: TA
     % ' This calculates TA from pH and HCO3.
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    K1F=K1(selected_GLOBAL);     K2F=K2(selected_GLOBAL);     KWF =KW(selected_GLOBAL);
-    KP1F=KP1(selected_GLOBAL);   KP2F=KP2(selected_GLOBAL);   KP3F=KP3(selected_GLOBAL);   TPF=phosphate_concentration(selected_GLOBAL);
-    TSiF=silicate_concentration(selected_GLOBAL);   KSiF=KSi(selected_GLOBAL);   TNH4F=ammonia_concentration(selected_GLOBAL); KNH4F=KNH4(selected_GLOBAL);
-    TH2SF=sulphide_concentration(selected_GLOBAL); KH2SF=KH2S(selected_GLOBAL); TBF =boron_concentration(selected_GLOBAL);    KBF=KB(selected_GLOBAL);
-    TSF =sulphate_concentration(selected_GLOBAL);    KSF =KS(selected_GLOBAL);    TFF =fluorine_concentration(selected_GLOBAL);    KFF=KF(selected_GLOBAL);
+    K1F=K1(selected);     K2F=K2(selected);     KWF =KW(selected);
+    KP1F=KP1(selected);   KP2F=KP2(selected);   KP3F=KP3(selected);   TPF=phosphate_concentration(selected);
+    TSiF=silicate_concentration(selected);   KSiF=KSi(selected);   TNH4F=ammonia_concentration(selected); KNH4F=KNH4(selected);
+    TH2SF=sulphide_concentration(selected); KH2SF=KH2S(selected); TBF =boron_concentration(selected);    KBF=KB(selected);
+    TSF =sulphate_concentration(selected);    KSF =KS(selected);    TFF =fluorine_concentration(selected);    KFF=KF(selected);
     H         = 10.^(-pHi);
     CAlk      = HCO3i.*(2.*K2F./H + 1);
     BAlk      = TBF.*KBF./(KBF + H);
@@ -818,7 +835,7 @@ function varargout=CalculateTAfrompHHCO3(pHi, HCO3i,pH_scale_in,Ks,boron_concent
     SiAlk     = TSiF.*KSiF./(KSiF + H);
     AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
     HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-    [~,~,pHfree,~] = FindpHOnAllScales(pHi,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration); % this converts pH to pHfree no matter the scale
+    [~,~,pHfree,~] = FindpHOnAllScales(pHi,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected); % this converts pH to pHfree no matter the scale
     Hfree = 10.^-pHfree; % this converts pHfree to Hfree
     HSO4      = TSF./(1 + KSF./Hfree);% ' since KS is on the free scale
     HF        = TFF./(1 + KFF./Hfree);% ' since KF is on the free scale
@@ -826,9 +843,7 @@ function varargout=CalculateTAfrompHHCO3(pHi, HCO3i,pH_scale_in,Ks,boron_concent
     varargout{1}=TActemp;
 end
 
-function varargout=CalculatepHfromTAHCO3(TAi, HCO3i,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration)
-    global selected_GLOBAL
-
+function varargout=CalculatepHfromTAHCO3(TAi, HCO3i,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
     % ' SUB CalculatepHfromTAHCO3, version 01.0, 8-18, added by J. Sharp with
     % ' modifications from Denis Pierrot.
@@ -845,14 +860,14 @@ function varargout=CalculatepHfromTAHCO3(TAi, HCO3i,pH_scale_in,Ks,boron_concent
     % ' However, once a given abs(deltapH) is less than pHTol, that pH value
     % ' will be locked in. This avoids erroneous contributions to results from
     % ' other lines of input.
-    K2F=K2(selected_GLOBAL);     KWF =KW(selected_GLOBAL);
-    KP1F=KP1(selected_GLOBAL);   KP2F=KP2(selected_GLOBAL);   KP3F=KP3(selected_GLOBAL);   TPF=phosphate_concentration(selected_GLOBAL);
-    TSiF=silicate_concentration(selected_GLOBAL);   KSiF=KSi(selected_GLOBAL);   TNH4F=ammonia_concentration(selected_GLOBAL); KNH4F=KNH4(selected_GLOBAL);
-    TH2SF=sulphide_concentration(selected_GLOBAL); KH2SF=KH2S(selected_GLOBAL); TBF =boron_concentration(selected_GLOBAL);    KBF=KB(selected_GLOBAL);
-    TSF =sulphate_concentration(selected_GLOBAL);    KSF =KS(selected_GLOBAL);    TFF =fluorine_concentration(selected_GLOBAL);    KFF=KF(selected_GLOBAL);
-    vl         = sum(selected_GLOBAL); % vectorlength
+    K2F=K2(selected);     KWF =KW(selected);
+    KP1F=KP1(selected);   KP2F=KP2(selected);   KP3F=KP3(selected);   TPF=phosphate_concentration(selected);
+    TSiF=silicate_concentration(selected);   KSiF=KSi(selected);   TNH4F=ammonia_concentration(selected); KNH4F=KNH4(selected);
+    TH2SF=sulphide_concentration(selected); KH2SF=KH2S(selected); TBF =boron_concentration(selected);    KBF=KB(selected);
+    TSF =sulphate_concentration(selected);    KSF =KS(selected);    TFF =fluorine_concentration(selected);    KFF=KF(selected);
+    vl         = sum(selected); % vectorlength
     % Find initital pH guess using method of Munhoven (2013)
-    pHGuess    = CalculatepHfromTAHCO3Munhoven(TAi, HCO3i, Ks,boron_concentration);
+    pHGuess    = CalculatepHfromTAHCO3Munhoven(TAi, HCO3i, Ks,boron_concentration,selected);
     ln10       = log(10);
     pH         = pHGuess;
     pHTol      = 0.0001; % tolerance
@@ -870,7 +885,7 @@ function varargout=CalculatepHfromTAHCO3(TAi, HCO3i,pH_scale_in,Ks,boron_concent
         SiAlk     = TSiF.*KSiF./(KSiF + H);
         AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
         HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-        [~,~,pHfree,~] = FindpHOnAllScales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration); % this converts pH to pHfree no matter the scale
+        [~,~,pHfree,~] = FindpHOnAllScales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected); % this converts pH to pHfree no matter the scale
         Hfree = 10.^-pHfree; % this converts pHfree to Hfree
         HSO4      = TSF./(1 + KSF./Hfree); %' since KS is on the free scale
         HF        = TFF./(1 + KFF./Hfree);% ' since KF is on the free scale
@@ -896,8 +911,7 @@ function varargout=CalculatepHfromTAHCO3(TAi, HCO3i,pH_scale_in,Ks,boron_concent
     varargout{1}=pH;
 end
 
-function varargout=CalculatepHfromTCHCO3(TCi, HCO3i, Ks)
-    global selected_GLOBAL;
+function varargout=CalculatepHfromTCHCO3(TCi, HCO3i, Ks,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
     % ' SUB CalculatepHfromTCHCO3, version 01.0, 3-19, added by J. Sharp
     % ' Inputs: TC, HCO3, K0, K1, K2
@@ -912,8 +926,8 @@ function varargout=CalculatepHfromTCHCO3(TCi, HCO3i, Ks)
     %          disp('nein!');return;
     %       end
     % check after sub to see if pH = missingn.
-    Discr = ((1-RR).*(1-RR) - 4.*(1./(K1(selected_GLOBAL))).*(K2(selected_GLOBAL)));
-    H     = 0.5.*((-(1-RR)) - sqrt(Discr))./(1./(K1(selected_GLOBAL))); % Subtraction
+    Discr = ((1-RR).*(1-RR) - 4.*(1./(K1(selected))).*(K2(selected)));
+    H     = 0.5.*((-(1-RR)) - sqrt(Discr))./(1./(K1(selected))); % Subtraction
     %       if (H <= 0)
     %           pHctemp = missingn;
     %       else
@@ -922,43 +936,41 @@ function varargout=CalculatepHfromTCHCO3(TCi, HCO3i, Ks)
     varargout{1}=pHctemp;
 end
 
-function varargout=CalculatepHfromfCO2HCO3(fCO2i, HCO3i, Ks)
-    global selected_GLOBAL;
+function varargout=CalculatepHfromfCO2HCO3(fCO2i, HCO3i, Ks,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
     % ' SUB CalculatepHfromfCO2HCO3, version 01.0, 3-19, added by J. Sharp
     % ' Inputs: fCO2, HCO3, K0, K1, K2
     % ' Output: pH
     % ' This calculates pH from fCO2 and HCO3, using K0, K1, and K2.
-    H            = (fCO2i.*K0(selected_GLOBAL).*K1(selected_GLOBAL))./HCO3i;  % removed incorrect (selected_GLOBAL) index from HCO3i // MPH
+    H            = (fCO2i.*K0(selected).*K1(selected))./HCO3i;  % removed incorrect (selected) index from HCO3i // MPH
     pHx          = -log10(H);
     varargout{1} = pHx;
     end % end nested function
     
-    function varargout=CalculatepHfCO2fromTCHCO3(TCx, HCO3x, Ks)
+    function varargout=CalculatepHfCO2fromTCHCO3(TCx, HCO3x, Ks,selected)
     % Outputs pH fCO2, in that order
     % SUB CalculatepHfCO2fromTCHCO3, version 01.0, 3-19, added by J. Sharp
     % Inputs: pHScale%, which_k1_k2%, which_kso4%, TC, HCO3, salinity, K(), T(), TempC, Pdbar
     % Outputs: pH, fCO2
     % This calculates pH and fCO2 from TC and HCO3 at output conditions.
-    pHx   = CalculatepHfromTCHCO3(TCx, HCO3x, Ks); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
-    fCO2x = CalculatefCO2fromTCpH(TCx, pHx, Ks);
+    pHx   = CalculatepHfromTCHCO3(TCx, HCO3x, Ks,selected); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
+    fCO2x = CalculatefCO2fromTCpH(TCx, pHx, Ks,selected);
     varargout{1} = pHx;
     varargout{2} = fCO2x;
     end
 
 
-    function varargout=CalculateTAfrompHCO3(pHi, CO3i,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration)
-    global selected_GLOBAL
+    function varargout=CalculateTAfrompHCO3(pHi, CO3i,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
     % ' SUB CalculateTAfrompHCO3, version 01.0, 8-18, added by J. Sharp
     % ' Inputs: pH, CO3, K(), T()
     % ' Output: TA
     % ' This calculates TA from pH and CO3.
-    K1F=K1(selected_GLOBAL);     K2F=K2(selected_GLOBAL);     KWF =KW(selected_GLOBAL);
-    KP1F=KP1(selected_GLOBAL);   KP2F=KP2(selected_GLOBAL);   KP3F=KP3(selected_GLOBAL);   TPF=phosphate_concentration(selected_GLOBAL);
-    TSiF=silicate_concentration(selected_GLOBAL);   KSiF=KSi(selected_GLOBAL);   TNH4F=ammonia_concentration(selected_GLOBAL); KNH4F=KNH4(selected_GLOBAL);
-    TH2SF=sulphide_concentration(selected_GLOBAL); KH2SF=KH2S(selected_GLOBAL); TBF =boron_concentration(selected_GLOBAL);    KBF=KB(selected_GLOBAL);
-    TSF =sulphate_concentration(selected_GLOBAL);    KSF =KS(selected_GLOBAL);    TFF =fluorine_concentration(selected_GLOBAL);    KFF=KF(selected_GLOBAL);
+    K1F=K1(selected);     K2F=K2(selected);     KWF =KW(selected);
+    KP1F=KP1(selected);   KP2F=KP2(selected);   KP3F=KP3(selected);   TPF=phosphate_concentration(selected);
+    TSiF=silicate_concentration(selected);   KSiF=KSi(selected);   TNH4F=ammonia_concentration(selected); KNH4F=KNH4(selected);
+    TH2SF=sulphide_concentration(selected); KH2SF=KH2S(selected); TBF =boron_concentration(selected);    KBF=KB(selected);
+    TSF =sulphate_concentration(selected);    KSF =KS(selected);    TFF =fluorine_concentration(selected);    KFF=KF(selected);
     H         = 10.^(-pHi);
     CAlk      = CO3i.*(H./K2F + 2);
     BAlk      = TBF.*KBF./(KBF + H);
@@ -969,7 +981,7 @@ function varargout=CalculatepHfromfCO2HCO3(fCO2i, HCO3i, Ks)
     SiAlk     = TSiF.*KSiF./(KSiF + H);
     AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
     HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-    [~,~,pHfree,~] = FindpHOnAllScales(pHi,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration); % this converts pH to pHfree no matter the scale
+    [~,~,pHfree,~] = FindpHOnAllScales(pHi,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected); % this converts pH to pHfree no matter the scale
     Hfree = 10.^-pHfree; % this converts pHfree to Hfree
     HSO4      = TSF./(1 + KSF./Hfree);% ' since KS is on the free scale
     HF        = TFF./(1 + KFF./Hfree);% ' since KF is on the free scale
@@ -977,8 +989,7 @@ function varargout=CalculatepHfromfCO2HCO3(fCO2i, HCO3i, Ks)
     varargout{1}=TActemp;
 end
 
-function varargout=CalculatepHfromTACO3(TAi,CO3i,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration)
-    global selected_GLOBAL
+function varargout=CalculatepHfromTACO3(TAi,CO3i,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected)
     % ' SUB CalculatepHfromTACO3, version 01.0, 8-18, added by J. Sharp with
     % ' modifications from Denis Pierrot.
     % ' Inputs: TA, CO3, K0, K(), T()
@@ -996,14 +1007,14 @@ function varargout=CalculatepHfromTACO3(TAi,CO3i,pH_scale_in,Ks,boron_concentrat
     % ' other lines of input.    
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
 
-    K2F=K2(selected_GLOBAL);     KWF =KW(selected_GLOBAL);
-    KP1F=KP1(selected_GLOBAL);   KP2F=KP2(selected_GLOBAL);   KP3F=KP3(selected_GLOBAL);   TPF=phosphate_concentration(selected_GLOBAL);
-    TSiF=silicate_concentration(selected_GLOBAL);   KSiF=KSi(selected_GLOBAL);   TNH4F=ammonia_concentration(selected_GLOBAL); KNH4F=KNH4(selected_GLOBAL);
-    TH2SF=sulphide_concentration(selected_GLOBAL); KH2SF=KH2S(selected_GLOBAL); TBF =boron_concentration(selected_GLOBAL);    KBF=KB(selected_GLOBAL);
-    TSF =sulphate_concentration(selected_GLOBAL);    KSF =KS(selected_GLOBAL);    TFF =fluorine_concentration(selected_GLOBAL);    KFF=KF(selected_GLOBAL);
-    vl         = sum(selected_GLOBAL); % vectorlength
+    K2F=K2(selected);     KWF =KW(selected);
+    KP1F=KP1(selected);   KP2F=KP2(selected);   KP3F=KP3(selected);   TPF=phosphate_concentration(selected);
+    TSiF=silicate_concentration(selected);   KSiF=KSi(selected);   TNH4F=ammonia_concentration(selected); KNH4F=KNH4(selected);
+    TH2SF=sulphide_concentration(selected); KH2SF=KH2S(selected); TBF =boron_concentration(selected);    KBF=KB(selected);
+    TSF =sulphate_concentration(selected);    KSF =KS(selected);    TFF =fluorine_concentration(selected);    KFF=KF(selected);
+    vl         = sum(selected); % vectorlength
     % Find initital pH guess using method of Munhoven (2013)
-    pHGuess    = CalculatepHfromTACO3Munhoven(TAi, CO3i, Ks,boron_concentration);
+    pHGuess    = CalculatepHfromTACO3Munhoven(TAi, CO3i, Ks,boron_concentration,selected);
     ln10       = log(10);
     pH         = pHGuess;
     pHTol      = 0.0001; % tolerance
@@ -1021,7 +1032,7 @@ function varargout=CalculatepHfromTACO3(TAi,CO3i,pH_scale_in,Ks,boron_concentrat
         SiAlk     = TSiF.*KSiF./(KSiF + H);
         AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
         HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-        [~,~,pHfree,~] = FindpHOnAllScales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration); % this converts pH to pHfree no matter the scale
+        [~,~,pHfree,~] = FindpHOnAllScales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected); % this converts pH to pHfree no matter the scale
         Hfree = 10.^-pHfree; % this converts pHfree to Hfree
         HSO4      = TSF./(1 + KSF./Hfree); %' since KS is on the free scale
         HF        = TFF./(1 + KFF./Hfree);% ' since KF is on the free scale
@@ -1047,8 +1058,7 @@ function varargout=CalculatepHfromTACO3(TAi,CO3i,pH_scale_in,Ks,boron_concentrat
     varargout{1}=pH;
 end
 
-function varargout=CalculatepHfromTCCO3(TCi, CO3i, Ks)
-    global selected_GLOBAL;
+function varargout=CalculatepHfromTCCO3(TCi, CO3i, Ks,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
     % ' SUB CalculatepHfromTCCO3, version 01.0, 8-18, added by J. Sharp
     % ' Inputs: TC, CO3, K0, K1, K2
@@ -1063,8 +1073,8 @@ function varargout=CalculatepHfromTCCO3(TCi, CO3i, Ks)
     %          disp('nein!');return;
     %       end
     % check after sub to see if pH = missingn.
-    Discr = ((1./K2(selected_GLOBAL)).*(1./K2(selected_GLOBAL)) - 4.*(1./(K1(selected_GLOBAL).*K2(selected_GLOBAL))).*(1-RR));
-    H     = 0.5.*((-1./K2(selected_GLOBAL)) + sqrt(Discr))./(1./(K1(selected_GLOBAL).*K2(selected_GLOBAL))); % Addition
+    Discr = ((1./K2(selected)).*(1./K2(selected)) - 4.*(1./(K1(selected).*K2(selected))).*(1-RR));
+    H     = 0.5.*((-1./K2(selected)) + sqrt(Discr))./(1./(K1(selected).*K2(selected))); % Addition
     %       if (H <= 0)
     %           pHctemp = missingn;
     %       else
@@ -1073,86 +1083,80 @@ function varargout=CalculatepHfromTCCO3(TCi, CO3i, Ks)
     varargout{1}=pHctemp;
 end
 
-function varargout=CalculatepHfromfCO2CO3(fCO2i, CO3i, Ks)
-    global selected_GLOBAL;
+function varargout=CalculatepHfromfCO2CO3(fCO2i, CO3i, Ks,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
     % ' SUB CalculatepHfromfCO2CO3, version 01.0, 8-18, added by J. Sharp
     % ' Inputs: fCO2, CO3, K0, K1, K2
     % ' Output: pH
     % ' This calculates pH from fCO2 and CO3, using K0, K1, and K2.
-    H            = sqrt((fCO2i.*K0(selected_GLOBAL).*K1(selected_GLOBAL).*K2(selected_GLOBAL))./CO3i);    % removed incorrect (selected_GLOBAL) index from CO3i // MPH
+    H            = sqrt((fCO2i.*K0(selected).*K1(selected).*K2(selected))./CO3i);    % removed incorrect (selected) index from CO3i // MPH
     pHx          = -log10(H);
     varargout{1} = pHx;
 end
 
-function varargout=CalculatepHfCO2fromTCCO3(TCx, CO3x, Ks)
+function varargout=CalculatepHfCO2fromTCCO3(TCx, CO3x, Ks,selected)
     % Outputs pH fCO2, in that order
     % SUB CalculatepHfCO2fromTCCO3, version 01.0, 8-18, added by J. Sharp
     % Inputs: pHScale%, which_k1_k2%, which_kso4%, TC, CO3, salinity, K(), T(), TempC, Pdbar
     % Outputs: pH, fCO2
     % This calculates pH and fCO2 from TC and CO3 at output conditions.
-    pHx   = CalculatepHfromTCCO3(TCx, CO3x, Ks); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
-    fCO2x = CalculatefCO2fromTCpH(TCx, pHx, Ks);
+    pHx   = CalculatepHfromTCCO3(TCx, CO3x, Ks,selected); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
+    fCO2x = CalculatefCO2fromTCpH(TCx, pHx, Ks,selected);
     varargout{1} = pHx;
     varargout{2} = fCO2x;
 end
 
-function varargout=CalculatepHfromCO3HCO3(CO3x, HCO3x, Ks)
-    global selected_GLOBAL
+function varargout=CalculatepHfromCO3HCO3(CO3x, HCO3x, Ks,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
     % ' SUB CalculatepHfromCO3HCO3, version 01.0, 3-19, added by J. Sharp
     % ' Inputs: CO3, HCO3, K2
     % ' Output: pH
     % ' This calculates fCO2 from TC and pH, using K2.
-    H            = HCO3x.*K2(selected_GLOBAL)./CO3x;
+    H            = HCO3x.*K2(selected)./CO3x;
     pHx          = -log10(H);
     varargout{1} = pHx;
 end
 
-function varargout=CalculateCO3HCO3fromTCpH(TCx, pHx, Ks)
-    global selected_GLOBAL
+function varargout=CalculateCO3HCO3fromTCpH(TCx, pHx, Ks,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
     % ' SUB CalculateCO3HCO3CO2fromTCpH, version 01.0, 3-19, added by J. Sharp
     % ' Inputs: TC, pH, K1, K2
     % ' Output: CO3, HCO3, CO2
     % ' This calculates CO3, HCO3, and CO2 from TC and pH, using K1, and K2.
     H            = 10.^(-pHx);
-    CO3x         = TCx.*K1(selected_GLOBAL).*K2(selected_GLOBAL)./(K1(selected_GLOBAL).*H + H.*H + K1(selected_GLOBAL).*K2(selected_GLOBAL));
-    HCO3x        = TCx.*K1(selected_GLOBAL).*H./(K1(selected_GLOBAL).*H + H.*H + K1(selected_GLOBAL).*K2(selected_GLOBAL));
+    CO3x         = TCx.*K1(selected).*K2(selected)./(K1(selected).*H + H.*H + K1(selected).*K2(selected));
+    HCO3x        = TCx.*K1(selected).*H./(K1(selected).*H + H.*H + K1(selected).*K2(selected));
     varargout{1} = CO3x;
     varargout{2} = HCO3x;
 end
 
-function varargout=CalculateCO3fromTCpH(TCx, pHx, Ks)
-    global selected_GLOBAL
+function varargout=CalculateCO3fromTCpH(TCx, pHx, Ks,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
     % ' SUB CalculateCO3CO2fromTCpH, version 01.0, 3-19, added by J. Sharp
     % ' Inputs: TC, pH, K1, K2
     % ' Output: CO3, CO2
     % ' This calculates CO3 and CO2 from TC and pH, using K1, and K2.
     H            = 10.^(-pHx);
-    CO3x         = TCx.*K1(selected_GLOBAL).*K2(selected_GLOBAL)./(K1(selected_GLOBAL).*H + H.*H + K1(selected_GLOBAL).*K2(selected_GLOBAL));
+    CO3x         = TCx.*K1(selected).*K2(selected)./(K1(selected).*H + H.*H + K1(selected).*K2(selected));
     varargout{1} = CO3x;
 end
 
-function varargout=CalculateHCO3fromTCpH(TCx, pHx, Ks)
-    global selected_GLOBAL
+function varargout=CalculateHCO3fromTCpH(TCx, pHx, Ks,selected)
     % ' SUB CalculateHCO3CO2fromTCpH, version 01.0, 3-19, added by J. Sharp
     % ' Inputs: TC, pH, K1, K2
     % ' Output: HCO3, CO2
     % ' This calculates HCO3 and CO2 from TC and pH, using K1, and K2.
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
     H            = 10.^(-pHx);
-    HCO3x        = TCx.*K1(selected_GLOBAL).*H./(K1(selected_GLOBAL).*H + H.*H + K1(selected_GLOBAL).*K2(selected_GLOBAL));
+    HCO3x        = TCx.*K1(selected).*H./(K1(selected).*H + H.*H + K1(selected).*K2(selected));
     varargout{1} = HCO3x;
 end
 
 
-function varargout=CalculatepHfromTATCMunhoven(TAi, TCi, Ks,boron_concentration)
-    global selected_GLOBAL;
+function varargout=CalculatepHfromTATCMunhoven(TAi, TCi, Ks,boron_concentration,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
 
-    K1F=K1(selected_GLOBAL);     K2F=K2(selected_GLOBAL);     TBF =boron_concentration(selected_GLOBAL);    KBF=KB(selected_GLOBAL);
+    K1F=K1(selected);     K2F=K2(selected);     TBF =boron_concentration(selected);    KBF=KB(selected);
     g0 = K1F.*K2F.*KBF.*(1-(2.*TCi+TBF)./TAi);
     g1 = K1F.*(KBF.*(1-TBF./TAi-TCi./TAi)+K2F.*(1-2.*TCi./TAi));
     g2 = KBF.*(1-TBF./TAi)+K1F.*(1-TCi./TAi);
@@ -1183,10 +1187,9 @@ function varargout=CalculatepHfromTATCMunhoven(TAi, TCi, Ks,boron_concentration)
     varargout{1}=pHGuess;
 end
 
-function varargout=CalculatepHfromTACO2Munhoven(TAi, CO2x, Ks, boron_concentration)
-    global selected_GLOBAL;
+function varargout=CalculatepHfromTACO2Munhoven(TAi, CO2x, Ks, boron_concentration,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    K1F=K1(selected_GLOBAL);     K2F=K2(selected_GLOBAL);     TBF =boron_concentration(selected_GLOBAL);    KBF=KB(selected_GLOBAL);
+    K1F=K1(selected);     K2F=K2(selected);     TBF =boron_concentration(selected);    KBF=KB(selected);
     g0 = -2.*K1F.*K2F.*KBF.*CO2x./TAi;
     g1 = -K1F.*(2.*K2F.*CO2x+KBF.*CO2x)./TAi;
     g2 = KBF-(TBF.*KBF+K1F.*CO2x)./TAi;
@@ -1214,10 +1217,9 @@ function varargout=CalculatepHfromTACO2Munhoven(TAi, CO2x, Ks, boron_concentrati
     varargout{1}=pHGuess;
 end
 
-function varargout=CalculatepHfromTAHCO3Munhoven(TAi, HCO3x, Ks, boron_concentration)
-    global selected_GLOBAL;
+function varargout=CalculatepHfromTAHCO3Munhoven(TAi, HCO3x, Ks, boron_concentration,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    K1F=K1(selected_GLOBAL);     K2F=K2(selected_GLOBAL);     TBF =boron_concentration(selected_GLOBAL);    KBF=KB(selected_GLOBAL);
+    K1F=K1(selected);     K2F=K2(selected);     TBF =boron_concentration(selected);    KBF=KB(selected);
     g0 = 2.*K2F.*KBF.*HCO3x;
     g1 = KBF.*(HCO3x+TBF-TAi)+2.*K2F.*HCO3x;
     g2 = HCO3x-TAi;
@@ -1231,12 +1233,10 @@ function varargout=CalculatepHfromTAHCO3Munhoven(TAi, HCO3x, Ks, boron_concentra
     varargout{1}=pHGuess;
 end
 
-function varargout=CalculatepHfromTACO3Munhoven(TAi, CO3x, Ks, boron_concentration)
-    global selected_GLOBAL;
-
+function varargout=CalculatepHfromTACO3Munhoven(TAi, CO3x, Ks, boron_concentration,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
 
-    K1F=K1(selected_GLOBAL);     K2F=K2(selected_GLOBAL);     TBF =boron_concentration(selected_GLOBAL);    KBF=KB(selected_GLOBAL);
+    K1F=K1(selected);     K2F=K2(selected);     TBF =boron_concentration(selected);    KBF=KB(selected);
     g0 = K2F.*KBF.*(2.*CO3x+TBF-TAi);
     g1 = KBF.*CO3x+K2F.*(2.*CO3x-TAi);
     g2 = CO3x;
@@ -1250,8 +1250,7 @@ function varargout=CalculatepHfromTACO3Munhoven(TAi, CO3x, Ks, boron_concentrati
     varargout{1}=pHGuess;
 end
 
-function varargout=RevelleFactor(TAi, TCi, pH_scale,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration)
-    % global which_k1_k2;
+function varargout=RevelleFactor(TAi, TCi, pH_scale,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected)
     % ' SUB RevelleFactor, version 01.03, 01-07-97, written by Ernie Lewis.
     % ' Inputs: which_k1_k2%, TA, TC, K0, K(), T()
     % ' Outputs: Revelle
@@ -1265,13 +1264,13 @@ function varargout=RevelleFactor(TAi, TCi, pH_scale,Ks,boron_concentration,fluor
     dTC = 0.00000001;% ' 0.01 umol/kg-SW (lower than prior versions of CO2SYS)
     % ' Find fCO2 at TA, TC + dTC
     TCi = TC0 + dTC;
-    pHc= CalculatepHfromTATC(TAi, TCi, pH_scale,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);
-    fCO2c= CalculatefCO2fromTCpH(TCi, pHc, Ks);
+    pHc= CalculatepHfromTATC(TAi, TCi, pH_scale,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected);
+    fCO2c= CalculatefCO2fromTCpH(TCi, pHc, Ks,selected);
     fCO2plus = fCO2c;
     % ' Find fCO2 at TA, TC - dTC
     TCi = TC0 - dTC;
-    pHc= CalculatepHfromTATC(TAi, TCi, pH_scale,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration);
-    fCO2c= CalculatefCO2fromTCpH(TCi, pHc, Ks);
+    pHc= CalculatepHfromTATC(TAi, TCi, pH_scale,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected);
+    fCO2c= CalculatefCO2fromTCpH(TCi, pHc, Ks,selected);
     fCO2minus = fCO2c;
     % CalculateRevelleFactor:
     Revelle = (fCO2plus - fCO2minus)./dTC./((fCO2plus + fCO2minus)./TC0); % Corrected error pointed out by MP Humphreys (https://pyco2sys.readthedocs.io/en/latest/validate/)
@@ -1279,8 +1278,7 @@ function varargout=RevelleFactor(TAi, TCi, pH_scale,Ks,boron_concentration,fluor
 end
 
 
-function varargout=CalculateAlkParts(pH,pH_scale,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration)
-    global selected_GLOBAL;
+function varargout=CalculateAlkParts(pH,pH_scale,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected)
     % ' SUB CalculateAlkParts, version 01.03, 10-10-97, written by Ernie Lewis.
     % ' Inputs: pH, TC, K(), T()
     % ' Outputs: BAlk, OH, PAlk, SiAlk, Hfree, HSO4, HF
@@ -1290,13 +1288,13 @@ function varargout=CalculateAlkParts(pH,pH_scale,Ks,boron_concentration,fluorine
     % ' negligible) as long as the K Constants are on that scale.
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
     
-    KWF =KW(selected_GLOBAL);
-    KP1F=KP1(selected_GLOBAL);   KP2F=KP2(selected_GLOBAL);   KP3F=KP3(selected_GLOBAL);   TPF=phosphate_concentration(selected_GLOBAL);
-    TSiF=silicate_concentration(selected_GLOBAL);   KSiF=KSi(selected_GLOBAL);   TNH4F=ammonia_concentration(selected_GLOBAL); KNH4F=KNH4(selected_GLOBAL);
-    TH2SF=sulphide_concentration(selected_GLOBAL); KH2SF=KH2S(selected_GLOBAL); TBF =boron_concentration(selected_GLOBAL);    KBF=KB(selected_GLOBAL);
-    TSF =sulphate_concentration(selected_GLOBAL);    KSF =KS(selected_GLOBAL);    TFF =fluorine_concentration(selected_GLOBAL);    KFF=KF(selected_GLOBAL);
+    KWF =KW(selected);
+    KP1F=KP1(selected);   KP2F=KP2(selected);   KP3F=KP3(selected);   TPF=phosphate_concentration(selected);
+    TSiF=silicate_concentration(selected);   KSiF=KSi(selected);   TNH4F=ammonia_concentration(selected); KNH4F=KNH4(selected);
+    TH2SF=sulphide_concentration(selected); KH2SF=KH2S(selected); TBF =boron_concentration(selected);    KBF=KB(selected);
+    TSF =sulphate_concentration(selected);    KSF =KS(selected);    TFF =fluorine_concentration(selected);    KFF=KF(selected);
     
-    H         = 10.^(-pH);
+    H         = 10.^(-pH(selected));
     BAlk      = TBF.*KBF./(KBF + H);
     OH        = KWF./H;
     PhosTop   = KP1F.*KP2F.*H + 2.*KP1F.*KP2F.*KP3F - H.*H.*H;
@@ -1305,7 +1303,7 @@ function varargout=CalculateAlkParts(pH,pH_scale,Ks,boron_concentration,fluorine
     SiAlk     = TSiF.*KSiF./(KSiF + H);
     AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
     HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-    [~,~,pHfree,~] = FindpHOnAllScales(pH,pH_scale,Ks,fluorine_concentration,sulphate_concentration); % this converts pH to pHfree no matter the scale
+    [~,~,pHfree,~] = FindpHOnAllScales(pH(selected),pH_scale,Ks,fluorine_concentration,sulphate_concentration,selected); % this converts pH to pHfree no matter the scale
     Hfree = 10.^-pHfree; % this converts pHfree to Hfree
     HSO4      = TSF./(1 + KSF./Hfree); %' since KS is on the free scale
     HF        = TFF./(1 + KFF./Hfree); %' since KF is on the free scale
@@ -1316,8 +1314,7 @@ function varargout=CalculateAlkParts(pH,pH_scale,Ks,boron_concentration,fluorine
 end
 
 
-function varargout=CaSolubility(salinity, TempC, TC, pH, Ks, sqrt_salinity, gas_constant, calcium_concentration,which_k1_k2,Pbar)
-    global selected_GLOBAL
+function varargout=CaSolubility(salinity, TempC, TC, pH, Ks, sqrt_salinity, gas_constant, calcium_concentration,which_k1_k2,Pbar,selected)
     global k_perturbation_GLOBAL    % Id of perturbed K
     global Perturb % perturbation
     % '***********************************************************************
@@ -1351,19 +1348,19 @@ function varargout=CaSolubility(salinity, TempC, TC, pH, Ks, sqrt_salinity, gas_
     temp_k    = TempC + 273.15;
     log_temp_k = log(temp_k);
 
-    Ca=calcium_concentration(selected_GLOBAL);
-    Ar=nan(sum(selected_GLOBAL),1);
-    KCa=nan(sum(selected_GLOBAL),1);
-    KAr=nan(sum(selected_GLOBAL),1);
+    Ca=calcium_concentration(selected);
+    Ar=nan(sum(selected),1);
+    KCa=nan(sum(selected),1);
+    KAr=nan(sum(selected),1);
     TempKx=temp_k;
     logTempKx=log_temp_k;
     sqrSalx=sqrt_salinity;
-    Pbarx=Pbar(selected_GLOBAL);
+    Pbarx=Pbar(selected);
     RR = (gas_constant.*temp_k);
     RTx = RR;
-    FF=(which_k1_k2(selected_GLOBAL)~=6 & which_k1_k2(selected_GLOBAL)~=7);
+    FF=(which_k1_k2(selected)~=6 & which_k1_k2(selected)~=7);
     if any(FF)
-    % (below here, selected_GLOBAL isn't used, since almost always all rows match the above criterium,
+    % (below here, selected isn't used, since almost always all rows match the above criterium,
     %  in all other cases the rows will be overwritten later on).
         % CalciteSolubility:
         % '       Mucci, Alphonso, Amer. J. of Science 283:781-799, 1983.
@@ -1398,7 +1395,7 @@ function varargout=CaSolubility(salinity, TempC, TC, pH, Ks, sqrt_salinity, gas_
         lnKArfac  = (-deltaVKAr + 0.5.*KappaKAr.*Pbarx(FF)).*Pbarx(FF)./RTx(FF);
         KAr(FF)       = KAr(FF).*exp(lnKArfac);
     end
-    FF=(which_k1_k2(selected_GLOBAL)==6 | which_k1_k2(selected_GLOBAL)==7);
+    FF=(which_k1_k2(selected)==6 | which_k1_k2(selected)==7);
     if any(FF)
         % *** CalculateKCaforGEOSECS:
         % Ingle et al, Marine Chemistry 1:295-307, 1973 is referenced in
@@ -1440,13 +1437,13 @@ function varargout=CaSolubility(salinity, TempC, TC, pH, Ks, sqrt_salinity, gas_
     
     % CalculateOmegasHere:
     H = 10.^(-pH);
-    CO3 = TC.*K1(selected_GLOBAL).*K2(selected_GLOBAL)./(K1(selected_GLOBAL).*H + H.*H + K1(selected_GLOBAL).*K2(selected_GLOBAL));
+    CO3 = TC.*K1(selected).*K2(selected)./(K1(selected).*H + H.*H + K1(selected).*K2(selected));
     varargout{1} = CO3.*Ca./KCa; % OmegaCa, dimensionless
     varargout{2} = CO3.*Ca./KAr; % OmegaAr, dimensionless
 end
     
-function varargout=FindpHOnAllScales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration)
-    global fH selected_GLOBAL;
+function varargout=FindpHOnAllScales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected)
+    global fH;
     % ' SUB FindpHOnAllScales, version 01.02, 01-08-97, written by Ernie Lewis.
     % ' Inputs: pHScale%, pH, K(), T(), fH
     % ' Outputs: pHNBS, pHfree, pHTot, pHSWS
@@ -1455,17 +1452,17 @@ function varargout=FindpHOnAllScales(pH,pH_scale_in,Ks,fluorine_concentration,su
     %  KS = K(6); KF = K(5);% 'these are at the given T, S, P
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
 
-    TSx=sulphate_concentration(selected_GLOBAL); KSx=KS(selected_GLOBAL); TFx=fluorine_concentration(selected_GLOBAL); KFx=KF(selected_GLOBAL);fHx=fH(selected_GLOBAL);
+    TSx=sulphate_concentration(selected); KSx=KS(selected); TFx=fluorine_concentration(selected); KFx=KF(selected);fHx=fH(selected);
     FREEtoTOT = (1 + TSx./KSx); % ' pH scale conversion factor
     SWStoTOT  = (1 + TSx./KSx)./(1 + TSx./KSx + TFx./KFx);% ' pH scale conversion factor
-    factor=nan(sum(selected_GLOBAL),1);
-    nF=pH_scale_in(selected_GLOBAL)==1;  %'"pHtot"
+    factor=nan(sum(selected),1);
+    nF=pH_scale_in(selected)==1;  %'"pHtot"
     factor(nF) = 0;
-    nF=pH_scale_in(selected_GLOBAL)==2; % '"pHsws"
+    nF=pH_scale_in(selected)==2; % '"pHsws"
     factor(nF) = -log(SWStoTOT(nF))./log(0.1);
-    nF=pH_scale_in(selected_GLOBAL)==3; % '"pHfree"
+    nF=pH_scale_in(selected)==3; % '"pHfree"
     factor(nF) = -log(FREEtoTOT(nF))./log(0.1);
-    nF=pH_scale_in(selected_GLOBAL)==4;  %'"pHNBS"
+    nF=pH_scale_in(selected)==4;  %'"pHNBS"
     factor(nF) = -log(SWStoTOT(nF))./log(0.1) + log(fHx(nF))./log(0.1);
     pHtot  = pH    - factor;    % ' pH comes into this sub on the given scale
     pHNBS  = pHtot - log(SWStoTOT) ./log(0.1) + log(fHx)./log(0.1);
