@@ -8,12 +8,6 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
                                             which_k1_k2,which_kso4,which_kf, which_boron, ...
                                             varargin)
     
-    % Added by JM Epitalon
-    % For computing derivative with respect to Ks, one has to call CO2sys with a perturbed K
-    % Requested perturbation is passed through the following global variables
-    global k_perturbation_GLOBAL    % Id of perturbed K
-    global Perturb  % perturbation
-    
     % Input conditioning
     
     % set default for optional input argument
@@ -61,7 +55,6 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     which_boron(1:number_of_points,1)         = which_boron(:)         ;
     
     % Assign input to the 'historical' variable names.
-    % pH_scale_in_GLOBAL      = pH_scale_in;
     
     gas_constant = 83.14462618; % ml bar-1 K-1 mol-1,
     
@@ -150,26 +143,6 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     % Calculate the constants for all samples at input conditions
     % The constants calculated for each sample will be on the appropriate pH scale!
     Ks_in = calculate_equilibrium_constants(number_of_points,temperature_in,pressure_in/10,salinity,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2);
-    
-    % Added by JM Epitalon
-    % For computing derivative with respect to Ks, one has to perturb the value of one K
-    % Requested perturbation is passed through global variables k_perturbation_GLOBAL and Perturb
-    if (~ isempty(k_perturbation_GLOBAL))
-        switch k_perturbation_GLOBAL
-            case {'K0'}
-                K0 = K0 + Perturb;
-            case {'K1'}
-                K1 = K1 + Perturb;
-            case {'K2'}
-                K2 = K2 + Perturb;
-            case {'KB'}
-                KB = KB + Perturb;
-            case {'KW'}
-                KW = KW + Perturb;
-            case {'BOR'}
-                boron_concentration = boron_concentration + Perturb;
-        end
-    end
     
     K0_in = Ks_in("K0");
     
@@ -360,27 +333,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     clear K0 K1 K2 KW KB KF KS KP1 KP2 KP3 KSi KNH4 KH2S
     
     % Calculate the constants for all samples at output conditions
-    Ks_out = calculate_equilibrium_constants(number_of_points,temperature_out,pressure_out/10,salinity,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2);
-    
-    % Added by JM Epitalon
-    % For computing derivative with respect to Ks, one has to perturb the value of one K
-    % Requested perturbation is passed through global variables k_perturbation_GLOBAL and Perturb
-    if (~ isempty(k_perturbation_GLOBAL))
-        switch k_perturbation_GLOBAL
-            case {'K0'}
-                K0 = K0 + Perturb;
-            case {'K1'}
-                K1 = K1 + Perturb;
-            case {'K2'}
-                K2 = K2 + Perturb;
-            case {'KB'}
-                KB = KB + Perturb;
-            case {'KW'}
-                KW = KW + Perturb;
-            case {'BOR'}
-                boron_concentration = boron_concentration + Perturb;
-        end
-    end                  
+    Ks_out = calculate_equilibrium_constants(number_of_points,temperature_out,pressure_out/10,salinity,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2);                
 
     % For output conditions, using conservative TA and TC, calculate pH, fCO2
     % and pCO2, HCO3, CO3, and CO2
@@ -556,14 +509,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         '96 - phosphate_concentration               (umol/kgSW) ';
         '97 - silicate_concentration              (umol/kgSW) ';
         '98 - ammonia_concentration             (umol/kgSW) ';
-        '99 - sulphide_concentration             (umol/kgSW) '};
-    
-    clear global K2 KP3 
-    clear global KB KS T BORON 
-    clear global K KF KSi KNH4 KH2S 
-    clear global K0 KP1 KW 
-    clear global K1 KP2
-	
+        '99 - sulphide_concentration             (umol/kgSW) '};	
 end 
 
 function varargout=CalculatepHfromTATC(TAi, TCi, pH_scale_in, Ks, boron_concentration, fluorine_concentration, sulphate_concentration, phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k)
@@ -1315,8 +1261,6 @@ end
 
 
 function varargout=CaSolubility(salinity, TempC, TC, pH, Ks, sqrt_salinity, gas_constant, calcium_concentration,which_k1_k2,Pbar,selected)
-    global k_perturbation_GLOBAL    % Id of perturbed K
-    global Perturb % perturbation
     % '***********************************************************************
     % ' SUB CaSolubility, version 01.05, 05-23-97, written by Ernie Lewis.
     % ' Inputs: which_k1_k2%, salinity, temperature_in, pressure_in, TCi, pHi, K1, K2
@@ -1420,19 +1364,6 @@ function varargout=CaSolubility(salinity, TempC, TC, pH, Ks, sqrt_salinity, gas_
         % I can't find them anywhere else.
         KCa(FF) = KCa(FF).*exp((36   - 0.2 .*TempC(FF)).*Pbarx(FF)./RTx(FF));
         KAr(FF) = KAr(FF).*exp((33.3 - 0.22.*TempC(FF)).*Pbarx(FF)./RTx(FF));
-    end
-    % Added by JM Epitalon
-    % For computing derivative with respect to KCa or KAr, one has to perturb the value of one K
-    % Requested perturbation is passed through global variables k_perturbation_GLOBAL and Perturb
-    if (~ isempty(k_perturbation_GLOBAL))
-        switch k_perturbation_GLOBAL
-            case {'KSPA'}   % solubility Product for Aragonite
-                KAr = KAr + Perturb;
-            case {'KSPC'}   % for Calcite
-                KCa = KCa + Perturb;
-            case {'calcium_concentration'}   % for calcium concentration
-                Ca  = Ca  + Perturb;
-        end
     end
     
     % CalculateOmegasHere:

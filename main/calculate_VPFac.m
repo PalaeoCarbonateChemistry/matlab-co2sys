@@ -1,6 +1,6 @@
 function VPFac = calculate_VPFac(salinity,temp_k)
     % CalculateVPFac:
-    % Weiss, R. selected_GLOBAL., and Price, B. A., Nitrous oxide solubility in water and
+    % Weiss, R. selected., and Price, B. A., Nitrous oxide solubility in water and
     %       seawater, Marine Chemistry 8:347-359, 1980.
     % They fit the data of Goff and Gratch (1946) with the vapor pressure
     %       lowering by sea salt as given by Robinson (1954).
@@ -11,7 +11,7 @@ function VPFac = calculate_VPFac(salinity,temp_k)
     %       and the data of Goff and Gratch came before IPTS-48.
     % The references are:
     % Goff, J. A. and Gratch, S., Low pressure properties of water from -160 deg
-    %       to 212 deg selected_GLOBAL, Transactions of the American Society of Heating and
+    %       to 212 deg selected, Transactions of the American Society of Heating and
     %       Ventilating Engineers 52:95-122, 1946.
     % Robinson, Journal of the Marine Biological Association of the U. K.
     %       33:449-455, 1954.

@@ -1,10 +1,9 @@
 function fugacity_factor = calculate_fugacity_factor(p_opt,gas_constant,number_of_points,which_k1_k2,temp_k)
-    global selected_GLOBAL
     % CalculateFugacityConstants:
     % In previos versions of CO2SYS, the fugacity factor was calculated
     % assuming pressure at one atmosphere, or close to it. Starting with
     % v3.2.1, an option to use in situ pressure is provided.
-    %       Weiss, R. selected_GLOBAL., Marine Chemistry 2:203-215, 1974.
+    %       Weiss, R. selected., Marine Chemistry 2:203-215, 1974.
     %       Delta and B in cm3/mol
     fugacity_factor = ones(number_of_points,1);
     Delta = (57.7 - 0.118.*temp_k);
@@ -19,6 +18,6 @@ function fugacity_factor = calculate_fugacity_factor(p_opt,gas_constant,number_o
     else
         disp('co2_press must be set to either 0 or 1'); % Display error message
     end
-    selected_GLOBAL=(which_k1_k2==6 | which_k1_k2==7); % GEOSECS and Peng assume pCO2 = fCO2, or FugFac = 1
-    fugacity_factor(selected_GLOBAL) = 1;
+    selected=(which_k1_k2==6 | which_k1_k2==7); % GEOSECS and Peng assume pCO2 = fCO2, or FugFac = 1
+    fugacity_factor(selected) = 1;
 end
