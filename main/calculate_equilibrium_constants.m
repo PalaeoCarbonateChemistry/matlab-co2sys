@@ -1,7 +1,5 @@
 
 function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pbar,salinity,pH_scale,p_opt,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2)
-    global fH;
-    
     % SUB Constants, version 04.01, 10-13-97, written by Ernie Lewis.
     % Inputs: pHScale%, which_k1_k2%, Sali, temperature_in, Pdbar
     % Outputs: K0, K(), T(), fH
@@ -113,31 +111,9 @@ function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pbar,salini
     %       These are NOT pressure-corrected.
     SWStoTOT  = (1 + sulphate_concentration./KS)./(1 + sulphate_concentration./KS + fluorine_concentration./KF);
     FREEtoTOT =  1 + sulphate_concentration./KS;
-    
-    % CalculatefH
-    fH = nan(number_of_points,1);
-    % Use GEOSECS's value for cases 1,2,3,4,5 (and 6) to convert pH scales.
-    selected=(which_k1_k2==8);
-    if any(selected)
-        fH(selected) = 1; % this shouldn't occur in the program for this case
-    end
-    selected=(which_k1_k2==7);
-    if any(selected)
-        fH(selected) = 1.29 - 0.00204.*  temp_k(selected) + (0.00046 -...
-            0.00000148.*temp_k(selected)).*salinity(selected).*salinity(selected);
-        % Peng et al, Tellus 39B:439-458, 1987:
-        % They reference the GEOSECS report, but round the value
-        % given there off so that it is about .008 (1%) lower. It
-        % doesn't agree with the check value they give on p. 456.
-    end
-    selected=(which_k1_k2~=7 & which_k1_k2~=8);
-    if any(selected)
-        fH(selected) = 1.2948 - 0.002036.*temp_k(selected) + (0.0004607 -...
-            0.000001475.*temp_k(selected)).*salinity(selected).^2;
-        % Takahashi et al, Chapter 3 in GEOSECS Pacific Expedition,
-        % v. 3, 1982 (p. 80);
-    end
-    
+
+    fH = calculate_fH(number_of_points,which_k1_k2,salinity,temp_k);
+
     % CalculateKB:
     KB      = nan(number_of_points,1); logKB   = nan(number_of_points,1);
     lnKBtop = nan(number_of_points,1); lnKB    = nan(number_of_points,1);
