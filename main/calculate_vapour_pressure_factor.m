@@ -1,4 +1,4 @@
-function VPFac = calculate_VPFac(salinity,temp_k)
+function VPFac = calculate_vapour_pressure_factor(salinity,temp_k)
     % CalculateVPFac:
     % Weiss, R. selected., and Price, B. A., Nitrous oxide solubility in water and
     %       seawater, Marine Chemistry 8:347-359, 1980.

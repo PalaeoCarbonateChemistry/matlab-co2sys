@@ -1,5 +1,5 @@
 
-function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pbar,salinity,pH_scale,p_opt,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2)
+function Ks = calculate_equilibrium_constants(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2)
     % SUB Constants, version 04.01, 10-13-97, written by Ernie Lewis.
     % Inputs: pHScale%, which_k1_k2%, Sali, temperature_in, Pdbar
     % Outputs: K0, K(), T(), fH
@@ -18,7 +18,7 @@ function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pbar,salini
     %               pHScale% (the chosen one) in units of mol/kg-SW
     %               except KS and KF are on the free scale
     %               and KW is in units of (mol/kg-SW)^2
-    temp_k    = TempC + 273.15;
+    temp_k    = temp_c + 273.15;
     log_temp_k = log(temp_k);
 
     % CalculateK0:
@@ -29,14 +29,14 @@ function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pbar,salini
     K0   = exp(lnK0);                 % this is in mol/kg-SW/atm
     vCO2 = 32.3;                      % partial molal volume of CO2 (cm3 / mol)
                                       % from Weiss (1974, Appendix, paragraph 3)
-    if p_opt == 0
-        prscorr = 1; % Set pressure correction to 1
-    elseif p_opt == 1
-        prscorr = exp((-Pbar).*vCO2./(gas_constant.*temp_k)); % Calculate pressure correction to K0
+    if co2_correction == 0
+        co2_pressure_correction = 1; % Set pressure correction to 1
+    elseif co2_correction == 1
+        co2_pressure_correction = exp((-pressure_bar).*vCO2./(gas_constant.*temp_k)); % Calculate pressure correction to K0
     else
         disp('co2_press must be set to either 0 or 1'); % Display error message
     end         
-    K0   = K0 .* prscorr; % this is in mol/kg-SW/atm
+    K0   = K0 .* co2_pressure_correction; % this is in mol/kg-SW/atm
     
     % CalculateIonS:
     % This is from the DOE handbook, Chapter 5, p. 13/22, eq. 7.2.4:
@@ -126,7 +126,7 @@ function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pbar,salini
         % This is for GEOSECS and Peng et al.
         % Lyman, John, UCLA Thesis, 1957
         % fit by Li et al, JGR 74:5507-5525, 1969:
-        logKB(selected) = -9.26 + 0.00886.*salinity(selected) + 0.01.*TempC(selected);
+        logKB(selected) = -9.26 + 0.00886.*salinity(selected) + 0.01.*temp_c(selected);
         KB(selected) = 10.^(logKB(selected))...  % this is on the NBS scale
             ./fH(selected);               % convert to the SWS scale
     end
@@ -455,8 +455,8 @@ function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pbar,salini
 	    % sigma for pK1 is reported to be 0.005
 	    % sigma for pK2 is reported to be 0.008
 	    % This is from page 1715
-        pK1 =  6.359 - 0.00664.*salinity(selected) - 0.01322.*TempC(selected) + 4.989e-5.*TempC(selected).^2;
-        pK2 =  9.867 - 0.01314.*salinity(selected) - 0.01904.*TempC(selected) + 2.448e-5.*TempC(selected).^2;
+        pK1 =  6.359 - 0.00664.*salinity(selected) - 0.01322.*temp_c(selected) + 4.989e-5.*temp_c(selected).^2;
+        pK2 =  9.867 - 0.01314.*salinity(selected) - 0.01904.*temp_c(selected) + 2.448e-5.*temp_c(selected).^2;
 	    K1(selected) = 10.^-pK1; % this is on the SWS pH scale in mol/kg-SW
 	    K2(selected) = 10.^-pK2; % this is on the SWS pH scale in mol/kg-SW
     end
@@ -641,14 +641,14 @@ function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pbar,salini
     if any(selected)
         %***PressureEffectsOnK1inFreshWater:
         %               This is from Millero, 1983.
-        deltaV(selected)  = -30.54 + 0.1849 .*TempC(selected) - 0.0023366.*TempC(selected).^2;
-        Kappa(selected)   = (-6.22 + 0.1368 .*TempC(selected) - 0.001233 .*TempC(selected).^2)./1000;
-        lnK1fac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*Pbar(selected)).*Pbar(selected)./RR(selected);
+        deltaV(selected)  = -30.54 + 0.1849 .*temp_c(selected) - 0.0023366.*temp_c(selected).^2;
+        Kappa(selected)   = (-6.22 + 0.1368 .*temp_c(selected) - 0.001233 .*temp_c(selected).^2)./1000;
+        lnK1fac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*pressure_bar(selected)).*pressure_bar(selected)./RR(selected);
         %***PressureEffectsOnK2inFreshWater:
         %               This is from Millero, 1983.
-        deltaV(selected)  = -29.81 + 0.115.*TempC(selected) - 0.001816.*TempC(selected).^2;
-        Kappa(selected)   = (-5.74 + 0.093.*TempC(selected) - 0.001896.*TempC(selected).^2)./1000;
-        lnK2fac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*Pbar(selected)).*Pbar(selected)./RR(selected);
+        deltaV(selected)  = -29.81 + 0.115.*temp_c(selected) - 0.001816.*temp_c(selected).^2;
+        Kappa(selected)   = (-5.74 + 0.093.*temp_c(selected) - 0.001896.*temp_c(selected).^2)./1000;
+        lnK2fac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*pressure_bar(selected)).*pressure_bar(selected)./RR(selected);
         lnKBfac(selected) = 0 ;%; this doesn't matter since boron_concentration = 0 for this case
     end
     selected=(which_k1_k2==6 | which_k1_k2==7);
@@ -659,11 +659,11 @@ function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pbar,salini
         %               but the fits are the same as those in
         %               Edmond and Gieskes, GCA, 34:1261-1291, 1970
         %               who in turn quote Li, personal communication
-        lnK1fac(selected) = (24.2 - 0.085.*TempC(selected)).*Pbar(selected)./RR(selected);
-        lnK2fac(selected) = (16.4 - 0.04 .*TempC(selected)).*Pbar(selected)./RR(selected);
+        lnK1fac(selected) = (24.2 - 0.085.*temp_c(selected)).*pressure_bar(selected)./RR(selected);
+        lnK2fac(selected) = (16.4 - 0.04 .*temp_c(selected)).*pressure_bar(selected)./RR(selected);
         %               Takahashi et al had 26.4, but 16.4 is from Edmond and Gieskes
         %               and matches the GEOSECS results
-        lnKBfac(selected) = (27.5 - 0.095.*TempC(selected)).*Pbar(selected)./RR(selected);
+        lnKBfac(selected) = (27.5 - 0.095.*temp_c(selected)).*pressure_bar(selected)./RR(selected);
     end
     selected=(which_k1_k2~=6 & which_k1_k2~=7 & which_k1_k2~=8);
     if any(selected)
@@ -671,29 +671,29 @@ function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pbar,salini
         %               These are from Millero, 1995.
         %               They are the same as Millero, 1979 and Millero, 1992.
         %               They are from data of Culberson and Pytkowicz, 1968.
-        deltaV(selected)  = -25.5 + 0.1271.*TempC(selected);
+        deltaV(selected)  = -25.5 + 0.1271.*temp_c(selected);
         %                 'deltaV = deltaV - .151.*(Sali - 34.8); % Millero, 1979
-        Kappa(selected)   = (-3.08 + 0.0877.*TempC(selected))./1000;
+        Kappa(selected)   = (-3.08 + 0.0877.*temp_c(selected))./1000;
         %                 'Kappa = Kappa  - .578.*(Sali - 34.8)/1000.; % Millero, 1979
- 	    lnK1fac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*Pbar(selected)).*Pbar(selected)./RR(selected);
+ 	    lnK1fac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*pressure_bar(selected)).*pressure_bar(selected)./RR(selected);
         %               The fits given in Millero, 1983 are somewhat different.
         
         %***PressureEffectsOnK2:
         %               These are from Millero, 1995.
         %               They are the same as Millero, 1979 and Millero, 1992.
         %               They are from data of Culberson and Pytkowicz, 1968.
-        deltaV(selected)  = -15.82 - 0.0219.*TempC(selected);
+        deltaV(selected)  = -15.82 - 0.0219.*temp_c(selected);
         %                  'deltaV = deltaV + .321.*(Sali - 34.8); % Millero, 1979
-        Kappa(selected)   = (1.13 - 0.1475.*TempC(selected))./1000;
+        Kappa(selected)   = (1.13 - 0.1475.*temp_c(selected))./1000;
         %                 'Kappa = Kappa - .314.*(Sali - 34.8)./1000: % Millero, 1979
-	    lnK2fac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*Pbar(selected)).*Pbar(selected)./RR(selected);
+	    lnK2fac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*pressure_bar(selected)).*pressure_bar(selected)./RR(selected);
         %               The fit given in Millero, 1983 is different.
         %               Not by a lot for deltaV, but by much for Kappa. %
         
         %***PressureEffectsOnKB:
         %               This is from Millero, 1979.
         %               It is from data of Culberson and Pytkowicz, 1968.
-        deltaV(selected)  = -29.48 + 0.1622.*TempC(selected) - 0.002608.*TempC(selected).^2;
+        deltaV(selected)  = -29.48 + 0.1622.*temp_c(selected) - 0.002608.*temp_c(selected).^2;
         %               Millero, 1983 has:
         %                 'deltaV = -28.56 + .1211.*temperature_in - .000321.*temperature_in.*temperature_in
         %               Millero, 1992 has:
@@ -706,7 +706,7 @@ function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pbar,salini
         %                 'Kappa = Kappa + .354.*(Sali - 34.8)./1000: % Millero,1979
         %               Millero, 1983 has:
         %                 'Kappa = (-3 + .0427.*temperature_in)./1000
-        lnKBfac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*Pbar(selected)).*Pbar(selected)./RR(selected);
+        lnKBfac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*pressure_bar(selected)).*pressure_bar(selected)./RR(selected);
     end
     
     % CorrectKWForPressure:
@@ -715,9 +715,9 @@ function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pbar,salini
     if any(selected)
         % PressureEffectsOnKWinFreshWater:
         %               This is from Millero, 1983.
-        deltaV(selected)  =  -25.6 + 0.2324.*TempC(selected) - 0.0036246.*TempC(selected).^2;
-        Kappa(selected)   = (-7.33 + 0.1368.*TempC(selected) - 0.001233 .*TempC(selected).^2)./1000;
- 	    lnKWfac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*Pbar(selected)).*Pbar(selected)./RR(selected);
+        deltaV(selected)  =  -25.6 + 0.2324.*temp_c(selected) - 0.0036246.*temp_c(selected).^2;
+        Kappa(selected)   = (-7.33 + 0.1368.*temp_c(selected) - 0.001233 .*temp_c(selected).^2)./1000;
+ 	    lnKWfac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*pressure_bar(selected)).*pressure_bar(selected)./RR(selected);
     
         %               NOTE the temperature dependence of KappaK1 and KappaKW
         %               for fresh water in Millero, 1983 are the same.
@@ -729,26 +729,26 @@ function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pbar,salini
         %       is the same as for the other seawater cases.
         % PressureEffectsOnKW:
         %               This is from Millero, 1983 and his programs CO2ROY(T).BAS.
-        deltaV(selected)  = -20.02 + 0.1119.*TempC(selected) - 0.001409.*TempC(selected).^2;
+        deltaV(selected)  = -20.02 + 0.1119.*temp_c(selected) - 0.001409.*temp_c(selected).^2;
         %               Millero, 1992 and Millero, 1995 have:
-        Kappa(selected)   = (-5.13 + 0.0794.*TempC(selected))./1000; % Millero, 1983
+        Kappa(selected)   = (-5.13 + 0.0794.*temp_c(selected))./1000; % Millero, 1983
         %               Millero, 1995 has this too, but Millero, 1992 is different.
-	    lnKWfac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*Pbar(selected)).*Pbar(selected)./RR(selected);
+	    lnKWfac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*pressure_bar(selected)).*pressure_bar(selected)./RR(selected);
         %               Millero, 1979 does not list values for these.
     end
     
     % PressureEffectsOnKF:
     %       This is from Millero, 1995, which is the same as Millero, 1983.
     %       It is assumed that KF is on the free pH scale.
-    deltaV = -9.78 - 0.009.*TempC - 0.000942.*TempC.^2;
-    Kappa = (-3.91 + 0.054.*TempC)./1000;
-    lnKFfac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant.*temp_k);
+    deltaV = -9.78 - 0.009.*temp_c - 0.000942.*temp_c.^2;
+    Kappa = (-3.91 + 0.054.*temp_c)./1000;
+    lnKFfac = (-deltaV + 0.5.*Kappa.*pressure_bar).*pressure_bar./(gas_constant.*temp_k);
     % PressureEffectsOnKS:
     %       This is from Millero, 1995, which is the same as Millero, 1983.
     %       It is assumed that KS is on the free pH scale.
-    deltaV = -18.03 + 0.0466.*TempC + 0.000316.*TempC.^2;
-    Kappa = (-4.53 + 0.09.*TempC)./1000;
-    lnKSfac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant.*temp_k);
+    deltaV = -18.03 + 0.0466.*temp_c + 0.000316.*temp_c.^2;
+    Kappa = (-4.53 + 0.09.*temp_c)./1000;
+    lnKSfac = (-deltaV + 0.5.*Kappa.*pressure_bar).*pressure_bar./(gas_constant.*temp_k);
     
     % CorrectKP1KP2KP3KSiForPressure:
     % These corrections don't matter for the GEOSECS choice (which_k1_k2% = 6) and
@@ -757,33 +757,33 @@ function Ks = calculate_equilibrium_constants(number_of_points,TempC,Pbar,salini
     % The corrections for KP1, KP2, and KP3 are from Millero, 1995, which are the
     %       same as Millero, 1983.
     % PressureEffectsOnKP1:
-    deltaV = -14.51 + 0.1211.*TempC - 0.000321.*TempC.^2;
-    Kappa  = (-2.67 + 0.0427.*TempC)./1000;
-    lnKP1fac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant.*temp_k);
+    deltaV = -14.51 + 0.1211.*temp_c - 0.000321.*temp_c.^2;
+    Kappa  = (-2.67 + 0.0427.*temp_c)./1000;
+    lnKP1fac = (-deltaV + 0.5.*Kappa.*pressure_bar).*pressure_bar./(gas_constant.*temp_k);
     % PressureEffectsOnKP2:
-    deltaV = -23.12 + 0.1758.*TempC - 0.002647.*TempC.^2;
-    Kappa  = (-5.15 + 0.09  .*TempC)./1000;
-    lnKP2fac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant.*temp_k);
+    deltaV = -23.12 + 0.1758.*temp_c - 0.002647.*temp_c.^2;
+    Kappa  = (-5.15 + 0.09  .*temp_c)./1000;
+    lnKP2fac = (-deltaV + 0.5.*Kappa.*pressure_bar).*pressure_bar./(gas_constant.*temp_k);
     % PressureEffectsOnKP3:
-    deltaV = -26.57 + 0.202 .*TempC - 0.003042.*TempC.^2;
-    Kappa  = (-4.08 + 0.0714.*TempC)./1000;
-    lnKP3fac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant.*temp_k);
+    deltaV = -26.57 + 0.202 .*temp_c - 0.003042.*temp_c.^2;
+    Kappa  = (-4.08 + 0.0714.*temp_c)./1000;
+    lnKP3fac = (-deltaV + 0.5.*Kappa.*pressure_bar).*pressure_bar./(gas_constant.*temp_k);
     % PressureEffectsOnKSi:
     %  The only mention of this is Millero, 1995 where it is stated that the
     %    values have been estimated from the values of boric acid. HOWEVER,
     %    there is no listing of the values in the table.
     %    I used the values for boric acid from above.
-    deltaV = -29.48 + 0.1622.*TempC - 0.002608.*TempC.^2;
+    deltaV = -29.48 + 0.1622.*temp_c - 0.002608.*temp_c.^2;
     Kappa  = -2.84./1000;
-    lnKSifac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant.*temp_k);
+    lnKSifac = (-deltaV + 0.5.*Kappa.*pressure_bar).*pressure_bar./(gas_constant.*temp_k);
     % PressureEffectsOnKNH4: added by J. Sharp
-    deltaV = -26.43 + 0.0889.*TempC - 0.000905.*TempC.^2;
-    Kappa  = (-5.03 + 0.0814.*TempC)./1000;
-    lnKNH4fac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant.*temp_k);
+    deltaV = -26.43 + 0.0889.*temp_c - 0.000905.*temp_c.^2;
+    Kappa  = (-5.03 + 0.0814.*temp_c)./1000;
+    lnKNH4fac = (-deltaV + 0.5.*Kappa.*pressure_bar).*pressure_bar./(gas_constant.*temp_k);
     % PressureEffectsOnKH2S: added by J. Sharp
-    deltaV = -11.07 - 0.009.*TempC - 0.000942.*TempC.^2;
-    Kappa  = (-2.89 + 0.054 .*TempC)./1000;
-    lnKH2Sfac = (-deltaV + 0.5.*Kappa.*Pbar).*Pbar./(gas_constant.*temp_k);
+    deltaV = -11.07 - 0.009.*temp_c - 0.000942.*temp_c.^2;
+    Kappa  = (-2.89 + 0.054 .*temp_c)./1000;
+    lnKH2Sfac = (-deltaV + 0.5.*Kappa.*pressure_bar).*pressure_bar./(gas_constant.*temp_k);
     
     % CorrectKsForPressureHere:
     K1fac  = exp(lnK1fac);  K1  = K1 .*K1fac;
