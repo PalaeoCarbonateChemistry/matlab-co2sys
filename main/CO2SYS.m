@@ -11,11 +11,11 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     % Input conditioning
     
     % set default for optional input argument
-    p_opt = 0;
+    co2_pressure_correction = 0;
     % parse optional input argument
-    for i = 1:2:length(varargin)-1
-        if strcmpi(varargin{i}, 'co2_press')
-            p_opt = varargin{i+1};
+    for index = 1:2:length(varargin)-1
+        if strcmpi(varargin{index},'co2_press')
+            co2_pressure_correction = varargin{index+1};
         end
     end
     
@@ -57,69 +57,69 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     gas_constant = 83.14462618; % ml bar-1 K-1 mol-1,
     
     % Generate empty vectors for...
-    alkalinity   = nan(number_of_points,1);
-    dic   = nan(number_of_points,1);
-    pH   = nan(number_of_points,1); % pH
-    pco2   = nan(number_of_points,1); % pCO2
-    fco2   = nan(number_of_points,1); % fCO2
-    hco3 = nan(number_of_points,1); % [HCO3]
-    co3  = nan(number_of_points,1); % [CO3]
-    co2  = nan(number_of_points,1); % [CO2*]
+    alkalinity = nan(number_of_points,1);
+    dic        = nan(number_of_points,1);
+    pH         = nan(number_of_points,1); % pH
+    pco2       = nan(number_of_points,1); % pCO2
+    fco2       = nan(number_of_points,1); % fCO2
+    hco3       = nan(number_of_points,1); % [HCO3]
+    co3        = nan(number_of_points,1); % [CO3]
+    co2        = nan(number_of_points,1); % [CO2*]
 
     salinity = salinity_in;
     
     % Assign values to empty vectors.
-    selected=(parameter_1_type==1 & parameter_1~=-999);   
-    alkalinity(selected)=parameter_1(selected)/1e6; % Convert from micromol/kg to mol/kg
+    selected = (parameter_1_type==1 & parameter_1~=-999);   
+    alkalinity(selected) = parameter_1(selected)/1e6; % Convert from micromol/kg to mol/kg
 
-    selected=(parameter_1_type==2 & parameter_1~=-999);   
-    dic(selected)=parameter_1(selected)/1e6; % Convert from micromol/kg to mol/kg
+    selected = (parameter_1_type==2 & parameter_1~=-999);   
+    dic(selected) = parameter_1(selected)/1e6; % Convert from micromol/kg to mol/kg
 
-    selected=(parameter_1_type==3 & parameter_1~=-999);   
-    pH(selected)=parameter_1(selected);
+    selected = (parameter_1_type==3 & parameter_1~=-999);   
+    pH(selected) = parameter_1(selected);
 
-    selected=(parameter_1_type==4 & parameter_1~=-999);   
-    pco2(selected)=parameter_1(selected)/1e6; % Convert from microatm. to atm.
+    selected = (parameter_1_type==4 & parameter_1~=-999);   
+    pco2(selected) = parameter_1(selected)/1e6; % Convert from microatm. to atm.
 
-    selected=(parameter_1_type==5 & parameter_1~=-999);   
-    fco2(selected)=parameter_1(selected)/1e6; % Convert from microatm. to atm.
+    selected = (parameter_1_type==5 & parameter_1~=-999);   
+    fco2(selected) = parameter_1(selected)/1e6; % Convert from microatm. to atm.
 
-    selected=(parameter_1_type==6 & parameter_1~=-999); 
-    hco3(selected)=parameter_1(selected)/1e6; % Convert from micromol/kg to mol/kg
+    selected = (parameter_1_type==6 & parameter_1~=-999); 
+    hco3(selected) = parameter_1(selected)/1e6; % Convert from micromol/kg to mol/kg
     
-    selected=(parameter_1_type==7 & parameter_1~=-999);  
-    co3(selected)=parameter_1(selected)/1e6; % Convert from micromol/kg to mol/kg
+    selected = (parameter_1_type==7 & parameter_1~=-999);  
+    co3(selected) = parameter_1(selected)/1e6; % Convert from micromol/kg to mol/kg
     
-    selected=(parameter_1_type==8 & parameter_1~=-999);  
-    co2(selected)=parameter_1(selected)/1e6; % Convert from micromol/kg to mol/kg
+    selected = (parameter_1_type==8 & parameter_1~=-999);  
+    co2(selected) = parameter_1(selected)/1e6; % Convert from micromol/kg to mol/kg
     
-    selected=(parameter_2_type==1 & parameter_2~=-999);   
-    alkalinity(selected)=parameter_2(selected)/1e6; % Convert from micromol/kg to mol/kg
+    selected = (parameter_2_type==1 & parameter_2~=-999);   
+    alkalinity(selected) = parameter_2(selected)/1e6; % Convert from micromol/kg to mol/kg
     
-    selected=(parameter_2_type==2 & parameter_2~=-999);   
-    dic(selected)=parameter_2(selected)/1e6; % Convert from micromol/kg to mol/kg
+    selected = (parameter_2_type==2 & parameter_2~=-999);   
+    dic(selected) = parameter_2(selected)/1e6; % Convert from micromol/kg to mol/kg
     
-    selected=(parameter_2_type==3 & parameter_2~=-999);   
-    pH(selected)=parameter_2(selected);
+    selected = (parameter_2_type==3 & parameter_2~=-999);   
+    pH(selected) = parameter_2(selected);
     
-    selected=(parameter_2_type==4 & parameter_2~=-999);   
-    pco2(selected)=parameter_2(selected)/1e6; % Convert from microatm. to atm.
+    selected = (parameter_2_type==4 & parameter_2~=-999);   
+    pco2(selected) = parameter_2(selected)/1e6; % Convert from microatm. to atm.
     
-    selected=(parameter_2_type==5 & parameter_2~=-999);   
-    fco2(selected)=parameter_2(selected)/1e6; % Convert from microatm. to atm.
+    selected = (parameter_2_type==5 & parameter_2~=-999);   
+    fco2(selected) = parameter_2(selected)/1e6; % Convert from microatm. to atm.
     
-    selected=(parameter_2_type==6 & parameter_2~=-999); 
-    hco3(selected)=parameter_2(selected)/1e6; % Convert from micromol/kg to mol/kg
+    selected = (parameter_2_type==6 & parameter_2~=-999); 
+    hco3(selected) = parameter_2(selected)/1e6; % Convert from micromol/kg to mol/kg
     
-    selected=(parameter_2_type==7 & parameter_2~=-999);  
-    co3(selected)=parameter_2(selected)/1e6; % Convert from micromol/kg to mol/kg
+    selected = (parameter_2_type==7 & parameter_2~=-999);  
+    co3(selected) = parameter_2(selected)/1e6; % Convert from micromol/kg to mol/kg
     
-    selected=(parameter_2_type==8 & parameter_2~=-999);  
-    co2(selected)=parameter_2(selected)/1e6; % Convert from micromol/kg to mol/kg
+    selected = (parameter_2_type==8 & parameter_2~=-999);  
+    co2(selected) = parameter_2(selected)/1e6; % Convert from micromol/kg to mol/kg
     
     % Generate the columns holding Si, Phos, Amm, H2S and salinity.
     % Pure Water case:
-    selected=(which_k1_k2==8);
+    selected = (which_k1_k2==8);
     salinity(selected) = 0;
 
     boron_concentration = calculate_boron_concentration(salinity,number_of_points,which_boron,which_k1_k2);
@@ -134,19 +134,19 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     % The vector 'peng_correction' is used to modify the value of TA, for those
     % cases where which_k1_k2==7, since PAlk(Peng) = PAlk(Dickson) + phosphate.
     % Thus, peng_correction is 0 for all cases where which_k1_k2 is not 7
-    peng_correction=zeros(number_of_points,1); 
-    selected=which_k1_k2==7; 
-    peng_correction(selected)=phosphate_concentration(selected);
+    peng_correction = zeros(number_of_points,1); 
+    selected = (which_k1_k2==7); 
+    peng_correction(selected) = phosphate_concentration(selected);
     
     % Calculate the constants for all samples at input conditions
     % The constants calculated for each sample will be on the appropriate pH scale!
-    Ks_in = calculate_equilibrium_constants(number_of_points,temperature_in,pressure_in/10,salinity,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2);
+    Ks_in = calculate_equilibrium_constants(number_of_points,temperature_in,pressure_in/10,salinity,pH_scale_in,co2_pressure_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2);
     
     K0_in = Ks_in("K0");
     
     % Make sure fCO2 is available for each sample that has pCO2 or CO2.
     temp_k = temperature_in+273.15;
-    fugacity_factor = calculate_fugacity_factor(p_opt,gas_constant,number_of_points,which_k1_k2,temp_k);
+    fugacity_factor = calculate_fugacity_factor(co2_pressure_correction,gas_constant,number_of_points,which_k1_k2,temp_k);
     
     selected = (~isnan(pco2) & (parameter_1_type==4 | parameter_2_type==4));  
     fco2(selected) = pco2(selected).*fugacity_factor(selected);
@@ -155,14 +155,14 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     fco2(selected) = co2(selected)./K0_in(selected);
     
     % Generate vectors for results, and copy the raw input values into them
-    alkalinity_output    = alkalinity;
-    dic_output    = dic;
-    pH_output   = pH;
-    pco2_output   = pco2;
-    fco2_output   = fco2;
-    hco3_output = hco3;
-    co3_output  = co3;
-    co2_output  = co2;
+    alkalinity_in = alkalinity;
+    dic_in        = dic;
+    pH_in         = pH;
+    pco2_in       = pco2;
+    fco2_in       = fco2;
+    hco3_in       = hco3;
+    co3_in        = co3;
+    co2_in        = co2;
     
     % Generate vector describing the combination of input parameters
     % So, the valid ones are:
@@ -173,152 +173,152 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     % pCO2 will be calculated later on, routines work with fCO2.
     selected = (combination==12); % input TA, TC
     if any(selected)
-    selected=(~isnan(alkalinity_output) & ~isnan(dic_output) & selected);
-        pH_output(selected)                = calculate_pH_from_alkalinity_dic(alkalinity_output(selected)-peng_correction(selected),dic_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
-        selected=(~isnan(pH_output) & selected);
+    selected = (~isnan(alkalinity_in) & ~isnan(dic_in) & selected);
+        pH_in(selected) = calculate_pH_from_alkalinity_dic(alkalinity_in(selected)-peng_correction(selected),dic_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+        selected = (~isnan(pH_in) & selected);
         if any(selected)
-           fco2_output(selected)              = calculate_fco2_from_dic_pH(dic_output(selected), pH_output(selected),Ks_in,selected);
-           [co3_output(selected),hco3_output(selected)] = calculate_co3_hco3_from_dic_pH(dic_output(selected),pH_output(selected),Ks_in,selected);
+           fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected), pH_in(selected),Ks_in,selected);
+           [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
         end
     end
 
     selected = (combination==13); % input TA, pH
     if any(selected)
-    selected=(~isnan(alkalinity_output) & ~isnan(pH_output) & selected);
-        dic_output(selected)                 = calculate_dic_from_alkalinity_pH(alkalinity_output(selected)-peng_correction(selected),pH_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
-        fco2_output(selected)                = calculate_fco2_from_dic_pH(dic_output(selected),pH_output(selected),Ks_in,selected);
-        [co3_output(selected),hco3_output(selected)]   = calculate_co3_hco3_from_dic_pH(dic_output(selected),pH_output(selected),Ks_in,selected);
+    selected = (~isnan(alkalinity_in) & ~isnan(pH_in) & selected);
+        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+        fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
+        [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
     end
 
     selected = (combination==14 | combination==15 | combination==18); % input TA, (pCO2 or fCO2 or CO2)
     if any(selected)
-    selected=(~isnan(alkalinity_output) & ~isnan(fco2_output) & selected);
-        pH_output(selected)                = calculate_pH_from_alkalinity_fco2(alkalinity_output(selected)-peng_correction(selected),fco2_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
-        selected=(~isnan(pH_output) & selected);
+    selected=(~isnan(alkalinity_in) & ~isnan(fco2_in) & selected);
+        pH_in(selected) = calculate_pH_from_alkalinity_fco2(alkalinity_in(selected)-peng_correction(selected),fco2_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+        selected = (~isnan(pH_in) & selected);
         if any(selected)
-           dic_output(selected)              = calculate_dic_from_alkalinity_pH(alkalinity_output(selected)-peng_correction(selected),pH_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
-           [co3_output(selected),hco3_output(selected)]= calculate_co3_hco3_from_dic_pH(dic_output(selected),pH_output(selected),Ks_in,selected);
+           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+           [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
         end
     end
 
     selected = (combination==16); % input TA, HCO3
     if any(selected)
-    selected=(~isnan(alkalinity_output) & ~isnan(hco3_output) & selected);
-        pH_output(selected)                = calculate_pH_from_alkalinity_hco3(alkalinity_output(selected)-peng_correction(selected),hco3_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);  % added Peng correction // MPH
-        selected=(~isnan(pH_output) & selected);
+    selected = (~isnan(alkalinity_in) & ~isnan(hco3_in) & selected);
+        pH_in(selected) = calculate_pH_from_alkalinity_hco3(alkalinity_in(selected)-peng_correction(selected),hco3_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);  % added Peng correction // MPH
+        selected=(~isnan(pH_in) & selected);
         if any(selected)
-           dic_output(selected)              = calculate_dic_from_alkalinity_pH(alkalinity_output(selected)-peng_correction(selected),pH_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
-           fco2_output(selected)             = calculate_fco2_from_dic_pH(dic_output(selected),pH_output(selected), Ks_in,selected); 
-           co3_output(selected)            = calculate_co2_from_dic_pH(dic_output(selected),pH_output(selected), Ks_in,selected);
+           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+           fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected); 
+           co3_in(selected) = calculate_co2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
         end
     end
 
     selected = (combination==17); % input TA, CO3
     if any(selected)
-    selected=(~isnan(alkalinity_output) & ~isnan(co3_output) & selected);
-        pH_output(selected)                 = calculate_pH_from_alkalinity_co3(alkalinity_output(selected)-peng_correction(selected),co3_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);  % added Peng correction // MPH
-        selected=(~isnan(pH_output) & selected);
+    selected = (~isnan(alkalinity_in) & ~isnan(co3_in) & selected);
+        pH_in(selected) = calculate_pH_from_alkalinity_co3(alkalinity_in(selected)-peng_correction(selected),co3_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);  % added Peng correction // MPH
+        selected=(~isnan(pH_in) & selected);
         if any(selected)
-           dic_output(selected)               = calculate_dic_from_alkalinity_pH(alkalinity_output(selected)-peng_correction(selected),pH_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
-           fco2_output(selected)              = calculate_fco2_from_dic_pH(dic_output(selected),pH_output(selected), Ks_in,selected); 
-           hco3_output(selected)            = calculate_hco3_from_dic_pH(dic_output(selected),pH_output(selected), Ks_in,selected);
+           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+           fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected); 
+           hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
         end
     end
 
     selected = (combination==23); % input TC, pH
     if any(selected)
-    selected=(~isnan(dic_output) & ~isnan(pH_output) & selected);
-        alkalinity_output(selected)                  = calculate_alkalinity_from_dic_pH(dic_output(selected),pH_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
-        fco2_output(selected)                 = calculate_fco2_from_dic_pH(dic_output(selected),pH_output(selected),Ks_in,selected);
-        [co3_output(selected),hco3_output(selected)]    = calculate_co3_hco3_from_dic_pH(dic_output(selected), pH_output(selected),Ks_in,selected);
+    selected = (~isnan(dic_in) & ~isnan(pH_in) & selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
+        fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
+        [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected), pH_in(selected),Ks_in,selected);
     end
     
     selected = (combination==24 | combination==25 | combination==28);  % input TC, (pCO2 or fCO2 or CO2)
     if any(selected)
-    selected=(~isnan(dic_output) & ~isnan(fco2_output) & selected);
-        pH_output(selected)                 = calculate_pH_from_dic_fco2(dic_output(selected),fco2_output(selected), Ks_in,selected);
-        alkalinity_output(selected)                  = calculate_alkalinity_from_dic_pH(dic_output(selected),pH_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
-        [co3_output(selected),hco3_output(selected)]    = calculate_co3_hco3_from_dic_pH(dic_output(selected),pH_output(selected), Ks_in,selected);
+    selected = (~isnan(dic_in) & ~isnan(fco2_in) & selected);
+        pH_in(selected) = calculate_pH_from_dic_fco2(dic_in(selected),fco2_in(selected), Ks_in,selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
+        [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
 
     selected = (combination==26); % input TC, HCO3
     if any(selected)
-    selected=(~isnan(dic_output) & ~isnan(hco3_output) & selected);
-        [pH_output(selected),fco2_output(selected)]       = calculate_pH_fco2_from_dic_hco3(dic_output(selected),hco3_output(selected), Ks_in,selected);
-        alkalinity_output(selected)                  = calculate_alkalinity_from_dic_pH(dic_output(selected),pH_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
-        co3_output(selected)                = calculate_co2_from_dic_pH(dic_output(selected),pH_output(selected),Ks_in,selected);
+    selected = (~isnan(dic_in) & ~isnan(hco3_in) & selected);
+        [pH_in(selected),fco2_in(selected)] = calculate_pH_fco2_from_dic_hco3(dic_in(selected),hco3_in(selected), Ks_in,selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
+        co3_in(selected) = calculate_co2_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
     end
 
     selected = (combination==27); % input TC, CO3
     if any(selected)
-    selected=(~isnan(dic_output) & ~isnan(co3_output) & selected);
-        [pH_output(selected),fco2_output(selected)]       = calculate_pH_fco2_from_dic_co3(dic_output(selected),co3_output(selected), Ks_in,selected);
-        alkalinity_output(selected)                  = calculate_alkalinity_from_dic_pH(dic_output(selected),pH_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
-        hco3_output(selected)               = calculate_hco3_from_dic_pH(dic_output(selected),pH_output(selected), Ks_in,selected);
+    selected = (~isnan(dic_in) & ~isnan(co3_in) & selected);
+        [pH_in(selected),fco2_in(selected)] = calculate_pH_fco2_from_dic_co3(dic_in(selected),co3_in(selected), Ks_in,selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
+        hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
 
     selected = (combination==34 | combination==35 | combination==38); % input pH, (pCO2 or fCO2 or CO2)
     if any(selected)
-    selected=(~isnan(pH_output) & ~isnan(fco2_output) & selected);
-        dic_output(selected)                  = calculate_dic_from_pH_fco2(pH_output(selected),fco2_output(selected), Ks_in,selected);
-        alkalinity_output(selected)                  = calculate_alkalinity_from_dic_pH(dic_output(selected),pH_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
-        [co3_output(selected),hco3_output(selected)]    = calculate_co3_hco3_from_dic_pH(dic_output(selected),pH_output(selected), Ks_in,selected);
+    selected = (~isnan(pH_in) & ~isnan(fco2_in) & selected);
+        dic_in(selected) = calculate_dic_from_pH_fco2(pH_in(selected),fco2_in(selected), Ks_in,selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
+        [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
 
     selected = (combination==36); % input pH, HCO3
     if any(selected)
-    selected=(~isnan(pH_output) & ~isnan(hco3_output) & selected);
-        alkalinity_output(selected)                  = calculate_alkalinity_from_pH_hco3(pH_output(selected),hco3_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
-        dic_output(selected)                  = calculate_dic_from_alkalinity_pH(alkalinity_output(selected)-peng_correction(selected),pH_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
-        fco2_output(selected)                 = calculate_fco2_from_dic_pH(dic_output(selected),pH_output(selected), Ks_in,selected);
-        co3_output(selected)                = calculate_co2_from_dic_pH(dic_output(selected),pH_output(selected), Ks_in,selected);
+    selected = (~isnan(pH_in) & ~isnan(hco3_in) & selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_pH_hco3(pH_in(selected),hco3_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
+        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+        fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
+        co3_in(selected) = calculate_co2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
 
     selected = (combination==37); % input pH, CO3
     if any(selected)
-    selected=(~isnan(pH_output) & ~isnan(co3_output) & selected);
-        alkalinity_output(selected)                  = calculate_alkalinity_from_pH_co3(pH_output(selected),co3_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
-        dic_output(selected)                  = calculate_dic_from_alkalinity_pH(alkalinity_output(selected)-peng_correction(selected),pH_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
-        fco2_output(selected)                 = calculate_fco2_from_dic_pH(dic_output(selected),pH_output(selected), Ks_in,selected);
-        hco3_output(selected)               = calculate_hco3_from_dic_pH(dic_output(selected),pH_output(selected), Ks_in,selected);
+    selected = (~isnan(pH_in) & ~isnan(co3_in) & selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_pH_co3(pH_in(selected),co3_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
+        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+        fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
+        hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
 
     selected = (combination==46 | combination==56 | combination==68); % input (pCO2 or fCO2 or CO2), HCO3
     if any(selected)
-    selected=(~isnan(fco2_output) & ~isnan(hco3_output) & selected);
-        pH_output(selected)                 = calculate_pH_from_fco2_hco3(fco2_output(selected),hco3_output(selected), Ks_in,selected);
-        dic_output(selected)                  = calculate_dic_from_pH_fco2(pH_output(selected),fco2_output(selected), Ks_in,selected);
-        alkalinity_output(selected)                  = calculate_alkalinity_from_dic_pH(dic_output(selected),pH_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
-        co3_output(selected)                = calculate_co2_from_dic_pH(dic_output(selected),pH_output(selected), Ks_in,selected);
+    selected = (~isnan(fco2_in) & ~isnan(hco3_in) & selected);
+        pH_in(selected) = calculate_pH_from_fco2_hco3(fco2_in(selected),hco3_in(selected), Ks_in,selected);
+        dic_in(selected) = calculate_dic_from_pH_fco2(pH_in(selected),fco2_in(selected), Ks_in,selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
+        co3_in(selected) = calculate_co2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
 
     selected = (combination==47 | combination==57 | combination==78); % input (pCO2 or fCO2 or CO2), CO3
     if any(selected)
-    selected=(~isnan(fco2_output) & ~isnan(co3_output) & selected);
-        pH_output(selected)                 = calculate_pH_from_fco2_co3(fco2_output(selected),co3_output(selected), Ks_in,selected);
-        dic_output(selected)                  = calculate_dic_from_pH_fco2 (pH_output(selected),fco2_output(selected), Ks_in,selected);
-        alkalinity_output(selected)                  = calculate_alkalinity_from_dic_pH(dic_output(selected),pH_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
-        hco3_output(selected)               = calculate_hco3_from_dic_pH(dic_output(selected),pH_output(selected), Ks_in,selected);
+    selected = (~isnan(fco2_in) & ~isnan(co3_in) & selected);
+        pH_in(selected) = calculate_pH_from_fco2_co3(fco2_in(selected),co3_in(selected), Ks_in,selected);
+        dic_in(selected) = calculate_dic_from_pH_fco2 (pH_in(selected),fco2_in(selected), Ks_in,selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
+        hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
 
     selected = (combination==67); % input HCO3, CO3
     if any(selected)
-    selected=(~isnan(hco3_output) & ~isnan(co3_output) & selected);
-        pH_output(selected)                 = calculate_pH_from_co3_hco3(co3_output(selected),hco3_output(selected), Ks_in,selected);
-        alkalinity_output(selected)                  = calculate_alkalinity_from_pH_co3(pH_output(selected),co3_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
-        dic_output(selected)                  = calculate_dic_from_alkalinity_pH(alkalinity_output(selected)-peng_correction(selected),pH_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
-        fco2_output(selected)                 = calculate_fco2_from_dic_pH(dic_output(selected),pH_output(selected), Ks_in,selected);
+    selected = (~isnan(hco3_in) & ~isnan(co3_in) & selected);
+        pH_in(selected) = calculate_pH_from_co3_hco3(co3_in(selected),hco3_in(selected), Ks_in,selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_pH_co3(pH_in(selected),co3_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
+        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+        fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
         %CO2ic(selected)                = CalculateCO2fromTCpH(TCc(selected),PHic(selected));
     end
     
     % By now, an fCO2 value is available for each sample.
     % Generate the associated pCO2 value:
-    selected = (isnan(pco2_output) & (parameter_1_type~=4 | parameter_2_type~=4)); 
-    pco2_output(selected)  = fco2_output(selected)./fugacity_factor(selected);
+    selected = (isnan(pco2_in) & (parameter_1_type~=4 | parameter_2_type~=4)); 
+    pco2_in(selected)  = fco2_in(selected)./fugacity_factor(selected);
 
     % Generate the associated CO2 value:
-    selected = (isnan(co2_output) & (parameter_1_type~=8 | parameter_2_type~=8)); 
-    co2_output(selected) = fco2_output(selected).*K0_in(selected);
+    selected = (isnan(co2_in) & (parameter_1_type~=8 | parameter_2_type~=8)); 
+    co2_in(selected) = fco2_in(selected).*K0_in(selected);
     
     % Calculate Other Params At Input Conditions
     % Generate vector of NaN
@@ -330,27 +330,27 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         revelle_alkalinity_in,saturation_state_calcite_in,saturation_state_aragonite_in,...
         co2_dry_alkalinity_in] = deal(nan_vector);
 
-    selected = (~isnan(pH_output)); % if PHic = NaN, pH calculation was not performed or did not converge
+    selected = (~isnan(pH_in)); % if PHic = NaN, pH calculation was not performed or did not converge
     [boron_alkalinity_in(selected),oh_alkalinity_in(selected),phosphate_alkalinity_in(selected),...
         silicate_alkalinity_in(selected),ammonia_alkalinity_in(selected),sulphide_alkalinity_in(selected),...
         h_free_alkalinity_in(selected),sulphate_alkalinity_in(selected),fluorine_alkalinity_in(selected),...
-        ] = calculate_alkalinity_parts(pH_output,pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+        ] = calculate_alkalinity_parts(pH_in,pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
     
     phosphate_alkalinity_in(selected) = phosphate_alkalinity_in(selected)+peng_correction(selected);
-    revelle_alkalinity_in(selected) = calculate_revelle_factor(alkalinity_output(selected)-peng_correction(selected), dic_output(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
-    [saturation_state_calcite_in(selected),saturation_state_aragonite_in(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_in(selected), dic_output(selected), pH_output(selected), Ks_in, sqrt(salinity(selected)),gas_constant,calcium_concentration,which_k1_k2,pressure_in/10,selected);
+    revelle_alkalinity_in(selected) = calculate_revelle_factor(alkalinity_in(selected)-peng_correction(selected), dic_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+    [saturation_state_calcite_in(selected),saturation_state_aragonite_in(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_in(selected), dic_in(selected), pH_in(selected), Ks_in, sqrt(salinity(selected)),gas_constant,calcium_concentration,which_k1_k2,pressure_in/10,selected);
     vapour_pressure_factor = calculate_vapour_pressure_factor(salinity,temp_k);
-    co2_dry_alkalinity_in(~isnan(pco2_output),1) = pco2_output(~isnan(pco2_output),1)./vapour_pressure_factor(~isnan(pco2_output),1); % ' this assumes pTot = 1 atm
+    co2_dry_alkalinity_in(~isnan(pco2_in),1) = pco2_in(~isnan(pco2_in),1)./vapour_pressure_factor(~isnan(pco2_in),1); % ' this assumes pTot = 1 atm
     
     
-    substrate_inhibitor_ratio_in = hco3_output./(h_free_alkalinity_in.*1e6);
+    substrate_inhibitor_ratio_in = hco3_in./(h_free_alkalinity_in.*1e6);
     
     % % Just for reference, convert pH at input conditions to the other scales
     pHicT = nan(number_of_points,1);
     pHicS = nan(number_of_points,1);
     pHicF = nan(number_of_points,1);
     pHicN = nan(number_of_points,1);
-    [pHicT(selected),pHicS(selected),pHicF(selected),pHicN(selected)]=find_pH_on_all_scales(pH_output(selected),pH_scale_in,Ks_in,fluorine_concentration,sulphate_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+    [pHicT(selected),pHicS(selected),pHicF(selected),pHicN(selected)]=find_pH_on_all_scales(pH_in(selected),pH_scale_in,Ks_in,fluorine_concentration,sulphate_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
     
     % Merge the Ks at input into an array. Ks at output will be glued to this later.
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks_in);
@@ -359,20 +359,20 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     clear K0 K1 K2 KW KB KF KS KP1 KP2 KP3 KSi KNH4 KH2S
     
     % Calculate the constants for all samples at output conditions
-    Ks_out = calculate_equilibrium_constants(number_of_points,temperature_out,pressure_out/10,salinity,pH_scale_in,p_opt,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2);                
+    Ks_out = calculate_equilibrium_constants(number_of_points,temperature_out,pressure_out/10,salinity,pH_scale_in,co2_pressure_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2);                
 
     % For output conditions, using conservative TA and TC, calculate pH, fCO2
     % and pCO2, HCO3, CO3, and CO2
     temp_k = temperature_out+273.15;
-    selected=(~isnan(alkalinity_output) & ~isnan(dic_output)); % i.e., do for all samples that have TA and TC values
+    selected=(~isnan(alkalinity_in) & ~isnan(dic_in)); % i.e., do for all samples that have TA and TC values
     pH_out = NaN(number_of_points,1);
     [co3_out,hco3_out,fco2_out] = deal(pH_out);
-    pH_out(selected) = calculate_pH_from_alkalinity_dic(alkalinity_output(selected)-peng_correction(selected), dic_output(selected),pH_scale_in,Ks_out,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
-        fco2_out(selected) = calculate_fco2_from_dic_pH(dic_output(selected), pH_out(selected), Ks_out,selected);
-        [co3_out(selected),hco3_out(selected)] = calculate_co3_hco3_from_dic_pH(dic_output(selected),pH_out(selected), Ks_out,selected);
+    pH_out(selected) = calculate_pH_from_alkalinity_dic(alkalinity_in(selected)-peng_correction(selected), dic_in(selected),pH_scale_in,Ks_out,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
+        fco2_out(selected) = calculate_fco2_from_dic_pH(dic_in(selected), pH_out(selected), Ks_out,selected);
+        [co3_out(selected),hco3_out(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_out(selected), Ks_out,selected);
     
     % Generate the associated pCO2 value:
-    fugacity_factor = calculate_fugacity_factor(p_opt,gas_constant,number_of_points,which_k1_k2,temp_k);
+    fugacity_factor = calculate_fugacity_factor(co2_pressure_correction,gas_constant,number_of_points,which_k1_k2,temp_k);
     pco2_out  = fco2_out./fugacity_factor;
     % Generate the associated CO2 value:
 
@@ -390,8 +390,8 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         sulphide_alkalinity_out(selected), h_free_alkalinity_out(selected),sulphate_alkalinity_out(selected),fluorine_alkalinity_out(selected)] = calculate_alkalinity_parts(pH_out,pH_scale_in,Ks_out,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
     
     phosphate_alkalinity_out(selected)                 = phosphate_alkalinity_out(selected)+peng_correction(selected);
-    revelle_alkalinity_out(selected)              = calculate_revelle_factor(alkalinity_output(selected)-peng_correction(selected), dic_output(selected),pH_scale_in,Ks_out,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
-    [saturation_state_calcite_out(selected),saturation_state_aragonite_out(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_out(selected), dic_output(selected), pH_out(selected), Ks_out, sqrt(salinity(selected)), gas_constant, calcium_concentration,which_k1_k2,pressure_out/10,selected);
+    revelle_alkalinity_out(selected)              = calculate_revelle_factor(alkalinity_in(selected)-peng_correction(selected), dic_in(selected),pH_scale_in,Ks_out,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+    [saturation_state_calcite_out(selected),saturation_state_aragonite_out(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_out(selected), dic_in(selected), pH_out(selected), Ks_out, sqrt(salinity(selected)), gas_constant, calcium_concentration,which_k1_k2,pressure_out/10,selected);
     vapour_pressure_factor = calculate_vapour_pressure_factor(salinity,temp_k);
     co2_dry_alkalinity_out(~isnan(pco2_out),1)    = pco2_out(~isnan(pco2_out))./vapour_pressure_factor(~isnan(pco2_out)); % ' this assumes pTot = 1 atm
     substrate_inhibitor_ratio_out = hco3_out./(h_free_alkalinity_out.*1e6);
@@ -408,8 +408,8 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     concentration_vector =[boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration];
     
     % Saving data in array, 99 columns, as many rows as samples input
-    data=[alkalinity_output*1e6         dic_output*1e6        pH_output           pco2_output*1e6        fco2_output*1e6...
-          hco3_output*1e6      co3_output*1e6      co2_output*1e6      boron_alkalinity_in*1e6     oh_alkalinity_in*1e6...
+    data=[alkalinity_in*1e6         dic_in*1e6        pH_in           pco2_in*1e6        fco2_in*1e6...
+          hco3_in*1e6      co3_in*1e6      co2_in*1e6      boron_alkalinity_in*1e6     oh_alkalinity_in*1e6...
           phosphate_alkalinity_in*1e6     silicate_alkalinity_in*1e6   ammonia_alkalinity_in*1e6  sulphide_alkalinity_in*1e6    h_free_alkalinity_in*1e6... %%% Multiplied Hfreeinp *1e6, svh20100827
           revelle_alkalinity_in      saturation_state_calcite_in     saturation_state_aragonite_in     co2_dry_alkalinity_in*1e6  substrate_inhibitor_ratio_in...
           pH_out            pco2_out*1e6       fco2_out*1e6       hco3_out*1e6      co3_out*1e6...
