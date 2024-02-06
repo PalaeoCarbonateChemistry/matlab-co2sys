@@ -592,10 +592,7 @@ classdef EquilibriumConstants
             end         
             k0_pressure_correction = co2_pressure_correction; % this is in mol/kg-SW/atm
         end
-        function [k1_pressure_correction,...
-                  k2_pressure_correction,...
-                  kb_pressure_correction] = calculate_pressure_correction_k1_and_k2_and_kb(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar)
-            
+        function [k1_pressure_correction,k2_pressure_correction,kb_pressure_correction] = calculate_pressure_correction_k1_and_k2_and_kb(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar)
             temp_k    = temp_c + 273.15;
             log_temp_k = log(temp_k);
         
@@ -795,6 +792,88 @@ classdef EquilibriumConstants
             kf_pressure_correction = exp(lnKFfac);
         end
         
+        %% Deep
+        function k0 = calculate_k0(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
+            k0_surface = EquilibriumConstants.calculate_surface_k0(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            k0_pressure_correction = EquilibriumConstants.calculate_pressure_correction_k0(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar,co2_correction);
+
+            k0 = k0_surface.*k0_pressure_correction;
+        end
+        function k1 = calculate_k1(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
+            [k1_surface,~] = EquilibriumConstants.calculate_surface_k1_and_k2(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            [k1_pressure_correction,~,~] = EquilibriumConstants.calculate_pressure_correction_k1_and_k2_and_kb(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
+
+            k1 = k1_surface.*k1_pressure_correction;
+        end
+        function k2 = calculate_k2(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
+            [~,k2_surface] = EquilibriumConstants.calculate_surface_k1_and_k2(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            [~,k2_pressure_correction,~] = EquilibriumConstants.calculate_pressure_correction_k1_and_k2_and_kb(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
+
+            k2 = k2_surface.*k2_pressure_correction;
+        end
+        function kb = calculate_kb(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
+            kb_surface = EquilibriumConstants.calculate_surface_kb(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            [~,~,kb_pressure_correction] = EquilibriumConstants.calculate_pressure_correction_k1_and_k2_and_kb(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
+
+            kb = kb_surface.*kb_pressure_correction;
+        end
+        function kw = calculate_kw(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
+            kw_surface = EquilibriumConstants.calculate_surface_kw(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            kw_pressure_correction = EquilibriumConstants.calculate_pressure_correction_kw(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
+
+            kw = kw_surface.*kw_pressure_correction;
+        end
+        function kp1 = calculate_kp1(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
+            [kp1_surface,~,~,~] = EquilibriumConstants.calculate_surface_kp1_and_kp2_and_kp3_and_ksi(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            [kp1_pressure_correction,~,~] = EquilibriumConstants.calculate_pressure_correction_kp1_and_kp2_and_kp3(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
+
+            kp1 = kp1_surface.*kp1_pressure_correction;
+        end
+        function kp2 = calculate_kp2(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
+            [~,kp2_surface,~,~] = EquilibriumConstants.calculate_surface_kp1_and_kp2_and_kp3_and_ksi(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            [~,kp2_pressure_correction,~] = EquilibriumConstants.calculate_pressure_correction_kp1_and_kp2_and_kp3(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
+
+            kp2 = kp2_surface.*kp2_pressure_correction;
+        end
+        function kp3 = calculate_kp3(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
+            [~,~,kp3_surface,~] = EquilibriumConstants.calculate_surface_kp1_and_kp2_and_kp3_and_ksi(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            [~,~,kp3_pressure_correction] = EquilibriumConstants.calculate_pressure_correction_kp1_and_kp2_and_kp3(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
+
+            kp3 = kp3_surface.*kp3_pressure_correction;
+        end
+        function ksi = calculate_ksi(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
+            [~,~,~,ksi_surface] = EquilibriumConstants.calculate_surface_kp1_and_kp2_and_kp3_and_ksi(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            ksi_pressure_correction = EquilibriumConstants.calculate_pressure_correction_ksi(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
+
+            ksi = ksi_surface.*ksi_pressure_correction;
+        end
+        function knh4 = calculate_knh4(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
+            [knh4_surface,~] = EquilibriumConstants.calculate_surface_knh4_and_kh2s(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            knh4_pressure_correction = EquilibriumConstants.calculate_pressure_correction_knh4(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
+
+            knh4 = knh4_surface.*knh4_pressure_correction;
+        end
+        function kh2s = calculate_kh2s(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
+            [~,kh2s_surface] = EquilibriumConstants.calculate_surface_knh4_and_kh2s(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            kh2s_pressure_correction = EquilibriumConstants.calculate_pressure_correction_kh2s(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
+
+            kh2s = kh2s_surface.*kh2s_pressure_correction;
+        end
+
+        function ks = calculate_ks(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2)
+            ks_surface = EquilibriumConstants.calculate_surface_ks(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2);
+            ks_pressure_correction = EquilibriumConstants.calculate_pressure_correction_ks(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
+
+            ks = ks_surface.*ks_pressure_correction;
+        end
+        function kf = calculate_kf(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2)
+            kf_surface = EquilibriumConstants.calculate_surface_kf(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2);
+            kf_pressure_correction = EquilibriumConstants.calculate_pressure_correction_kf(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
+
+            kf = kf_surface.*kf_pressure_correction;
+        end
+
+
         %% Combination
         function Ks = calculate_surface_all(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
             k0 = EquilibriumConstants.calculate_surface_k0(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
@@ -826,7 +905,58 @@ classdef EquilibriumConstants
                         {k0_pressure_correction,k1_pressure_correction,k2_pressure_correction,kw_pressure_correction,kb_pressure_correction,kf_pressure_correction,ks_pressure_correction,kp1_pressure_correction,kp2_pressure_correction,kp3_pressure_correction,ksi_pressure_correction,knh4_pressure_correction,kh2s_pressure_correction});
 
         end
-    
+        function Ks = calculate_all(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2)
+            KS = EquilibriumConstants.calculate_surface_ks(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2);
+            KF = EquilibriumConstants.calculate_surface_kf(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2);
+            SWStoTOT  = (1 + sulphate_concentration./KS)./(1 + sulphate_concentration./KS + fluorine_concentration./KF);
+            FREEtoTOT =  1 + sulphate_concentration./KS;
+
+            temp_k    = temp_c + 273.15;
+            log_temp_k = log(temp_k);
+            fH = calculate_fH(number_of_points,which_k1_k2,salinity,temp_k);
+        
+            k0 = EquilibriumConstants.calculate_k0(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            k1 = EquilibriumConstants.calculate_k1(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            k2 = EquilibriumConstants.calculate_k2(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            kb = EquilibriumConstants.calculate_kb(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            kw = EquilibriumConstants.calculate_kw(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            kp1 = EquilibriumConstants.calculate_kp1(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            kp2 = EquilibriumConstants.calculate_kp2(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            kp3 = EquilibriumConstants.calculate_kp3(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            ksi = EquilibriumConstants.calculate_ksi(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            knh4= EquilibriumConstants.calculate_knh4(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            kh2s= EquilibriumConstants.calculate_kh2s(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+
+            ks = EquilibriumConstants.calculate_ks(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2);
+            kf = EquilibriumConstants.calculate_kf(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2);
+
+            SWStoTOT  = (1 + sulphate_concentration./ks)./(1 + sulphate_concentration./ks + fluorine_concentration./kf);
+            FREEtoTOT =  1 + sulphate_concentration./ks;
+
+            % FindpHScaleConversionFactor:
+            % this is the scale they will be put on
+            pHfactor  = nan(number_of_points,1);
+            selected=(pH_scale==1); %Total
+            pHfactor(selected) = SWStoTOT(selected);
+            selected=(pH_scale==2); %SWS, they are all on this now
+            pHfactor(selected) = 1;
+            selected=(pH_scale==3); %pHfree
+            pHfactor(selected) = SWStoTOT(selected)./FREEtoTOT(selected);
+            selected=(pH_scale==4); %pHNBS
+            pHfactor(selected) = fH(selected);
+            
+            % ConvertFromSWSpHScaleToChosenScale:
+            K0 = k0; KS = ks; KF = kf;
+            K1   = k1.* pHfactor;  K2   = k2.* pHfactor;
+            KW   = kw.* pHfactor;  KB   = kb.* pHfactor;
+            KP1  = kp1.*pHfactor;  KP2  = kp2.*pHfactor;
+            KP3  = kp3.*pHfactor;  KSi  = ksi.*pHfactor;
+            KNH4 = knh4.*pHfactor; KH2S = kh2s.*pHfactor;
+
+            Ks = EquilibriumConstants.pack_Ks(K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S);
+        end
+
+        %% Packing and unpacking
         function [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks)
             K0 = Ks("K0");
             K1 = Ks("K1");
