@@ -140,7 +140,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     % Calculate the constants for all samples at input conditions
     % The constants calculated for each sample will be on the appropriate pH scale!
-    Ks_in = EquilibriumConstants.calculate_all(number_of_points,temperature_in,pressure_in/10,salinity,pH_scale_in,co2_pressure_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2);
+    Ks_in = EquilibriumConstantsStatic.calculate_all(number_of_points,temperature_in,pressure_in/10,salinity,pH_scale_in,co2_pressure_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2);
     
     K0_in = Ks_in("K0");
     
@@ -359,7 +359,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     clear K0 K1 K2 KW KB KF KS KP1 KP2 KP3 KSi KNH4 KH2S
     
     % Calculate the constants for all samples at output conditions
-    Ks_out = EquilibriumConstants.calculate_all(number_of_points,temperature_out,pressure_out/10,salinity,pH_scale_in,co2_pressure_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2);                
+    Ks_out = EquilibriumConstantsStatic.calculate_all(number_of_points,temperature_out,pressure_out/10,salinity,pH_scale_in,co2_pressure_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2);                
 
     % For output conditions, using conservative TA and TC, calculate pH, fCO2
     % and pCO2, HCO3, CO3, and CO2
