@@ -8,16 +8,14 @@ classdef EquilibriumConstantsStatic
                 salinity.*(0.023517-0.023656.*(temp_k./100) + 0.0047036.*(temp_k./100).^2);
             k0   = exp(lnK0);
         end
-        function k1 = calculate_surface_k1(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
+        function k1 = calculate_surface_k1(temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
             temp_k    = temp_c + 273.15;
             log_temp_k = log(temp_k);
 
-            fH = calculate_fH(number_of_points,which_k1_k2,salinity,temp_k);
-        
-            % CalculateK1K2:
-            lnK1     = nan(number_of_points,1);
-            pK1      = nan(number_of_points,1); 
-            K1       = nan(number_of_points,1);
+            fH = calculate_fH(which_k1_k2,salinity,temp_k);
+            lnK1 = NaN([numel(temp_c),1]);
+            pK1 = NaN([numel(temp_c),1]);
+            K1 = NaN([numel(temp_c),1]);
             
             selected=(which_k1_k2==1);
             if any(selected)
@@ -150,7 +148,7 @@ classdef EquilibriumConstantsStatic
             temp_k    = temp_c + 273.15;
             log_temp_k = log(temp_k);
 
-            fH = calculate_fH(number_of_points,which_k1_k2,salinity,temp_k);
+            fH = calculate_fH(which_k1_k2,salinity,temp_k);
         
             % CalculateK1K2:
             lnK2     = nan(number_of_points,1);
@@ -321,7 +319,7 @@ classdef EquilibriumConstantsStatic
         function kb = calculate_surface_kb(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
             temp_k    = temp_c + 273.15;
             log_temp_k = log(temp_k);
-            fH = calculate_fH(number_of_points,which_k1_k2,salinity,temp_k);
+            fH = calculate_fH(which_k1_k2,salinity,temp_k);
             
             % CalculateKB:
             KB      = nan(number_of_points,1); logKB   = nan(number_of_points,1);
@@ -382,7 +380,7 @@ classdef EquilibriumConstantsStatic
         function kp2 = calculate_surface_kp2(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
             temp_k    = temp_c + 273.15;
             log_temp_k = log(temp_k);
-            fH = calculate_fH(number_of_points,which_k1_k2,salinity,temp_k);
+            fH = calculate_fH(which_k1_k2,salinity,temp_k);
             
             % CalculateKP1KP2KP3KSi:
             KP2      = nan(number_of_points,1);
@@ -410,7 +408,7 @@ classdef EquilibriumConstantsStatic
         end
         function kp3 = calculate_surface_kp3(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
             temp_k    = temp_c + 273.15;
-            fH = calculate_fH(number_of_points,which_k1_k2,salinity,temp_k);
+            fH = calculate_fH(which_k1_k2,salinity,temp_k);
             
             % CalculateKP1KP2KP3KSi:
             KP3      = nan(number_of_points,1);
@@ -440,7 +438,7 @@ classdef EquilibriumConstantsStatic
             temp_k    = temp_c + 273.15;
             log_temp_k = log(temp_k);
             IonS         = 19.924 .* salinity ./ (1000 - 1.005   .* salinity);
-            fH = calculate_fH(number_of_points,which_k1_k2,salinity,temp_k);
+            fH = calculate_fH(which_k1_k2,salinity,temp_k);
             
             % CalculateKP1KP2KP3KSi:
             KSi      = nan(number_of_points,1);
@@ -820,7 +818,7 @@ classdef EquilibriumConstantsStatic
             k0 = k0_surface.*k0_pressure_correction;
         end
         function k1 = calculate_k1(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
-            k1_surface = EquilibriumConstantsStatic.calculate_surface_k1(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            k1_surface = EquilibriumConstantsStatic.calculate_surface_k1(temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
             k1_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_k1(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
 
             k1 = k1_surface.*k1_pressure_correction;
@@ -897,7 +895,7 @@ classdef EquilibriumConstantsStatic
         %% Combination
         function Ks = calculate_surface_all(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
             k0 = EquilibriumConstantsStatic.calculate_surface_k0(temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
-            k1 = EquilibriumConstantsStatic.calculate_surface_k1(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
+            k1 = EquilibriumConstantsStatic.calculate_surface_k1(temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
             k2 = EquilibriumConstantsStatic.calculate_surface_k2(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
             kw = EquilibriumConstantsStatic.calculate_surface_kw(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
             kb = EquilibriumConstantsStatic.calculate_surface_kb(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
@@ -942,7 +940,7 @@ classdef EquilibriumConstantsStatic
 
             temp_k    = temp_c + 273.15;
             log_temp_k = log(temp_k);
-            fH = calculate_fH(number_of_points,which_k1_k2,salinity,temp_k);
+            fH = calculate_fH(which_k1_k2,salinity,temp_k);
 
             Ks = EquilibriumConstantsStatic.calculate_surface_all(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
             [k0_surface,k1_surface,k2_surface,kw_surface,kb_surface,~,~,kp1_surface,kp2_surface,kp3_surface,ksi_surface,knh4_surface,kh2s_surface] = EquilibriumConstantsStatic.unpack_Ks(Ks);

@@ -1409,7 +1409,7 @@ function [pH_total,pH_seawater,pH_free,pH_NBS] = find_pH_on_all_scales(pH,pH_sca
     %  sulphate_concentration = T(3); fluorine_concentration = T(2);
     %  KS = K(6); KF = K(5);% 'these are at the given T, S, P
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    fH = calculate_fH(number_of_points,which_k1_k2,salinity,temp_k);
+    fH = calculate_fH(which_k1_k2,salinity,temp_k);
 
     TSx=sulphate_concentration(selected); KSx=KS(selected); TFx=fluorine_concentration(selected); KFx=KF(selected);fHx=fH(selected);
     FREEtoTOT = (1 + TSx./KSx); % ' pH scale conversion factor
