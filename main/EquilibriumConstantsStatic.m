@@ -616,88 +616,88 @@ classdef EquilibriumConstantsStatic
             end         
             k0_pressure_correction = co2_pressure_correction; % this is in mol/kg-SW/atm
         end
-        function [k1_pressure_correction,k2_pressure_correction,kb_pressure_correction] = calculate_pressure_correction_k1_and_k2_and_kb(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar)
+        function k1_pressure_correction = calculate_pressure_correction_k1(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar)
             temp_k    = temp_c + 273.15;
-            log_temp_k = log(temp_k);
-        
-            %CorrectK1K2KBForPressure:
-            deltaV    = nan(number_of_points,1); Kappa     = nan(number_of_points,1);
-            lnK1fac   = nan(number_of_points,1); lnK2fac   = nan(number_of_points,1);
-            lnKBfac   = nan(number_of_points,1);
-            selected=(which_k1_k2==8);
             RR = (gas_constant.*temp_k);
+
+            %Correct K1 for pressure:
+            deltaV    = nan(number_of_points,1);
+            Kappa     = nan(number_of_points,1);
+            lnK1fac   = nan(number_of_points,1);
+
+            selected=(which_k1_k2==8);
             if any(selected)
                 %***PressureEffectsOnK1inFreshWater:
                 %               This is from Millero, 1983.
                 deltaV(selected)  = -30.54 + 0.1849 .*temp_c(selected) - 0.0023366.*temp_c(selected).^2;
                 Kappa(selected)   = (-6.22 + 0.1368 .*temp_c(selected) - 0.001233 .*temp_c(selected).^2)./1000;
                 lnK1fac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*pressure_bar(selected)).*pressure_bar(selected)./RR(selected);
-                %***PressureEffectsOnK2inFreshWater:
-                %               This is from Millero, 1983.
-                deltaV(selected)  = -29.81 + 0.115.*temp_c(selected) - 0.001816.*temp_c(selected).^2;
-                Kappa(selected)   = (-5.74 + 0.093.*temp_c(selected) - 0.001896.*temp_c(selected).^2)./1000;
-                lnK2fac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*pressure_bar(selected)).*pressure_bar(selected)./RR(selected);
-                lnKBfac(selected) = 0 ;%; this doesn't matter since boron_concentration = 0 for this case
             end
+
             selected=(which_k1_k2==6 | which_k1_k2==7);
             if any(selected)
-                %               GEOSECS Pressure Effects On K1, K2, KB (on the NBS scale)
-                %               Takahashi et al, GEOSECS Pacific Expedition v. 3, 1982 quotes
-                %               Culberson and Pytkowicz, L and O 13:403-417, 1968:
-                %               but the fits are the same as those in
-                %               Edmond and Gieskes, GCA, 34:1261-1291, 1970
-                %               who in turn quote Li, personal communication
                 lnK1fac(selected) = (24.2 - 0.085.*temp_c(selected)).*pressure_bar(selected)./RR(selected);
-                lnK2fac(selected) = (16.4 - 0.04 .*temp_c(selected)).*pressure_bar(selected)./RR(selected);
-                %               Takahashi et al had 26.4, but 16.4 is from Edmond and Gieskes
-                %               and matches the GEOSECS results
-                lnKBfac(selected) = (27.5 - 0.095.*temp_c(selected)).*pressure_bar(selected)./RR(selected);
             end
+
             selected=(which_k1_k2~=6 & which_k1_k2~=7 & which_k1_k2~=8);
             if any(selected)
-                %***PressureEffectsOnK1:
-                %               These are from Millero, 1995.
-                %               They are the same as Millero, 1979 and Millero, 1992.
-                %               They are from data of Culberson and Pytkowicz, 1968.
                 deltaV(selected)  = -25.5 + 0.1271.*temp_c(selected);
-                %                 'deltaV = deltaV - .151.*(Sali - 34.8); % Millero, 1979
                 Kappa(selected)   = (-3.08 + 0.0877.*temp_c(selected))./1000;
-                %                 'Kappa = Kappa  - .578.*(Sali - 34.8)/1000.; % Millero, 1979
-	                lnK1fac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*pressure_bar(selected)).*pressure_bar(selected)./RR(selected);
-                %               The fits given in Millero, 1983 are somewhat different.
-                
-                %***PressureEffectsOnK2:
-                %               These are from Millero, 1995.
-                %               They are the same as Millero, 1979 and Millero, 1992.
-                %               They are from data of Culberson and Pytkowicz, 1968.
-                deltaV(selected)  = -15.82 - 0.0219.*temp_c(selected);
-                %                  'deltaV = deltaV + .321.*(Sali - 34.8); % Millero, 1979
-                Kappa(selected)   = (1.13 - 0.1475.*temp_c(selected))./1000;
-                %                 'Kappa = Kappa - .314.*(Sali - 34.8)./1000: % Millero, 1979
-                lnK2fac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*pressure_bar(selected)).*pressure_bar(selected)./RR(selected);
-                %               The fit given in Millero, 1983 is different.
-                %               Not by a lot for deltaV, but by much for Kappa. %
-                
-                %***PressureEffectsOnKB:
-                %               This is from Millero, 1979.
-                %               It is from data of Culberson and Pytkowicz, 1968.
-                deltaV(selected)  = -29.48 + 0.1622.*temp_c(selected) - 0.002608.*temp_c(selected).^2;
-                %               Millero, 1983 has:
-                %                 'deltaV = -28.56 + .1211.*temperature_in - .000321.*temperature_in.*temperature_in
-                %               Millero, 1992 has:
-                %                 'deltaV = -29.48 + .1622.*temperature_in + .295.*(Sali - 34.8)
-                %               Millero, 1995 has:
-                %                 'deltaV = -29.48 - .1622.*temperature_in - .002608.*temperature_in.*temperature_in
-                %                 'deltaV = deltaV + .295.*(Sali - 34.8); % Millero, 1979
-                Kappa(selected)   = -2.84./1000; % Millero, 1979
-                %               Millero, 1992 and Millero, 1995 also have this.
-                %                 'Kappa = Kappa + .354.*(Sali - 34.8)./1000: % Millero,1979
-                %               Millero, 1983 has:
-                %                 'Kappa = (-3 + .0427.*temperature_in)./1000
-                lnKBfac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*pressure_bar(selected)).*pressure_bar(selected)./RR(selected);
+                lnK1fac(selected) = (-deltaV(selected) + 0.5.*Kappa(selected).*pressure_bar(selected)).*pressure_bar(selected)./RR(selected);
             end
             k1_pressure_correction = exp(lnK1fac);
+        end
+        function k2_pressure_correction = calculate_pressure_correction_k2(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar)
+            temp_k    = temp_c + 273.15;
+            RR = (gas_constant.*temp_k);
+        
+            % Correct K2 for pressure:
+            lnK2fac   = nan(number_of_points,1);
+
+            selected=(which_k1_k2==8);
+            if any(selected)
+                deltaV  = -29.81 + 0.115.*temp_c(selected) - 0.001816.*temp_c(selected).^2;
+                Kappa   = (-5.74 + 0.093.*temp_c(selected) - 0.001896.*temp_c(selected).^2)./1000;
+                lnK2fac(selected) = (-deltaV + 0.5.*Kappa.*pressure_bar(selected)).*pressure_bar(selected)./RR(selected);
+            end
+
+            selected=(which_k1_k2==6 | which_k1_k2==7);
+            if any(selected)
+                lnK2fac(selected) = (16.4 - 0.04 .*temp_c(selected)).*pressure_bar(selected)./RR(selected);
+            end
+
+            selected=(which_k1_k2~=6 & which_k1_k2~=7 & which_k1_k2~=8);
+            if any(selected)
+                deltaV  = -15.82 - 0.0219.*temp_c(selected);
+                Kappa   = (1.13 - 0.1475.*temp_c(selected))./1000;
+                lnK2fac(selected) = (-deltaV + 0.5.*Kappa.*pressure_bar(selected)).*pressure_bar(selected)./RR(selected);
+            end
+
             k2_pressure_correction = exp(lnK2fac);
+        end
+        function kb_pressure_correction = calculate_pressure_correction_kb(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar)
+            temp_k    = temp_c + 273.15;
+            RR = (gas_constant.*temp_k);
+        
+            %Correct KB for pressure:
+            lnKBfac   = nan(number_of_points,1);
+
+            selected=(which_k1_k2==8);
+            if any(selected)
+                lnKBfac(selected) = 0 ;%; this doesn't matter since boron_concentration = 0 for this case
+            end
+
+            selected=(which_k1_k2==6 | which_k1_k2==7);
+            if any(selected)
+                lnKBfac(selected) = (27.5 - 0.095.*temp_c(selected)).*pressure_bar(selected)./RR(selected);
+            end
+
+            selected=(which_k1_k2~=6 & which_k1_k2~=7 & which_k1_k2~=8);
+            if any(selected)
+                deltaV  = -29.48 + 0.1622.*temp_c(selected) - 0.002608.*temp_c(selected).^2;
+                Kappa   = -2.84./1000;
+                lnKBfac(selected) = (-deltaV + 0.5.*Kappa.*pressure_bar(selected)).*pressure_bar(selected)./RR(selected);
+            end
             kb_pressure_correction = exp(lnKBfac);
         end
         function kw_pressure_correction = calculate_pressure_correction_kw(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar)
@@ -734,30 +734,31 @@ classdef EquilibriumConstantsStatic
             end
             kw_pressure_correction = exp(lnKWfac);
         end
-        function [kp1_pressure_correction,kp2_pressure_correction,kp3_pressure_correction] = calculate_pressure_correction_kp1_and_kp2_and_kp3(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar)
+        function kp1_pressure_correction = calculate_pressure_correction_kp1(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar)
             temp_k    = temp_c + 273.15;
                         
-            % CorrectKP1KP2KP3KSiForPressure:
-            % These corrections don't matter for the GEOSECS choice (which_k1_k2% = 6) and
-            %       the freshwater choice (which_k1_k2% = 8). For the Peng choice I assume
-            %       that they are the same as for the other choices (which_k1_k2% = 1 to 5).
-            % The corrections for KP1, KP2, and KP3 are from Millero, 1995, which are the
-            %       same as Millero, 1983.
-            % PressureEffectsOnKP1:
             deltaV = -14.51 + 0.1211.*temp_c - 0.000321.*temp_c.^2;
             Kappa  = (-2.67 + 0.0427.*temp_c)./1000;
             lnKP1fac = (-deltaV + 0.5.*Kappa.*pressure_bar).*pressure_bar./(gas_constant.*temp_k);
-            % PressureEffectsOnKP2:
+
+            kp1_pressure_correction = exp(lnKP1fac);
+        end
+        function kp2_pressure_correction = calculate_pressure_correction_kp2(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar)
+            temp_k    = temp_c + 273.15;
+                        
             deltaV = -23.12 + 0.1758.*temp_c - 0.002647.*temp_c.^2;
             Kappa  = (-5.15 + 0.09  .*temp_c)./1000;
             lnKP2fac = (-deltaV + 0.5.*Kappa.*pressure_bar).*pressure_bar./(gas_constant.*temp_k);
-            % PressureEffectsOnKP3:
+
+            kp2_pressure_correction = exp(lnKP2fac);
+        end
+        function kp3_pressure_correction = calculate_pressure_correction_kp3(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar)
+            temp_k    = temp_c + 273.15;
+
             deltaV = -26.57 + 0.202 .*temp_c - 0.003042.*temp_c.^2;
             Kappa  = (-4.08 + 0.0714.*temp_c)./1000;
             lnKP3fac = (-deltaV + 0.5.*Kappa.*pressure_bar).*pressure_bar./(gas_constant.*temp_k);
 
-            kp1_pressure_correction = exp(lnKP1fac);
-            kp2_pressure_correction = exp(lnKP2fac);
             kp3_pressure_correction = exp(lnKP3fac);
         end
         function ksi_pressure_correction = calculate_pressure_correction_ksi(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar)
@@ -825,19 +826,19 @@ classdef EquilibriumConstantsStatic
         end
         function k1 = calculate_k1(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
             k1_surface = EquilibriumConstantsStatic.calculate_surface_k1(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
-            [k1_pressure_correction,~,~] = EquilibriumConstantsStatic.calculate_pressure_correction_k1_and_k2_and_kb(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
+            k1_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_k1(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
 
             k1 = k1_surface.*k1_pressure_correction;
         end
         function k2 = calculate_k2(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
             k2_surface = EquilibriumConstantsStatic.calculate_surface_k2(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
-            [~,k2_pressure_correction,~] = EquilibriumConstantsStatic.calculate_pressure_correction_k1_and_k2_and_kb(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
+            k2_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_k2(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
 
             k2 = k2_surface.*k2_pressure_correction;
         end
         function kb = calculate_kb(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
             kb_surface = EquilibriumConstantsStatic.calculate_surface_kb(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
-            [~,~,kb_pressure_correction] = EquilibriumConstantsStatic.calculate_pressure_correction_k1_and_k2_and_kb(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
+            kb_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kb(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
 
             kb = kb_surface.*kb_pressure_correction;
         end
@@ -849,19 +850,19 @@ classdef EquilibriumConstantsStatic
         end
         function kp1 = calculate_kp1(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
             kp1_surface = EquilibriumConstantsStatic.calculate_surface_kp1(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
-            [kp1_pressure_correction,~,~] = EquilibriumConstantsStatic.calculate_pressure_correction_kp1_and_kp2_and_kp3(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
+            kp1_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kp1(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
 
             kp1 = kp1_surface.*kp1_pressure_correction;
         end
         function kp2 = calculate_kp2(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
             kp2_surface = EquilibriumConstantsStatic.calculate_surface_kp2(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
-            [~,kp2_pressure_correction,~] = EquilibriumConstantsStatic.calculate_pressure_correction_kp1_and_kp2_and_kp3(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
+            kp2_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kp2(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
 
             kp2 = kp2_surface.*kp2_pressure_correction;
         end
         function kp3 = calculate_kp3(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT)
             kp3_surface = EquilibriumConstantsStatic.calculate_surface_kp3(number_of_points,temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2,SWStoTOT,FREEtoTOT);
-            [~,~,kp3_pressure_correction] = EquilibriumConstantsStatic.calculate_pressure_correction_kp1_and_kp2_and_kp3(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
+            kp3_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kp3(number_of_points,which_k1_k2,gas_constant,temp_c,pressure_bar);
 
             kp3 = kp3_surface.*kp3_pressure_correction;
         end
