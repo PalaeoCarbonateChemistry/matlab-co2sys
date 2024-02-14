@@ -50,9 +50,14 @@ classdef RandomTests < matlab.unittest.TestCase
             phosphate = RandomTests.random_between(1,5,number_of_points);
             ammonia = round(RandomTests.random_between(0,1,number_of_points),0);
             sulphide = round(RandomTests.random_between(0,1,number_of_points),0);
+
+            pH_scale_in = round(RandomTests.random_between(0,4.5,number_of_points),0);
             
             which_k1k2 = floor(RandomTests.random_between(1,17.5,number_of_points));
             which_kso4 = floor(RandomTests.random_between(1,3.5,number_of_points));
+            which_kf = floor(RandomTests.random_between(1,2.5,number_of_points));
+            which_boron = floor(RandomTests.random_between(1,2.5,number_of_points));
+            co2_pressure_correction = floor(RandomTests.random_between(0,1.5,number_of_points));
             
             dic = repelem(2000,number_of_points,1);
             alkalinity = repelem(2300,number_of_points,1);
@@ -61,10 +66,11 @@ classdef RandomTests < matlab.unittest.TestCase
                            salinity, ...
                            pressure_in,pressure_out, ...
                            silicate,phosphate,ammonia,sulphide, ...
-                           which_k1k2,which_kso4, ...
+                           pH_scale_in,co2_pressure_correction, ...
+                           which_k1k2,which_kso4,which_kf,which_boron, ...
                            dic,alkalinity);
 
-            co2sys = CO2SYS(dic,alkalinity,2,1,salinity,temperature_in,temperature_out,pressure_in,pressure_out,silicate,phosphate,ammonia,sulphide,1,which_k1k2,which_kso4,1,1);
+            co2sys = CO2SYS(dic,alkalinity,2,1,salinity,temperature_in,temperature_out,pressure_in,pressure_out,silicate,phosphate,ammonia,sulphide,pH_scale_in,which_k1k2,which_kso4,which_kf,which_boron,co2_pressure_correction);
 
             writetable(inputs,"./small_data/temperature_salinity_pressure_random_inputs.csv");
             save("./small_data/temperature_salinity_pressure_random.mat","co2sys");
@@ -130,7 +136,6 @@ classdef RandomTests < matlab.unittest.TestCase
             % alkalinity combinations.
             % Returns: Table of inputs to co2sys
             %          The reference co2sys matrix
-
             co2sys_inputs = readtable("./small_data/dic_alkalinity_random_inputs.csv");
             co2sys_reference = load("./small_data/dic_alkalinity_random.mat").co2sys;
         end        
@@ -153,13 +158,18 @@ classdef RandomTests < matlab.unittest.TestCase
             ammonia = inputs.ammonia;
             sulphide = inputs.sulphide;
 
+            pH_scale_in = inputs.pH_scale_in;
+
             which_k1k2 = inputs.which_k1k2;
             which_kso4 = inputs.which_kso4;
+            which_kf = inputs.which_kf;
+            which_boron = inputs.which_boron;
+            co2_pressure_correction = inputs.co2_pressure_correction;
 
             dic = inputs.dic;
             alkalinity = inputs.alkalinity;
 
-            co2sys = CO2SYS(dic,alkalinity,2,1,salinity,temperature_in,temperature_out,pressure_in,pressure_out,silicate,phosphate,ammonia,sulphide,1,which_k1k2,which_kso4,1,1);
+            co2sys = CO2SYS(dic,alkalinity,2,1,salinity,temperature_in,temperature_out,pressure_in,pressure_out,silicate,phosphate,ammonia,sulphide,pH_scale_in,which_k1k2,which_kso4,which_kf,which_boron,co2_pressure_correction);
         end
         function co2sys = calculate_dic_alkalinity_results(inputs)
             % calculate_dic_alkalinity_results
