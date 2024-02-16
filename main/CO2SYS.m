@@ -66,6 +66,8 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     co3        = nan(number_of_points,1); % [CO3]
     co2        = nan(number_of_points,1); % [CO2*]
 
+    which_ks = WhichKs(which_k1_k2,which_kso4,which_kf);
+
     salinity = salinity_in;
     
     % Assign values to empty vectors.
@@ -140,7 +142,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     % Calculate the constants for all samples at input conditions
     % The constants calculated for each sample will be on the appropriate pH scale!
-    Ks_in = EquilibriumConstantsStatic.calculate_all(temperature_in,pressure_in/10,salinity,pH_scale_in,co2_pressure_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2);
+    Ks_in = EquilibriumConstantsStatic.calculate_all(temperature_in,pressure_in/10,salinity,pH_scale_in,co2_pressure_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_ks);
     
     K0_in = Ks_in("K0");
     
@@ -174,7 +176,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (combination==12); % input TA, TC
     if any(selected)
     selected = (~isnan(alkalinity_in) & ~isnan(dic_in) & selected);
-        pH_in(selected) = calculate_pH_from_alkalinity_dic(alkalinity_in(selected)-peng_correction(selected),dic_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+        pH_in(selected) = calculate_pH_from_alkalinity_dic(alkalinity_in(selected)-peng_correction(selected),dic_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k);
         selected = (~isnan(pH_in) & selected);
         if any(selected)
            fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected), pH_in(selected),Ks_in,selected);
@@ -185,7 +187,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (combination==13); % input TA, pH
     if any(selected)
     selected = (~isnan(alkalinity_in) & ~isnan(pH_in) & selected);
-        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k);
         fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
         [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
     end
@@ -193,10 +195,10 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (combination==14 | combination==15 | combination==18); % input TA, (pCO2 or fCO2 or CO2)
     if any(selected)
     selected=(~isnan(alkalinity_in) & ~isnan(fco2_in) & selected);
-        pH_in(selected) = calculate_pH_from_alkalinity_fco2(alkalinity_in(selected)-peng_correction(selected),fco2_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+        pH_in(selected) = calculate_pH_from_alkalinity_fco2(alkalinity_in(selected)-peng_correction(selected),fco2_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k);
         selected = (~isnan(pH_in) & selected);
         if any(selected)
-           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k);
            [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
         end
     end
@@ -204,10 +206,10 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (combination==16); % input TA, HCO3
     if any(selected)
     selected = (~isnan(alkalinity_in) & ~isnan(hco3_in) & selected);
-        pH_in(selected) = calculate_pH_from_alkalinity_hco3(alkalinity_in(selected)-peng_correction(selected),hco3_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);  % added Peng correction // MPH
+        pH_in(selected) = calculate_pH_from_alkalinity_hco3(alkalinity_in(selected)-peng_correction(selected),hco3_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k);  % added Peng correction // MPH
         selected=(~isnan(pH_in) & selected);
         if any(selected)
-           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k);
            fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected); 
            co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
         end
@@ -216,10 +218,10 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (combination==17); % input TA, CO3
     if any(selected)
     selected = (~isnan(alkalinity_in) & ~isnan(co3_in) & selected);
-        pH_in(selected) = calculate_pH_from_alkalinity_co3(alkalinity_in(selected)-peng_correction(selected),co3_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);  % added Peng correction // MPH
+        pH_in(selected) = calculate_pH_from_alkalinity_co3(alkalinity_in(selected)-peng_correction(selected),co3_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k);  % added Peng correction // MPH
         selected=(~isnan(pH_in) & selected);
         if any(selected)
-           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k);
            fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected); 
            hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
         end
@@ -228,7 +230,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (combination==23); % input TC, pH
     if any(selected)
     selected = (~isnan(dic_in) & ~isnan(pH_in) & selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k) + peng_correction(selected);
         fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
         [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected), pH_in(selected),Ks_in,selected);
     end
@@ -237,7 +239,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     if any(selected)
     selected = (~isnan(dic_in) & ~isnan(fco2_in) & selected);
         pH_in(selected) = calculate_pH_from_dic_fco2(dic_in(selected),fco2_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k) + peng_correction(selected);
         [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
 
@@ -245,7 +247,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     if any(selected)
     selected = (~isnan(dic_in) & ~isnan(hco3_in) & selected);
         [pH_in(selected),fco2_in(selected)] = calculate_pH_fco2_from_dic_hco3(dic_in(selected),hco3_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k) + peng_correction(selected);
         co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
     end
 
@@ -253,7 +255,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     if any(selected)
     selected = (~isnan(dic_in) & ~isnan(co3_in) & selected);
         [pH_in(selected),fco2_in(selected)] = calculate_pH_fco2_from_dic_co3(dic_in(selected),co3_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k) + peng_correction(selected);
         hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
 
@@ -261,15 +263,15 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     if any(selected)
     selected = (~isnan(pH_in) & ~isnan(fco2_in) & selected);
         dic_in(selected) = calculate_dic_from_pH_fco2(pH_in(selected),fco2_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k) + peng_correction(selected);
         [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
 
     selected = (combination==36); % input pH, HCO3
     if any(selected)
     selected = (~isnan(pH_in) & ~isnan(hco3_in) & selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_pH_hco3(pH_in(selected),hco3_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
-        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+        alkalinity_in(selected) = calculate_alkalinity_from_pH_hco3(pH_in(selected),hco3_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k) + peng_correction(selected);
+        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k);
         fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
         co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
@@ -277,8 +279,8 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (combination==37); % input pH, CO3
     if any(selected)
     selected = (~isnan(pH_in) & ~isnan(co3_in) & selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_pH_co3(pH_in(selected),co3_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
-        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+        alkalinity_in(selected) = calculate_alkalinity_from_pH_co3(pH_in(selected),co3_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k) + peng_correction(selected);
+        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k);
         fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
         hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
@@ -288,7 +290,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (~isnan(fco2_in) & ~isnan(hco3_in) & selected);
         pH_in(selected) = calculate_pH_from_fco2_hco3(fco2_in(selected),hco3_in(selected), Ks_in,selected);
         dic_in(selected) = calculate_dic_from_pH_fco2(pH_in(selected),fco2_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k) + peng_correction(selected);
         co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
 
@@ -297,7 +299,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (~isnan(fco2_in) & ~isnan(co3_in) & selected);
         pH_in(selected) = calculate_pH_from_fco2_co3(fco2_in(selected),co3_in(selected), Ks_in,selected);
         dic_in(selected) = calculate_dic_from_pH_fco2 (pH_in(selected),fco2_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k) + peng_correction(selected);
         hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
 
@@ -305,8 +307,8 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     if any(selected)
     selected = (~isnan(hco3_in) & ~isnan(co3_in) & selected);
         pH_in(selected) = calculate_pH_from_co3_hco3(co3_in(selected),hco3_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_pH_co3(pH_in(selected),co3_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k) + peng_correction(selected);
-        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+        alkalinity_in(selected) = calculate_alkalinity_from_pH_co3(pH_in(selected),co3_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k) + peng_correction(selected);
+        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k);
         fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
         %CO2ic(selected)                = CalculateCO2fromTCpH(TCc(selected),PHic(selected));
     end
@@ -334,10 +336,10 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     [boron_alkalinity_in(selected),oh_alkalinity_in(selected),phosphate_alkalinity_in(selected),...
         silicate_alkalinity_in(selected),ammonia_alkalinity_in(selected),sulphide_alkalinity_in(selected),...
         h_free_alkalinity_in(selected),sulphate_alkalinity_in(selected),fluorine_alkalinity_in(selected),...
-        ] = calculate_alkalinity_parts(pH_in,pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+        ] = calculate_alkalinity_parts(pH_in,pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k);
     
     phosphate_alkalinity_in(selected) = phosphate_alkalinity_in(selected)+peng_correction(selected);
-    revelle_alkalinity_in(selected) = calculate_revelle_factor(alkalinity_in(selected)-peng_correction(selected), dic_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+    revelle_alkalinity_in(selected) = calculate_revelle_factor(alkalinity_in(selected)-peng_correction(selected), dic_in(selected),pH_scale_in,Ks_in,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k);
     [saturation_state_calcite_in(selected),saturation_state_aragonite_in(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_in(selected), dic_in(selected), pH_in(selected), Ks_in, sqrt(salinity(selected)),gas_constant,calcium_concentration,which_k1_k2,pressure_in/10,selected);
     vapour_pressure_factor = calculate_vapour_pressure_factor(salinity,temp_k);
     co2_dry_alkalinity_in(~isnan(pco2_in),1) = pco2_in(~isnan(pco2_in),1)./vapour_pressure_factor(~isnan(pco2_in),1); % ' this assumes pTot = 1 atm
@@ -350,7 +352,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     pHicS = nan(number_of_points,1);
     pHicF = nan(number_of_points,1);
     pHicN = nan(number_of_points,1);
-    [pHicT(selected),pHicS(selected),pHicF(selected),pHicN(selected)]=find_pH_on_all_scales(pH_in(selected),pH_scale_in,Ks_in,fluorine_concentration,sulphate_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+    [pHicT(selected),pHicS(selected),pHicF(selected),pHicN(selected)]=find_pH_on_all_scales(pH_in(selected),pH_scale_in,Ks_in,fluorine_concentration,sulphate_concentration,selected,which_ks,salinity,temp_k);
     
     % Merge the Ks at input into an array. Ks at output will be glued to this later.
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks_in);
@@ -359,7 +361,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     clear K0 K1 K2 KW KB KF KS KP1 KP2 KP3 KSi KNH4 KH2S
     
     % Calculate the constants for all samples at output conditions
-    Ks_out = EquilibriumConstantsStatic.calculate_all(temperature_out,pressure_out/10,salinity,pH_scale_in,co2_pressure_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_kf,which_kso4,which_k1_k2);                
+    Ks_out = EquilibriumConstantsStatic.calculate_all(temperature_out,pressure_out/10,salinity,pH_scale_in,co2_pressure_correction,gas_constant,fluorine_concentration,sulphate_concentration,which_ks);                
 
     % For output conditions, using conservative TA and TC, calculate pH, fCO2
     % and pCO2, HCO3, CO3, and CO2
@@ -367,7 +369,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected=(~isnan(alkalinity_in) & ~isnan(dic_in)); % i.e., do for all samples that have TA and TC values
     pH_out = NaN(number_of_points,1);
     [co3_out,hco3_out,fco2_out] = deal(pH_out);
-    pH_out(selected) = calculate_pH_from_alkalinity_dic(alkalinity_in(selected)-peng_correction(selected), dic_in(selected),pH_scale_in,Ks_out,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
+    pH_out(selected) = calculate_pH_from_alkalinity_dic(alkalinity_in(selected)-peng_correction(selected), dic_in(selected),pH_scale_in,Ks_out,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
         fco2_out(selected) = calculate_fco2_from_dic_pH(dic_in(selected), pH_out(selected), Ks_out,selected);
         [co3_out(selected),hco3_out(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_out(selected), Ks_out,selected);
     
@@ -387,10 +389,10 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         co2_dry_alkalinity_out] = deal(nan_vector);
 
     [boron_alkalinity_out(selected),oh_alkalinity_out(selected),phosphate_alkalinity_out(selected),silicate_alkalinity_out(selected),ammonia_alkalinity_out(selected),...
-        sulphide_alkalinity_out(selected), h_free_alkalinity_out(selected),sulphate_alkalinity_out(selected),fluorine_alkalinity_out(selected)] = calculate_alkalinity_parts(pH_out,pH_scale_in,Ks_out,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+        sulphide_alkalinity_out(selected), h_free_alkalinity_out(selected),sulphate_alkalinity_out(selected),fluorine_alkalinity_out(selected)] = calculate_alkalinity_parts(pH_out,pH_scale_in,Ks_out,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k);
     
     phosphate_alkalinity_out(selected)                 = phosphate_alkalinity_out(selected)+peng_correction(selected);
-    revelle_alkalinity_out(selected)              = calculate_revelle_factor(alkalinity_in(selected)-peng_correction(selected), dic_in(selected),pH_scale_in,Ks_out,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+    revelle_alkalinity_out(selected)              = calculate_revelle_factor(alkalinity_in(selected)-peng_correction(selected), dic_in(selected),pH_scale_in,Ks_out,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k);
     [saturation_state_calcite_out(selected),saturation_state_aragonite_out(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_out(selected), dic_in(selected), pH_out(selected), Ks_out, sqrt(salinity(selected)), gas_constant, calcium_concentration,which_k1_k2,pressure_out/10,selected);
     vapour_pressure_factor = calculate_vapour_pressure_factor(salinity,temp_k);
     co2_dry_alkalinity_out(~isnan(pco2_out),1)    = pco2_out(~isnan(pco2_out))./vapour_pressure_factor(~isnan(pco2_out)); % ' this assumes pTot = 1 atm
@@ -401,7 +403,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     pH_out_seawater = nan(number_of_points,1);
     pH_out_free = nan(number_of_points,1);
     pH_out_NBS = nan(number_of_points,1);
-    [pH_out_total(selected),pH_out_seawater(selected),pH_out_free(selected),pH_out_NBS(selected)]=find_pH_on_all_scales(pH_out(selected),pH_scale_in,Ks_out,fluorine_concentration,sulphate_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+    [pH_out_total(selected),pH_out_seawater(selected),pH_out_free(selected),pH_out_NBS(selected)]=find_pH_on_all_scales(pH_out(selected),pH_scale_in,Ks_out,fluorine_concentration,sulphate_concentration,selected,which_ks,salinity,temp_k);
     
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks_out);
     k_out_vector = [K0,K1,K2,-log10(K1),-log10(K2),KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S];
@@ -541,7 +543,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         '99 - sulphide_concentration             (umol/kgSW) '};	
 end 
 
-function pH_out = calculate_pH_from_alkalinity_dic(TAi, TCi, pH_scale_in, Ks, boron_concentration, fluorine_concentration, sulphate_concentration, phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k)
+function pH_out = calculate_pH_from_alkalinity_dic(TAi, TCi, pH_scale_in, Ks, boron_concentration, fluorine_concentration, sulphate_concentration, phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k)
     % ' SUB calculate_pH_from_alkalinity_dic, version 04.01, 10-13-96, written by Ernie Lewis
     % ' with modifications from Denis Pierrot.
     % ' Inputs: TA, TC, K(), T()
@@ -586,7 +588,7 @@ function pH_out = calculate_pH_from_alkalinity_dic(TAi, TCi, pH_scale_in, Ks, bo
         SiAlk     = TSiF.*KSiF./(KSiF + H);
         AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
         HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-        [~,~,pHfree,~] = find_pH_on_all_scales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k); % this converts pH to pHfree no matter the scale
+        [~,~,pHfree,~] = find_pH_on_all_scales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected,which_ks,salinity,temp_k); % this converts pH to pHfree no matter the scale
         Hfree     = 10.^-pHfree; % this converts pHfree to Hfree
         HSO4      = TSF./(1 + KSF./Hfree); % since KS is on the free scale
         HF        = TFF./(1 + KFF./Hfree); % since KF is on the free scale
@@ -624,7 +626,7 @@ function fco2 = calculate_fco2_from_dic_pH(TCx, pHx, Ks,selected)
     fco2 = fCO2x;
     end % end nested function
     
-function dic = calculate_dic_from_alkalinity_pH(TAx, pHx,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k)
+function dic = calculate_dic_from_alkalinity_pH(TAx, pHx,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
     
     K1F=K1(selected);     K2F=K2(selected);     KWF =KW(selected);
@@ -645,7 +647,7 @@ function dic = calculate_dic_from_alkalinity_pH(TAx, pHx,pH_scale_in,Ks,boron_co
     SiAlk     = TSiF.*KSiF./(KSiF + H);
     AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
     HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-    [~,~,pHfree,~] = find_pH_on_all_scales(pHx,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k); % this converts pH to pHfree no matter the scale
+    [~,~,pHfree,~] = find_pH_on_all_scales(pHx,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected,which_ks,salinity,temp_k); % this converts pH to pHfree no matter the scale
     Hfree     = 10.^-pHfree; % this converts pHfree to Hfree
     HSO4      = TSF./(1 + KSF./Hfree); %' since KS is on the free scale
     HF        = TFF./(1 + KFF./Hfree); %' since KF is on the free scale
@@ -654,7 +656,7 @@ function dic = calculate_dic_from_alkalinity_pH(TAx, pHx,pH_scale_in,Ks,boron_co
     dic = TCxtemp;
 end % end nested function
 
-function pH_out = calculate_pH_from_alkalinity_fco2(TAi, fCO2i, pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k)
+function pH_out = calculate_pH_from_alkalinity_fco2(TAi, fCO2i, pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k)
     % ' SUB calculate_pH_from_alkalinity_fco2, version 04.01, 10-13-97, written by Ernie
     % ' Lewis with modifications from Denis Pierrot.
     % ' Inputs: TA, fCO2, K0, K(), T()
@@ -698,7 +700,7 @@ function pH_out = calculate_pH_from_alkalinity_fco2(TAi, fCO2i, pH_scale_in,Ks,b
         SiAlk     = TSiF.*KSiF./(KSiF + H);
         AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
         HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-        [~,~,pHfree,~] = find_pH_on_all_scales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k); % this converts pH to pHfree no matter the scale
+        [~,~,pHfree,~] = find_pH_on_all_scales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected,which_ks,salinity,temp_k); % this converts pH to pHfree no matter the scale
         Hfree     = 10.^-pHfree; % this converts pHfree to Hfree
         HSO4      = TSF./(1 + KSF./Hfree); %' since KS is on the free scale
         HF        = TFF./(1 + KFF./Hfree);% ' since KF is on the free scale
@@ -724,7 +726,7 @@ function pH_out = calculate_pH_from_alkalinity_fco2(TAi, fCO2i, pH_scale_in,Ks,b
     pH_out = pH;
 end
 
-function alkalinity = calculate_alkalinity_from_dic_pH(TCi, pHi,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k)
+function alkalinity = calculate_alkalinity_from_dic_pH(TCi, pHi,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k)
     % ' SUB calculate_alkalinity_from_dic_pH, version 02.02, 10-10-97, written by Ernie Lewis.
     % ' Inputs: TC, pH, K(), T()
     % ' Output: TA
@@ -746,7 +748,7 @@ function alkalinity = calculate_alkalinity_from_dic_pH(TCi, pHi,pH_scale_in,Ks,b
     SiAlk     = TSiF.*KSiF./(KSiF + H);
     AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
     HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-    [~,~,pHfree,~] = find_pH_on_all_scales(pHi,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k); % this converts pH to pHfree no matter the scale
+    [~,~,pHfree,~] = find_pH_on_all_scales(pHi,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected,which_ks,salinity,temp_k); % this converts pH to pHfree no matter the scale
     Hfree = 10.^-pHfree; % this converts pHfree to Hfree
     HSO4      = TSF./(1 + KSF./Hfree);% ' since KS is on the free scale
     HF        = TFF./(1 + KFF./Hfree);% ' since KF is on the free scale
@@ -789,7 +791,7 @@ function dic = calculate_dic_from_pH_fco2(pHi, fCO2i, Ks,selected)
     dic = TCctemp;
 end
 
-function alkalinity = calculate_alkalinity_from_pH_hco3(pHi, HCO3i,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k)
+function alkalinity = calculate_alkalinity_from_pH_hco3(pHi, HCO3i,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k)
     % ' SUB calculate_alkalinity_from_pH_co3, version 01.0, 3-19, added by J. Sharp
     % ' Inputs: pH, HCO3, K(), T()
     % ' Output: TA
@@ -810,7 +812,7 @@ function alkalinity = calculate_alkalinity_from_pH_hco3(pHi, HCO3i,pH_scale_in,K
     SiAlk     = TSiF.*KSiF./(KSiF + H);
     AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
     HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-    [~,~,pHfree,~] = find_pH_on_all_scales(pHi,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k); % this converts pH to pHfree no matter the scale
+    [~,~,pHfree,~] = find_pH_on_all_scales(pHi,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected,which_ks,salinity,temp_k); % this converts pH to pHfree no matter the scale
     Hfree = 10.^-pHfree; % this converts pHfree to Hfree
     HSO4      = TSF./(1 + KSF./Hfree);% ' since KS is on the free scale
     HF        = TFF./(1 + KFF./Hfree);% ' since KF is on the free scale
@@ -818,7 +820,7 @@ function alkalinity = calculate_alkalinity_from_pH_hco3(pHi, HCO3i,pH_scale_in,K
     alkalinity = TActemp;
 end
 
-function pH_out = calculate_pH_from_alkalinity_hco3(TAi, HCO3i,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k)
+function pH_out = calculate_pH_from_alkalinity_hco3(TAi, HCO3i,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
     % ' SUB calculate_pH_from_alkalinity_hco3, version 01.0, 8-18, added by J. Sharp with
     % ' modifications from Denis Pierrot.
@@ -860,7 +862,7 @@ function pH_out = calculate_pH_from_alkalinity_hco3(TAi, HCO3i,pH_scale_in,Ks,bo
         SiAlk     = TSiF.*KSiF./(KSiF + H);
         AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
         HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-        [~,~,pHfree,~] = find_pH_on_all_scales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k); % this converts pH to pHfree no matter the scale
+        [~,~,pHfree,~] = find_pH_on_all_scales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected,which_ks,salinity,temp_k); % this converts pH to pHfree no matter the scale
         Hfree = 10.^-pHfree; % this converts pHfree to Hfree
         HSO4      = TSF./(1 + KSF./Hfree); %' since KS is on the free scale
         HF        = TFF./(1 + KFF./Hfree);% ' since KF is on the free scale
@@ -934,7 +936,7 @@ function [pH_out,fco2] = calculate_pH_fco2_from_dic_hco3(TCx, HCO3x, Ks,selected
     fco2 = fCO2x;
 end
 
-function alkalinity = calculate_alkalinity_from_pH_co3(pHi, CO3i,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k)
+function alkalinity = calculate_alkalinity_from_pH_co3(pHi, CO3i,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
     % ' SUB calculate_alkalinity_from_pH_co3, version 01.0, 8-18, added by J. Sharp
     % ' Inputs: pH, CO3, K(), T()
@@ -955,7 +957,7 @@ function alkalinity = calculate_alkalinity_from_pH_co3(pHi, CO3i,pH_scale_in,Ks,
     SiAlk     = TSiF.*KSiF./(KSiF + H);
     AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
     HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-    [~,~,pHfree,~] = find_pH_on_all_scales(pHi,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k); % this converts pH to pHfree no matter the scale
+    [~,~,pHfree,~] = find_pH_on_all_scales(pHi,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected,which_ks,salinity,temp_k); % this converts pH to pHfree no matter the scale
     Hfree = 10.^-pHfree; % this converts pHfree to Hfree
     HSO4      = TSF./(1 + KSF./Hfree);% ' since KS is on the free scale
     HF        = TFF./(1 + KFF./Hfree);% ' since KF is on the free scale
@@ -963,7 +965,7 @@ function alkalinity = calculate_alkalinity_from_pH_co3(pHi, CO3i,pH_scale_in,Ks,
     alkalinity = TActemp;
 end
 
-function pH_out = calculate_pH_from_alkalinity_co3(TAi,CO3i,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k)
+function pH_out = calculate_pH_from_alkalinity_co3(TAi,CO3i,pH_scale_in,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k)
     % ' SUB calculate_pH_from_alkalinity_co3, version 01.0, 8-18, added by J. Sharp with
     % ' modifications from Denis Pierrot.
     % ' Inputs: TA, CO3, K0, K(), T()
@@ -1006,7 +1008,7 @@ function pH_out = calculate_pH_from_alkalinity_co3(TAi,CO3i,pH_scale_in,Ks,boron
         SiAlk     = TSiF.*KSiF./(KSiF + H);
         AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
         HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-        [~,~,pHfree,~] = find_pH_on_all_scales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k); % this converts pH to pHfree no matter the scale
+        [~,~,pHfree,~] = find_pH_on_all_scales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected,which_ks,salinity,temp_k); % this converts pH to pHfree no matter the scale
         Hfree = 10.^-pHfree; % this converts pHfree to Hfree
         HSO4      = TSF./(1 + KSF./Hfree); %' since KS is on the free scale
         HF        = TFF./(1 + KFF./Hfree);% ' since KF is on the free scale
@@ -1224,7 +1226,7 @@ function pH_out = calculate_pH_from_alkalinity_co3Munhoven(TAi, CO3x, Ks, boron_
     pH_out = pHGuess;
 end
 
-function revelle_factor = calculate_revelle_factor(TAi, TCi, pH_scale,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k)
+function revelle_factor = calculate_revelle_factor(TAi, TCi, pH_scale,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k)
     % ' SUB calculate_revelle_factor, version 01.03, 01-07-97, written by Ernie Lewis.
     % ' Inputs: which_k1_k2%, TA, TC, K0, K(), T()
     % ' Outputs: Revelle
@@ -1238,12 +1240,12 @@ function revelle_factor = calculate_revelle_factor(TAi, TCi, pH_scale,Ks,boron_c
     dTC = 0.00000001;% ' 0.01 umol/kg-SW (lower than prior versions of CO2SYS)
     % ' Find fCO2 at TA, TC + dTC
     TCi = TC0 + dTC;
-    pHc= calculate_pH_from_alkalinity_dic(TAi, TCi, pH_scale,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+    pHc= calculate_pH_from_alkalinity_dic(TAi, TCi, pH_scale,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k);
     fCO2c= calculate_fco2_from_dic_pH(TCi, pHc, Ks,selected);
     fCO2plus = fCO2c;
     % ' Find fCO2 at TA, TC - dTC
     TCi = TC0 - dTC;
-    pHc= calculate_pH_from_alkalinity_dic(TAi, TCi, pH_scale,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k);
+    pHc= calculate_pH_from_alkalinity_dic(TAi, TCi, pH_scale,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k);
     fCO2c= calculate_fco2_from_dic_pH(TCi, pHc, Ks,selected);
     fCO2minus = fCO2c;
     % CalculateRevelleFactor:
@@ -1252,7 +1254,7 @@ function revelle_factor = calculate_revelle_factor(TAi, TCi, pH_scale,Ks,boron_c
 end
 
 
-function [boron,oh,phosphate,silicate,ammonia,sulphide,h_free,sulphate,fluorine] = calculate_alkalinity_parts(pH,pH_scale,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k)
+function [boron,oh,phosphate,silicate,ammonia,sulphide,h_free,sulphate,fluorine] = calculate_alkalinity_parts(pH,pH_scale,Ks,boron_concentration,fluorine_concentration,sulphate_concentration,phosphate_concentration,silicate_concentration,ammonia_concentration,sulphide_concentration,selected,which_ks,salinity,temp_k)
     % ' SUB calculate_alkalinity_parts, version 01.03, 10-10-97, written by Ernie Lewis.
     % ' Inputs: pH, TC, K(), T()
     % ' Outputs: BAlk, OH, PAlk, SiAlk, Hfree, HSO4, HF
@@ -1277,7 +1279,7 @@ function [boron,oh,phosphate,silicate,ammonia,sulphide,h_free,sulphate,fluorine]
     SiAlk     = TSiF.*KSiF./(KSiF + H);
     AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
     HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-    [~,~,pHfree,~] = find_pH_on_all_scales(pH(selected),pH_scale,Ks,fluorine_concentration,sulphate_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k); % this converts pH to pHfree no matter the scale
+    [~,~,pHfree,~] = find_pH_on_all_scales(pH(selected),pH_scale,Ks,fluorine_concentration,sulphate_concentration,selected,which_ks,salinity,temp_k); % this converts pH to pHfree no matter the scale
     Hfree = 10.^-pHfree; % this converts pHfree to Hfree
     HSO4      = TSF./(1 + KSF./Hfree); %' since KS is on the free scale
     HF        = TFF./(1 + KFF./Hfree); %' since KF is on the free scale
@@ -1401,7 +1403,7 @@ function [saturation_state_calcite,saturation_state_aragonite] = calculate_carbo
     saturation_state_aragonite = CO3.*Ca./KAr; % OmegaAr, dimensionless
 end
     
-function [pH_total,pH_seawater,pH_free,pH_NBS] = find_pH_on_all_scales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected,number_of_points,which_k1_k2,salinity,temp_k)
+function [pH_total,pH_seawater,pH_free,pH_NBS] = find_pH_on_all_scales(pH,pH_scale_in,Ks,fluorine_concentration,sulphate_concentration,selected,which_ks,salinity,temp_k)
     % ' SUB find_pH_on_all_scales, version 01.02, 01-08-97, written by Ernie Lewis.
     % ' Inputs: pHScale%, pH, K(), T(), fH
     % ' Outputs: pHNBS, pHfree, pHTot, pHSWS
@@ -1409,7 +1411,7 @@ function [pH_total,pH_seawater,pH_free,pH_NBS] = find_pH_on_all_scales(pH,pH_sca
     %  sulphate_concentration = T(3); fluorine_concentration = T(2);
     %  KS = K(6); KF = K(5);% 'these are at the given T, S, P
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    fH = calculate_fH(which_k1_k2,salinity,temp_k);
+    fH = calculate_fH(which_ks,salinity,temp_k);
 
     TSx=sulphate_concentration(selected); KSx=KS(selected); TFx=fluorine_concentration(selected); KFx=KF(selected);fHx=fH(selected);
     FREEtoTOT = (1 + TSx./KSx); % ' pH scale conversion factor
