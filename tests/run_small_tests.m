@@ -5,7 +5,8 @@ function result = run_small_tests()
     grid_tests = TestSuite.fromClass(?GridTests);
     random_tests = TestSuite.fromClass(?RandomTests);
     chain_test = TestSuite.fromClass(?ChainTests);
+    equilibrium_constant_tests = TestSuite.fromClass(?EquilibriumConstantsTests);
     
-    fullSuite = [glodap_test_1,grid_tests,random_tests,chain_test];
+    fullSuite = [glodap_test_1,grid_tests,random_tests,chain_test,equilibrium_constant_tests];
     result = run(fullSuite);
 end
