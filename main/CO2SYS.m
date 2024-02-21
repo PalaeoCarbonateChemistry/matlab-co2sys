@@ -538,72 +538,48 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
 end 
 
 function pH_out = calculate_pH_from_alkalinity_dic(TAi,TCi,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
-    % ' SUB calculate_pH_from_alkalinity_dic, version 04.01, 10-13-96, written by Ernie Lewis
-    % ' with modifications from Denis Pierrot.
-    % ' Inputs: TA, TC, K(), T()
-    % ' Output: pH
-    %
-    % ' This calculates pH from TA and TC using K1 and K2 by Newton's method.
-    % ' It tries to solve for the pH at which Residual = 0.
-    % ' The starting guess is determined by the method introduced by Munhoven
-    % ' (2013).
-    %
-    % ' Made this to accept vectors. It will continue iterating until all
-    % ' values in the vector are "abs(deltapH) < pHTol". SVH2007
-    % ' However, once a given abs(deltapH) is less than pHTol, that pH value
-    % ' will be locked in. This avoids erroneous contributions to results from
-    % ' other lines of input. JDS2020
-
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-
-    K1F=K1(selected);     K2F=K2(selected);     KWF =KW(selected);
-    KP1F=KP1(selected);   KP2F=KP2(selected);   KP3F=KP3(selected);   
-    
+    [~,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
     
-    TPF=phosphate(selected);
-    TSiF=silicate(selected);   KSiF=KSi(selected);   TNH4F=ammonia(selected); KNH4F=KNH4(selected);
-    TH2SF=sulphide(selected); KH2SF=KH2S(selected); TBF =boron(selected);    KBF=KB(selected);
-    TSF =sulphate(selected);    KSF =KS(selected);    TFF =fluorine(selected);    KFF=KF(selected);
-    vl          = sum(selected);  % VectorLength
     % Find initital pH guess using method of Munhoven (2013)
-    pHGuess         = calculate_pH_from_alkalinity_dicMunhoven(TAi, TCi, Ks, boron,selected);
-    ln10            = log(10);
-    pH              = pHGuess;
-    pHTol           = 0.0001;  % tolerance for iterations end
-    deltapH(1:vl,1) = pHTol+1;
-    loopc=0;
-    nF=(abs(deltapH) > pHTol);
-    while any(nF)
+    pHGuess = calculate_pH_from_alkalinity_dicMunhoven(TAi, TCi, Ks, boron,selected);
+    pH = pHGuess;
+    pHTol = 1e-4;  % tolerance for iterations end
+    deltapH(1:sum(selected),1) = pHTol+1;
+    counter = 0;
+
+    above_tolerance = (abs(deltapH) > pHTol);
+    
+    while any(above_tolerance)
         H         = 10.^(-pH);
-        Denom     = (H.*H + K1F.*H + K1F.*K2F);
-        CAlk      = TCi.*K1F.*(H + 2.*K2F)./Denom;
-        BAlk      = TBF.*KBF./(KBF + H);
-        OH        = KWF./H;
-        PhosTop   = KP1F.*KP2F.*H + 2.*KP1F.*KP2F.*KP3F - H.*H.*H;
-        PhosBot   = H.*H.*H + KP1F.*H.*H + KP1F.*KP2F.*H + KP1F.*KP2F.*KP3F;
-        PAlk      = TPF.*PhosTop./PhosBot;
-        SiAlk     = TSiF.*KSiF./(KSiF + H);
-        AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
-        HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
+        Denom     = (H.^2 + K1(selected).*H + K1(selected).*K2(selected));
+        CAlk      = TCi.*K1(selected).*(H + 2.*K2(selected))./Denom;
+        BAlk      = boron(selected).*KB(selected)./(KB(selected) + H);
+        OH        = KW(selected)./H;
+        PhosTop   = KP1(selected).*KP2(selected).*H + 2.*KP1(selected).*KP2(selected).*KP3(selected) - H.*H.*H;
+        PhosBot   = H.^3 + KP1(selected).*H.*H + KP1(selected).*KP2(selected).*H + KP1(selected).*KP2(selected).*KP3(selected);
+        PAlk      = phosphate(selected).*PhosTop./PhosBot;
+        SiAlk     = silicate(selected).*KSi(selected)./(KSi(selected) + H);
+        AmmAlk    = ammonia(selected).*KNH4(selected)./(KNH4(selected) + H);
+        HSAlk     = sulphide(selected).*KH2S(selected)./(KH2S(selected) + H);
         [~,~,pHfree,~] = find_pH_on_all_scales(pH,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k); % this converts pH to pHfree no matter the scale
         Hfree     = 10.^-pHfree; % this converts pHfree to Hfree
-        HSO4      = TSF./(1 + KSF./Hfree); % since KS is on the free scale
-        HF        = TFF./(1 + KFF./Hfree); % since KF is on the free scale
+        HSO4      = sulphate(selected)./(1 + KS(selected)./Hfree); % since KS is on the free scale
+        HF        = fluorine(selected)./(1 + KF(selected)./Hfree); % since KF is on the free scale
         Residual  = TAi - CAlk - BAlk - OH - PAlk - SiAlk  - AmmAlk - HSAlk + Hfree + HSO4 + HF;
         % find Slope dTA/dpH;
         % (this is not exact, but keeps all important terms);
-        Slope     = ln10.*(TCi.*K1F.*H.*(H.*H + K1F.*K2F + 4.*H.*K2F)./Denom./Denom + BAlk.*H./(KBF + H) + OH + H);
+        Slope     = log(10).*(TCi.*K1(selected).*H.*(H.*H + K1(selected).*K2(selected) + 4.*H.*K2(selected))./Denom./Denom + BAlk.*H./(KB(selected) + H) + OH + H);
         deltapH   = Residual./Slope; %' this is Newton's method
         % ' to keep the jump from being too big:
         while any(abs(deltapH) > 1)
             FF=abs(deltapH)>1; deltapH(FF)=deltapH(FF)./2;
         end
-        pH(nF) = pH(nF) + deltapH(nF);
-        nF     = abs(deltapH) > pHTol;
-        loopc=loopc+1;
+        pH(above_tolerance) = pH(above_tolerance) + deltapH(above_tolerance);
+        above_tolerance     = abs(deltapH) > pHTol;
+        counter=counter+1;
      
-        if loopc>10000
+        if counter>10000
             Fr=find(abs(deltapH) > pHTol);
             pH(Fr)=NaN;  disp(['pH value did not converge for data on row(s): ' num2str((Fr)')]);
             deltapH=pHTol*0.9;
@@ -622,7 +598,7 @@ function fco2 = calculate_fco2_from_dic_pH(TCx, pHx, Ks,selected)
     H            = 10.^(-pHx);
     fCO2x        = TCx.*H.*H./(H.*H + K1(selected).*H + K1(selected).*K2(selected))./K0(selected);
     fco2 = fCO2x;
-    end % end nested function
+end % end nested function
     
 function dic = calculate_dic_from_alkalinity_pH(TAx, pHx,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
