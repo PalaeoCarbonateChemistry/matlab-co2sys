@@ -835,9 +835,9 @@ classdef EquilibriumConstantsStatic
         end
         
         %% Deep
-        function k0 = calculate_k0(temp_c,pressure_bar,salinity,co2_correction,which_k1_k2,pH_scale_conversion)
-            k0_surface = EquilibriumConstantsStatic.calculate_surface_k0(temp_c,salinity,which_k1_k2,pH_scale_conversion);
-            k0_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_k0(which_k1_k2,temp_c,pressure_bar,co2_correction);
+        function k0 = calculate_k0(temp_c,pressure_bar,salinity,co2_correction,which_ks,pH_scale_conversion)
+            k0_surface = EquilibriumConstantsStatic.calculate_surface_k0(temp_c,salinity,which_ks,pH_scale_conversion);
+            k0_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_k0(which_ks,temp_c,pressure_bar,co2_correction);
 
             k0 = k0_surface.*k0_pressure_correction;
         end
