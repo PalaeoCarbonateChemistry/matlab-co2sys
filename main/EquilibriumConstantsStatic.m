@@ -926,7 +926,7 @@ classdef EquilibriumConstantsStatic
         end
 
         %% pH Scale
-        function pH_factor = calculate_pH_factor(pH_scale,temp_c,salinity,which_ks,seawater_to_total,free_to_total)
+        function pH_factor = calculate_pH_factor_old(pH_scale,temp_c,salinity,which_ks,seawater_to_total,free_to_total)
             temp_k = temp_c+273.15;
             
             fH = calculate_fH(which_ks,salinity,temp_k);
@@ -989,17 +989,9 @@ classdef EquilibriumConstantsStatic
 
         end
         function Ks = calculate_all(temp_c,pressure_bar,which_pH_scale,co2_correction,composition,which_ks)
-            ks = EquilibriumConstantsStatic.calculate_surface_ks(temp_c,composition.salinity,which_ks);
-            kf = EquilibriumConstantsStatic.calculate_surface_kf(temp_c,composition.salinity,which_ks);
-            
-            % seawater_to_total = EquilibriumConstantsStatic.calculate_seawater_to_total(composition,ks,kf);
-
             pH_scale_conversion = [pHScale(which_pH_scale,composition,temp_c,composition.salinity,which_ks,0.0),...
                                    pHScale(which_pH_scale,composition,temp_c,composition.salinity,which_ks,pressure_bar)];
-
-            pH_factor_new = pH_scale_conversion(2).calculate_pH_factor(temp_c,composition.salinity,which_ks);
-
-            temp_k    = temp_c + 273.15;
+            pH_factor = pH_scale_conversion(2).calculate_pH_factor(temp_c,composition.salinity,which_ks);
 
             Ks = EquilibriumConstantsStatic.calculate_surface_all(temp_c,composition.salinity,which_ks,pH_scale_conversion(1));
             [k0_surface,k1_surface,k2_surface,kw_surface,kb_surface,~,~,kp1_surface,kp2_surface,kp3_surface,ksi_surface,knh4_surface,kh2s_surface] = EquilibriumConstantsStatic.unpack_Ks(Ks);
@@ -1022,11 +1014,6 @@ classdef EquilibriumConstantsStatic
             ks = EquilibriumConstantsStatic.calculate_ks(temp_c,pressure_bar,composition.salinity,which_ks);
             kf = EquilibriumConstantsStatic.calculate_kf(temp_c,pressure_bar,composition.salinity,which_ks);
 
-            seawater_to_total =  EquilibriumConstantsStatic.calculate_seawater_to_total(composition,ks,kf);
-            free_to_total =  EquilibriumConstantsStatic.calculate_free_to_total(composition,ks);
-
-            pH_factor = EquilibriumConstantsStatic.calculate_pH_factor(which_pH_scale,temp_c,composition.salinity,which_ks,seawater_to_total,free_to_total);
-            
             % ConvertFromSWSpHScaleToChosenScale:
             K0 = k0; KS = ks; KF = kf;
             K1   = k1.* pH_factor;  K2   = k2.* pH_factor;
@@ -1059,12 +1046,5 @@ classdef EquilibriumConstantsStatic
                         {K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S});
         end
 
-        %% Utility
-        function seawater_to_total = calculate_seawater_to_total(composition,ks,kf)
-            seawater_to_total = (1 + composition.sulphate./ks)./(1 + composition.sulphate./ks + composition.fluorine./kf);
-        end
-        function free_to_total = calculate_free_to_total(composition,ks)
-            free_to_total =  1 + composition.sulphate./ks;
-        end
     end
 end

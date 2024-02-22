@@ -17,8 +17,8 @@ classdef pHScale
             self.ks = EquilibriumConstantsStatic.calculate_ks(temp_c,pressure_bar,salinity,which_ks);
             self.kf = EquilibriumConstantsStatic.calculate_kf(temp_c,pressure_bar,salinity,which_ks);
 
-            self.seawater_to_total = EquilibriumConstantsStatic.calculate_seawater_to_total(composition,self.ks,self.kf);
-            self.free_to_total = EquilibriumConstantsStatic.calculate_free_to_total(composition,self.ks);
+            self.seawater_to_total = pHScale.calculate_seawater_to_total(composition,self.ks,self.kf);
+            self.free_to_total = pHScale.calculate_free_to_total(composition,self.ks);
         end
         function pH_factor = calculate_pH_factor(self,temp_c,salinity,which_ks)
             temp_k = temp_c+273.15;
@@ -40,6 +40,14 @@ classdef pHScale
 
             selected = (self.which_pH_scale==4); % pH NBS
             pH_factor(selected) = fH(selected);
+        end
+    end
+    methods (Static=true)
+        function seawater_to_total = calculate_seawater_to_total(composition,ks,kf)
+            seawater_to_total = (1 + composition.sulphate./ks)./(1 + composition.sulphate./ks + composition.fluorine./kf);
+        end
+        function free_to_total = calculate_free_to_total(composition,ks)
+            free_to_total =  1 + composition.sulphate./ks;
         end
     end
 end
