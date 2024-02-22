@@ -1,14 +1,14 @@
 classdef EquilibriumConstantsStatic
     methods (Static=true)
         %% Surface
-        function k0 = calculate_surface_k0(temp_c,salinity,which_ks,seawater_to_total)
+        function k0 = calculate_surface_k0(temp_c,salinity,which_ks,pH_scale_conversion)
             temp_k = temp_c + 273.15;
             
             lnK0 = -60.2409 + 93.4517./(temp_k./100) + 23.3585.*log(temp_k./100) +...
                 salinity.*(0.023517-0.023656.*(temp_k./100) + 0.0047036.*(temp_k./100).^2);
             k0   = exp(lnK0);
         end
-        function k1 = calculate_surface_k1(temp_c,salinity,which_ks,seawater_to_total)
+        function k1 = calculate_surface_k1(temp_c,salinity,which_ks,pH_scale_conversion)
             temp_k    = temp_c + 273.15;
             log_temp_k = log(temp_k);
 
@@ -24,7 +24,7 @@ classdef EquilibriumConstantsStatic
                     0.00654208.*sqrt(salinity(selected)).*salinity(selected);
                 K1(selected) = exp(lnK1(selected))...            % this is on the total pH scale in mol/kg-H2O
                     .*(1 - 0.001005.*salinity(selected))...    % convert to mol/kg-SW
-                    ./seawater_to_total(selected);                 % convert to SWS pH scale
+                    ./pH_scale_conversion.seawater_to_total(selected);                 % convert to SWS pH scale
             end
 
             selected=(which_ks.k1_k2==2);
@@ -79,7 +79,7 @@ classdef EquilibriumConstantsStatic
             if any(selected)
                 pK1(selected) = 3633.86./temp_k(selected)-61.2172+9.6777.*log(temp_k(selected))-0.011555.*salinity(selected)+0.0001152.*salinity(selected).^2;
 	            K1(selected)  = 10.^-pK1(selected)...           % this is on the total pH scale in mol/kg-SW
-                    ./seawater_to_total(selected);                % convert to SWS pH scale
+                    ./pH_scale_conversion.seawater_to_total(selected);                % convert to SWS pH scale
             end
 
             selected=(which_ks.k1_k2==11);
@@ -129,7 +129,7 @@ classdef EquilibriumConstantsStatic
             if any(selected)
                 pK1(selected) = 8510.63./temp_k(selected)-172.4493+26.32996.*log(temp_k(selected))-0.011555.*salinity(selected)+0.0001152.*salinity(selected).^2;
 	            K1(selected)  = 10.^-pK1(selected)...           % this is on the total pH scale in mol/kg-SW
-                    ./seawater_to_total(selected);                % convert to SWS pH scale
+                    ./pH_scale_conversion.seawater_to_total(selected);                % convert to SWS pH scale
             end
             
             selected=(which_ks.k1_k2==17);
@@ -140,11 +140,11 @@ classdef EquilibriumConstantsStatic
 	            C1 = -2.0901396.*salinity(selected).^0.5;
 	            pK1 = pK10 + A1 + B1./temp_k(selected) + C1.*log(temp_k(selected));
 	            K1(selected) = 10.^-pK1...               % this is on the total pH scale in mol/kg-sw
-                    ./seawater_to_total(selected);                % convert to SWS pH scale
+                    ./pH_scale_conversion.seawater_to_total(selected);                % convert to SWS pH scale
             end
             k1 = K1;
         end
-        function k2 = calculate_surface_k2(temp_c,salinity,which_ks,seawater_to_total)
+        function k2 = calculate_surface_k2(temp_c,salinity,which_ks,pH_scale_conversion)
             temp_k    = temp_c + 273.15;
             log_temp_k = log(temp_k);
 
@@ -162,7 +162,7 @@ classdef EquilibriumConstantsStatic
                     0.00846934.*sqrt(salinity(selected)).*salinity(selected);
                 K2(selected) = exp(lnK2(selected))...            % this is on the total pH scale in mol/kg-H2O
                     .*(1 - 0.001005.*salinity(selected))...    % convert to mol/kg-SW
-                    ./seawater_to_total(selected);                 % convert to SWS pH scale
+                    ./pH_scale_conversion.seawater_to_total(selected);                 % convert to SWS pH scale
             end
 
             selected=(which_ks.k1_k2==2);
@@ -218,7 +218,7 @@ classdef EquilibriumConstantsStatic
             if any(selected)
                 pK2(selected) = 471.78./temp_k(selected)+25.929 -3.16967.*log(temp_k(selected))-0.01781 .*salinity(selected)+0.0001122.*salinity(selected).^2;
 	            K2(selected)  = 10.^-pK2(selected)...           % this is on the total pH scale in mol/kg-SW
-                    ./seawater_to_total(selected);                % convert to SWS pH scale
+                    ./pH_scale_conversion.seawater_to_total(selected);                % convert to SWS pH scale
             end
 
             selected=(which_ks.k1_k2==11);
@@ -268,7 +268,7 @@ classdef EquilibriumConstantsStatic
             if any(selected)
                 pK2(selected) = 4226.23./temp_k(selected)-59.4636+9.60817.*log(temp_k(selected))-0.01781 .*salinity(selected)+0.0001122.*salinity(selected).^2;
 	            K2(selected)  = 10.^-pK2(selected)...           % this is on the total pH scale in mol/kg-SW
-                    ./seawater_to_total(selected);                % convert to SWS pH scale
+                    ./pH_scale_conversion.seawater_to_total(selected);                % convert to SWS pH scale
             end
             
             selected=(which_ks.k1_k2==17);
@@ -277,11 +277,11 @@ classdef EquilibriumConstantsStatic
                     0.04523.*salinity(selected) - 0.615.*salinity(selected).^0.5 - 0.0002799.*salinity(selected).^2 + ...
                     4.969.*(salinity(selected)./temp_k(selected));
                 K2(selected)  = 10.^-pK2...           % this is on the total pH scale in mol/kg-SW
-                    ./seawater_to_total(selected);                % convert to SWS pH scale
+                    ./pH_scale_conversion.seawater_to_total(selected);                % convert to SWS pH scale
             end
             k2 = K2;
         end
-        function kw = calculate_surface_kw(temp_c,salinity,which_ks,seawater_to_total)
+        function kw = calculate_surface_kw(temp_c,salinity,which_ks,pH_scale_conversion)
             temp_k    = temp_c + 273.15;
             log_temp_k = log(temp_k);
             
@@ -316,7 +316,7 @@ classdef EquilibriumConstantsStatic
             end
             kw = KW;
         end
-        function kb = calculate_surface_kb(temp_c,salinity,which_ks,seawater_to_total)
+        function kb = calculate_surface_kb(temp_c,salinity,which_ks,pH_scale_conversion)
             temp_k    = temp_c + 273.15;
             log_temp_k = log(temp_k);
             fH = calculate_fH(which_ks,salinity,temp_k);
@@ -349,11 +349,11 @@ classdef EquilibriumConstantsStatic
                     1.62142.*salinity(selected) + (-24.4344 - 25.085.*sqrt(salinity(selected)) - 0.2474.*...
                     salinity(selected)).*log_temp_k(selected) + 0.053105.*sqrt(salinity(selected)).*temp_k(selected);
                 KB(selected) = exp(lnKB(selected))...    % this is on the total pH scale in mol/kg-SW
-                    ./seawater_to_total(selected);         % convert to SWS pH scale
+                    ./pH_scale_conversion.seawater_to_total(selected);         % convert to SWS pH scale
             end
             kb = KB;    
         end
-        function kp1 = calculate_surface_kp1(temp_c,salinity,which_ks,seawater_to_total)
+        function kp1 = calculate_surface_kp1(temp_c,salinity,which_ks,pH_scale_conversion)
             temp_k    = temp_c + 273.15;
             log_temp_k = log(temp_k);
             
@@ -380,7 +380,7 @@ classdef EquilibriumConstantsStatic
 
             kp1 = KP1;
         end
-        function kp2 = calculate_surface_kp2(temp_c,salinity,which_ks,seawater_to_total)
+        function kp2 = calculate_surface_kp2(temp_c,salinity,which_ks,pH_scale_conversion)
             temp_k    = temp_c + 273.15;
             log_temp_k = log(temp_k);
             fH = calculate_fH(which_ks,salinity,temp_k);
@@ -409,7 +409,7 @@ classdef EquilibriumConstantsStatic
 
             kp2 = KP2;
         end
-        function kp3 = calculate_surface_kp3(temp_c,salinity,which_ks,seawater_to_total)
+        function kp3 = calculate_surface_kp3(temp_c,salinity,which_ks,pH_scale_conversion)
             temp_k    = temp_c + 273.15;
             fH = calculate_fH(which_ks,salinity,temp_k);
             
@@ -437,7 +437,7 @@ classdef EquilibriumConstantsStatic
 
             kp3 = KP3;
         end
-        function ksi = calculate_surface_ksi(temp_c,salinity,which_ks,seawater_to_total)
+        function ksi = calculate_surface_ksi(temp_c,salinity,which_ks,pH_scale_conversion)
             temp_k    = temp_c + 273.15;
             log_temp_k = log(temp_k);
             IonS         = 19.924 .* salinity ./ (1000 - 1.005   .* salinity);
@@ -470,7 +470,7 @@ classdef EquilibriumConstantsStatic
             ksi = KSi;
         end
 
-        function knh4 = calculate_surface_knh4(temp_c,salinity,which_ks,seawater_to_total)
+        function knh4 = calculate_surface_knh4(temp_c,salinity,which_ks,pH_scale_conversion)
             temp_k    = temp_c + 273.15;
             
             % Calculate KNH4
@@ -494,11 +494,11 @@ classdef EquilibriumConstantsStatic
                       (-2.354039E-05+0.009698623./temp_k(selected)).*salinity(selected).^2.5;
               KNH4(selected)  = 10.^-pKNH4(selected);                    % total scale, mol/kg-H2O
               KNH4(selected)  = KNH4(selected).*(1-0.001005.*salinity(selected)); % mol/kg-SW
-              KNH4(selected)  = KNH4(selected)./seawater_to_total(selected);             % converts to SWS pH scale
+              KNH4(selected)  = KNH4(selected)./pH_scale_conversion.seawater_to_total(selected);             % converts to SWS pH scale
             end
             knh4 = KNH4;
         end
-        function kh2s = calculate_surface_kh2s(temp_c,salinity,which_ks,seawater_to_total)
+        function kh2s = calculate_surface_kh2s(temp_c,salinity,which_ks,pH_scale_conversion)
             temp_k    = temp_c + 273.15;
             
             % Calculate KH2S
@@ -513,7 +513,7 @@ classdef EquilibriumConstantsStatic
             if any(selected)            
               KH2S(selected)  = (exp(225.838-13275.3./temp_k(selected)-34.6435.*log(temp_k(selected))+...
                           0.3449.*salinity(selected).^0.5-0.0274.*salinity(selected)))...
-                          ./seawater_to_total(selected);                    % convert to SWS pH scale
+                          ./pH_scale_conversion.seawater_to_total(selected);                    % convert to SWS pH scale
             end
 
             kh2s = KH2S;
@@ -602,9 +602,10 @@ classdef EquilibriumConstantsStatic
         end
         
         %% Pressure Corrections
-        function k0_pressure_correction = calculate_pressure_correction_k0(which_ks,gas_constant,temp_c,pressure_bar,co2_correction)
+        function k0_pressure_correction = calculate_pressure_correction_k0(which_ks,temp_c,pressure_bar,co2_correction)
             vCO2 = 32.3;
             temp_k = temp_c+273.15;
+            gas_constant = Constants.gas_constant;
 
             co2_pressure_correction = NaN(numel(co2_correction),1);
 
@@ -620,8 +621,9 @@ classdef EquilibriumConstantsStatic
    
             k0_pressure_correction = co2_pressure_correction; % this is in mol/kg-SW/atm
         end
-        function k1_pressure_correction = calculate_pressure_correction_k1(which_ks,gas_constant,temp_c,pressure_bar)
+        function k1_pressure_correction = calculate_pressure_correction_k1(which_ks,temp_c,pressure_bar)
             temp_k    = temp_c + 273.15;
+            gas_constant = Constants.gas_constant;
             RR = (gas_constant.*temp_k);
 
             %Correct K1 for pressure:
@@ -651,8 +653,9 @@ classdef EquilibriumConstantsStatic
             end
             k1_pressure_correction = exp(lnK1fac);
         end
-        function k2_pressure_correction = calculate_pressure_correction_k2(which_ks,gas_constant,temp_c,pressure_bar)
+        function k2_pressure_correction = calculate_pressure_correction_k2(which_ks,temp_c,pressure_bar)
             temp_k    = temp_c + 273.15;
+            gas_constant = Constants.gas_constant;
             RR = (gas_constant.*temp_k);
         
             % Correct K2 for pressure:
@@ -679,8 +682,9 @@ classdef EquilibriumConstantsStatic
 
             k2_pressure_correction = exp(lnK2fac);
         end
-        function kb_pressure_correction = calculate_pressure_correction_kb(which_ks,gas_constant,temp_c,pressure_bar)
+        function kb_pressure_correction = calculate_pressure_correction_kb(which_ks,temp_c,pressure_bar)
             temp_k    = temp_c + 273.15;
+            gas_constant = Constants.gas_constant;
             RR = (gas_constant.*temp_k);
         
             %Correct KB for pressure:
@@ -704,7 +708,8 @@ classdef EquilibriumConstantsStatic
             end
             kb_pressure_correction = exp(lnKBfac);
         end
-        function kw_pressure_correction = calculate_pressure_correction_kw(which_ks,gas_constant,temp_c,pressure_bar)
+        function kw_pressure_correction = calculate_pressure_correction_kw(which_ks,temp_c,pressure_bar)
+            gas_constant = Constants.gas_constant;
             RR = (gas_constant.*(temp_c+273.15));
             
             % CorrectKWForPressure:
@@ -738,8 +743,9 @@ classdef EquilibriumConstantsStatic
             end
             kw_pressure_correction = exp(lnKWfac);
         end
-        function kp1_pressure_correction = calculate_pressure_correction_kp1(which_ks,gas_constant,temp_c,pressure_bar)
+        function kp1_pressure_correction = calculate_pressure_correction_kp1(which_ks,temp_c,pressure_bar)
             temp_k    = temp_c + 273.15;
+            gas_constant = Constants.gas_constant;
                         
             deltaV = -14.51 + 0.1211.*temp_c - 0.000321.*temp_c.^2;
             Kappa  = (-2.67 + 0.0427.*temp_c)./1000;
@@ -747,17 +753,19 @@ classdef EquilibriumConstantsStatic
 
             kp1_pressure_correction = exp(lnKP1fac);
         end
-        function kp2_pressure_correction = calculate_pressure_correction_kp2(which_ks,gas_constant,temp_c,pressure_bar)
+        function kp2_pressure_correction = calculate_pressure_correction_kp2(which_ks,temp_c,pressure_bar)
             temp_k    = temp_c + 273.15;
-                        
+            gas_constant = Constants.gas_constant;
+
             deltaV = -23.12 + 0.1758.*temp_c - 0.002647.*temp_c.^2;
             Kappa  = (-5.15 + 0.09  .*temp_c)./1000;
             lnKP2fac = (-deltaV + 0.5.*Kappa.*pressure_bar).*pressure_bar./(gas_constant.*temp_k);
 
             kp2_pressure_correction = exp(lnKP2fac);
         end
-        function kp3_pressure_correction = calculate_pressure_correction_kp3(which_ks,gas_constant,temp_c,pressure_bar)
+        function kp3_pressure_correction = calculate_pressure_correction_kp3(which_ks,temp_c,pressure_bar)
             temp_k    = temp_c + 273.15;
+            gas_constant = Constants.gas_constant;
 
             deltaV = -26.57 + 0.202 .*temp_c - 0.003042.*temp_c.^2;
             Kappa  = (-4.08 + 0.0714.*temp_c)./1000;
@@ -765,9 +773,10 @@ classdef EquilibriumConstantsStatic
 
             kp3_pressure_correction = exp(lnKP3fac);
         end
-        function ksi_pressure_correction = calculate_pressure_correction_ksi(which_ks,gas_constant,temp_c,pressure_bar)
+        function ksi_pressure_correction = calculate_pressure_correction_ksi(which_ks,temp_c,pressure_bar)
             temp_k    = temp_c + 273.15;
-                        
+            gas_constant = Constants.gas_constant;
+
             % PressureEffectsOnKSi:
             %  The only mention of this is Millero, 1995 where it is stated that the
             %    values have been estimated from the values of boric acid. HOWEVER,
@@ -778,8 +787,9 @@ classdef EquilibriumConstantsStatic
             lnKSifac = (-deltaV + 0.5.*Kappa.*pressure_bar).*pressure_bar./(gas_constant.*temp_k);
             ksi_pressure_correction = exp(lnKSifac);
         end
-        function knh4_pressure_correction = calculate_pressure_correction_knh4(which_ks,gas_constant,temp_c,pressure_bar)
+        function knh4_pressure_correction = calculate_pressure_correction_knh4(which_ks,temp_c,pressure_bar)
             temp_k    = temp_c + 273.15;
+            gas_constant = Constants.gas_constant;
                         
             % PressureEffectsOnKNH4: added by J. Sharp
             deltaV = -26.43 + 0.0889.*temp_c - 0.000905.*temp_c.^2;
@@ -787,8 +797,9 @@ classdef EquilibriumConstantsStatic
             lnKNH4fac = (-deltaV + 0.5.*Kappa.*pressure_bar).*pressure_bar./(gas_constant.*temp_k);
             knh4_pressure_correction = exp(lnKNH4fac);
         end
-        function kh2s_pressure_correction = calculate_pressure_correction_kh2s(which_ks,gas_constant,temp_c,pressure_bar)
+        function kh2s_pressure_correction = calculate_pressure_correction_kh2s(which_ks,temp_c,pressure_bar)
             temp_k    = temp_c + 273.15;
+            gas_constant = Constants.gas_constant;
 
             % PressureEffectsOnKH2S: added by J. Sharp
             deltaV = -11.07 - 0.009.*temp_c - 0.000942.*temp_c.^2;
@@ -797,8 +808,9 @@ classdef EquilibriumConstantsStatic
             kh2s_pressure_correction = exp(lnKH2Sfac);
         end
 
-        function ks_pressure_correction = calculate_pressure_correction_ks(which_ks,gas_constant,temp_c,pressure_bar)
+        function ks_pressure_correction = calculate_pressure_correction_ks(which_ks,temp_c,pressure_bar)
             temp_k    = temp_c + 273.15;
+            gas_constant = Constants.gas_constant;
                         
             % PressureEffectsOnKS:
             %       This is from Millero, 1995, which is the same as Millero, 1983.
@@ -808,8 +820,9 @@ classdef EquilibriumConstantsStatic
             lnKSfac = (-deltaV + 0.5.*Kappa.*pressure_bar).*pressure_bar./(gas_constant.*temp_k);
             ks_pressure_correction = exp(lnKSfac);
         end
-        function kf_pressure_correction = calculate_pressure_correction_kf(which_ks,gas_constant,temp_c,pressure_bar)
+        function kf_pressure_correction = calculate_pressure_correction_kf(which_ks,temp_c,pressure_bar)
             temp_k    = temp_c + 273.15;
+            gas_constant = Constants.gas_constant;
             
             % PressureEffectsOnKF:
             %       This is from Millero, 1995, which is the same as Millero, 1983.
@@ -822,98 +835,98 @@ classdef EquilibriumConstantsStatic
         end
         
         %% Deep
-        function k0 = calculate_k0(temp_c,pressure_bar,salinity,co2_correction,gas_constant,which_k1_k2,seawater_to_total)
-            k0_surface = EquilibriumConstantsStatic.calculate_surface_k0(temp_c,salinity,which_k1_k2,seawater_to_total);
-            k0_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_k0(which_k1_k2,gas_constant,temp_c,pressure_bar,co2_correction);
+        function k0 = calculate_k0(temp_c,pressure_bar,salinity,co2_correction,which_ks,pH_scale_conversion)
+            k0_surface = EquilibriumConstantsStatic.calculate_surface_k0(temp_c,salinity,which_ks,pH_scale_conversion);
+            k0_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_k0(which_ks,temp_c,pressure_bar,co2_correction);
 
             k0 = k0_surface.*k0_pressure_correction;
         end
-        function k1 = calculate_k1(temp_c,pressure_bar,salinity,gas_constant,which_ks,seawater_to_total,seawater_to_total_deep,free_to_tot,free_to_tot_deep,pH_scale)
-            k1_surface = EquilibriumConstantsStatic.calculate_surface_k1(temp_c,salinity,which_ks,seawater_to_total);
-            k1_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_k1(which_ks,gas_constant,temp_c,pressure_bar);
-            pH_factor = EquilibriumConstantsStatic.calculate_pH_factor(pH_scale,temp_c,salinity,which_ks,seawater_to_total_deep,free_to_tot_deep);
+        function k1 = calculate_k1(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion)
+            k1_surface = EquilibriumConstantsStatic.calculate_surface_k1(temp_c,salinity,which_ks,pH_scale_conversion(1));
+            k1_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_k1(which_ks,temp_c,pressure_bar);
+            pH_factor = pH_scale_conversion(2).calculate_pH_factor(temp_c,salinity,which_ks);
 
             k1 = k1_surface.*k1_pressure_correction.*pH_factor;
         end
-        function k2 = calculate_k2(temp_c,pressure_bar,salinity,gas_constant,which_k1_k2,seawater_to_total,seawater_to_total_deep,free_to_tot,free_to_tot_deep,pH_scale)
-            k2_surface = EquilibriumConstantsStatic.calculate_surface_k2(temp_c,salinity,which_k1_k2,seawater_to_total);
-            k2_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_k2(which_k1_k2,gas_constant,temp_c,pressure_bar);
-            pH_factor = EquilibriumConstantsStatic.calculate_pH_factor(pH_scale,temp_c,salinity,which_k1_k2,seawater_to_total_deep,free_to_tot_deep);
+        function k2 = calculate_k2(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion)
+            k2_surface = EquilibriumConstantsStatic.calculate_surface_k2(temp_c,salinity,which_ks,pH_scale_conversion(1));
+            k2_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_k2(which_ks,temp_c,pressure_bar);
+            pH_factor = pH_scale_conversion(2).calculate_pH_factor(temp_c,salinity,which_ks);
 
             k2 = k2_surface.*k2_pressure_correction.*pH_factor;
         end
-        function kb = calculate_kb(temp_c,pressure_bar,salinity,gas_constant,which_k1_k2,seawater_to_total,seawater_to_total_deep,free_to_tot,free_to_tot_deep,pH_scale)
-            kb_surface = EquilibriumConstantsStatic.calculate_surface_kb(temp_c,salinity,which_k1_k2,seawater_to_total);
-            kb_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kb(which_k1_k2,gas_constant,temp_c,pressure_bar);
-            pH_factor = EquilibriumConstantsStatic.calculate_pH_factor(pH_scale,temp_c,salinity,which_k1_k2,seawater_to_total_deep,free_to_tot_deep);
+        function kb = calculate_kb(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion)
+            kb_surface = EquilibriumConstantsStatic.calculate_surface_kb(temp_c,salinity,which_ks,pH_scale_conversion(1));
+            kb_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kb(which_ks,temp_c,pressure_bar);
+            pH_factor = pH_scale_conversion(2).calculate_pH_factor(temp_c,salinity,which_ks);
 
             kb = kb_surface.*kb_pressure_correction.*pH_factor;
         end
-        function kw = calculate_kw(temp_c,pressure_bar,salinity,gas_constant,which_k1_k2,seawater_to_total,seawater_to_total_deep,free_to_tot,free_to_tot_deep,pH_scale)
-            kw_surface = EquilibriumConstantsStatic.calculate_surface_kw(temp_c,salinity,which_k1_k2,seawater_to_total);
-            kw_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kw(which_k1_k2,gas_constant,temp_c,pressure_bar);
-            pH_factor = EquilibriumConstantsStatic.calculate_pH_factor(pH_scale,temp_c,salinity,which_k1_k2,seawater_to_total_deep,free_to_tot_deep);
+        function kw = calculate_kw(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion)
+            kw_surface = EquilibriumConstantsStatic.calculate_surface_kw(temp_c,salinity,which_ks,pH_scale_conversion);
+            kw_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kw(which_ks,temp_c,pressure_bar);
+            pH_factor = pH_scale_conversion(2).calculate_pH_factor(temp_c,salinity,which_ks);
 
             kw = kw_surface.*kw_pressure_correction.*pH_factor;
         end
-        function kp1 = calculate_kp1(temp_c,pressure_bar,salinity,gas_constant,which_k1_k2,seawater_to_total,seawater_to_total_deep,free_to_tot,free_to_tot_deep,pH_scale)
-            kp1_surface = EquilibriumConstantsStatic.calculate_surface_kp1(temp_c,salinity,which_k1_k2,seawater_to_total);
-            kp1_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kp1(which_k1_k2,gas_constant,temp_c,pressure_bar);
-            pH_factor = EquilibriumConstantsStatic.calculate_pH_factor(pH_scale,temp_c,salinity,which_k1_k2,seawater_to_total_deep,free_to_tot_deep);
+        function kp1 = calculate_kp1(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion)
+            kp1_surface = EquilibriumConstantsStatic.calculate_surface_kp1(temp_c,salinity,which_ks,pH_scale_conversion(1));
+            kp1_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kp1(which_ks,temp_c,pressure_bar);
+            pH_factor = pH_scale_conversion(2).calculate_pH_factor(temp_c,salinity,which_ks);
 
             kp1 = kp1_surface.*kp1_pressure_correction.*pH_factor;
         end
-        function kp2 = calculate_kp2(temp_c,pressure_bar,salinity,gas_constant,which_k1_k2,seawater_to_total,seawater_to_total_deep,free_to_tot,free_to_tot_deep,pH_scale)
-            kp2_surface = EquilibriumConstantsStatic.calculate_surface_kp2(temp_c,salinity,which_k1_k2,seawater_to_total);
-            kp2_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kp2(which_k1_k2,gas_constant,temp_c,pressure_bar);
-            pH_factor = EquilibriumConstantsStatic.calculate_pH_factor(pH_scale,temp_c,salinity,which_k1_k2,seawater_to_total_deep,free_to_tot_deep);
+        function kp2 = calculate_kp2(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion)
+            kp2_surface = EquilibriumConstantsStatic.calculate_surface_kp2(temp_c,salinity,which_ks,pH_scale_conversion(1));
+            kp2_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kp2(which_ks,temp_c,pressure_bar);
+            pH_factor = pH_scale_conversion(2).calculate_pH_factor(temp_c,salinity,which_ks);
 
             kp2 = kp2_surface.*kp2_pressure_correction.*pH_factor;
         end
-        function kp3 = calculate_kp3(temp_c,pressure_bar,salinity,gas_constant,which_k1_k2,seawater_to_total,seawater_to_total_deep,free_to_tot,free_to_tot_deep,pH_scale)
-            kp3_surface = EquilibriumConstantsStatic.calculate_surface_kp3(temp_c,salinity,which_k1_k2,seawater_to_total);
-            kp3_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kp3(which_k1_k2,gas_constant,temp_c,pressure_bar);
-            pH_factor = EquilibriumConstantsStatic.calculate_pH_factor(pH_scale,temp_c,salinity,which_k1_k2,seawater_to_total_deep,free_to_tot_deep);
+        function kp3 = calculate_kp3(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion)
+            kp3_surface = EquilibriumConstantsStatic.calculate_surface_kp3(temp_c,salinity,which_ks,pH_scale_conversion(1));
+            kp3_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kp3(which_ks,temp_c,pressure_bar);
+            pH_factor = pH_scale_conversion(2).calculate_pH_factor(temp_c,salinity,which_ks);
 
             kp3 = kp3_surface.*kp3_pressure_correction.*pH_factor;
         end
-        function ksi = calculate_ksi(temp_c,pressure_bar,salinity,gas_constant,which_k1_k2,seawater_to_total,seawater_to_total_deep,free_to_tot,free_to_tot_deep,pH_scale)
-            ksi_surface = EquilibriumConstantsStatic.calculate_surface_ksi(temp_c,salinity,which_k1_k2,seawater_to_total);
-            ksi_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_ksi(which_k1_k2,gas_constant,temp_c,pressure_bar);
-            pH_factor = EquilibriumConstantsStatic.calculate_pH_factor(pH_scale,temp_c,salinity,which_k1_k2,seawater_to_total_deep,free_to_tot_deep);
+        function ksi = calculate_ksi(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion)
+            ksi_surface = EquilibriumConstantsStatic.calculate_surface_ksi(temp_c,salinity,which_ks,pH_scale_conversion(1));
+            ksi_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_ksi(which_ks,temp_c,pressure_bar);
+            pH_factor = pH_scale_conversion(2).calculate_pH_factor(temp_c,salinity,which_ks);
 
             ksi = ksi_surface.*ksi_pressure_correction.*pH_factor;
         end
-        function knh4 = calculate_knh4(temp_c,pressure_bar,salinity,gas_constant,which_k1_k2,seawater_to_total,seawater_to_total_deep,free_to_tot,free_to_tot_deep,pH_scale)
-            knh4_surface = EquilibriumConstantsStatic.calculate_surface_knh4(temp_c,salinity,which_k1_k2,seawater_to_total);
-            knh4_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_knh4(which_k1_k2,gas_constant,temp_c,pressure_bar);
-            pH_factor = EquilibriumConstantsStatic.calculate_pH_factor(pH_scale,temp_c,salinity,which_k1_k2,seawater_to_total_deep,free_to_tot_deep);
+        function knh4 = calculate_knh4(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion)
+            knh4_surface = EquilibriumConstantsStatic.calculate_surface_knh4(temp_c,salinity,which_ks,pH_scale_conversion(1));
+            knh4_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_knh4(which_ks,temp_c,pressure_bar);
+            pH_factor = pH_scale_conversion(2).calculate_pH_factor(temp_c,salinity,which_ks);
 
             knh4 = knh4_surface.*knh4_pressure_correction.*pH_factor;
         end
-        function kh2s = calculate_kh2s(temp_c,pressure_bar,salinity,gas_constant,which_k1_k2,seawater_to_total,seawater_to_total_deep,free_to_tot,free_to_tot_deep,pH_scale)
-            kh2s_surface = EquilibriumConstantsStatic.calculate_surface_kh2s(temp_c,salinity,which_k1_k2,seawater_to_total);
-            kh2s_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kh2s(which_k1_k2,gas_constant,temp_c,pressure_bar);
-            pH_factor = EquilibriumConstantsStatic.calculate_pH_factor(pH_scale,temp_c,salinity,which_k1_k2,seawater_to_total_deep,free_to_tot_deep);
+        function kh2s = calculate_kh2s(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion)
+            kh2s_surface = EquilibriumConstantsStatic.calculate_surface_kh2s(temp_c,salinity,which_ks,pH_scale_conversion(1));
+            kh2s_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kh2s(which_ks,temp_c,pressure_bar);
+            pH_factor = pH_scale_conversion(2).calculate_pH_factor(temp_c,salinity,which_ks);
 
             kh2s = kh2s_surface.*kh2s_pressure_correction.*pH_factor;
         end
 
-        function ks = calculate_ks(temp_c,pressure_bar,salinity,gas_constant,which_ks)
+        function ks = calculate_ks(temp_c,pressure_bar,salinity,which_ks)
             ks_surface = EquilibriumConstantsStatic.calculate_surface_ks(temp_c,salinity,which_ks);
-            ks_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_ks(which_ks,gas_constant,temp_c,pressure_bar);
+            ks_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_ks(which_ks,temp_c,pressure_bar);
 
             ks = ks_surface.*ks_pressure_correction;
         end
-        function kf = calculate_kf(temp_c,pressure_bar,salinity,gas_constant,which_ks)
+        function kf = calculate_kf(temp_c,pressure_bar,salinity,which_ks)
             kf_surface = EquilibriumConstantsStatic.calculate_surface_kf(temp_c,salinity,which_ks);
-            kf_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kf(which_ks,gas_constant,temp_c,pressure_bar);
+            kf_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kf(which_ks,temp_c,pressure_bar);
 
             kf = kf_surface.*kf_pressure_correction;
         end
 
         %% pH Scale
-        function pH_factor = calculate_pH_factor(pH_scale,temp_c,salinity,which_ks,seawater_to_total,free_to_tot)
+        function pH_factor = calculate_pH_factor_old(pH_scale,temp_c,salinity,which_ks,seawater_to_total,free_to_total)
             temp_k = temp_c+273.15;
             
             fH = calculate_fH(which_ks,salinity,temp_k);
@@ -929,25 +942,25 @@ classdef EquilibriumConstantsStatic
             pH_factor(selected) = 1;
 
             selected=(pH_scale==3); % pH free
-            pH_factor(selected) = seawater_to_total(selected)./free_to_tot(selected);
+            pH_factor(selected) = seawater_to_total(selected)./free_to_total(selected);
 
             selected=(pH_scale==4); % pH NBS
             pH_factor(selected) = fH(selected);
         end
         
         %% Combination
-        function Ks = calculate_surface_all(temp_c,salinity,which_ks,seawater_to_total)
-            k0 = EquilibriumConstantsStatic.calculate_surface_k0(temp_c,salinity,which_ks,seawater_to_total);
-            k1 = EquilibriumConstantsStatic.calculate_surface_k1(temp_c,salinity,which_ks,seawater_to_total);
-            k2 = EquilibriumConstantsStatic.calculate_surface_k2(temp_c,salinity,which_ks,seawater_to_total);
-            kw = EquilibriumConstantsStatic.calculate_surface_kw(temp_c,salinity,which_ks,seawater_to_total);
-            kb = EquilibriumConstantsStatic.calculate_surface_kb(temp_c,salinity,which_ks,seawater_to_total);
-            kp1 = EquilibriumConstantsStatic.calculate_surface_kp1(temp_c,salinity,which_ks,seawater_to_total);
-            kp2 = EquilibriumConstantsStatic.calculate_surface_kp2(temp_c,salinity,which_ks,seawater_to_total);
-            kp3 = EquilibriumConstantsStatic.calculate_surface_kp3(temp_c,salinity,which_ks,seawater_to_total);
-            ksi = EquilibriumConstantsStatic.calculate_surface_ksi(temp_c,salinity,which_ks,seawater_to_total);
-            knh4 = EquilibriumConstantsStatic.calculate_surface_knh4(temp_c,salinity,which_ks,seawater_to_total);
-            kh2s = EquilibriumConstantsStatic.calculate_surface_kh2s(temp_c,salinity,which_ks,seawater_to_total);
+        function Ks = calculate_surface_all(temp_c,salinity,which_ks,pH_scale_conversion)
+            k0 = EquilibriumConstantsStatic.calculate_surface_k0(temp_c,salinity,which_ks,pH_scale_conversion);
+            k1 = EquilibriumConstantsStatic.calculate_surface_k1(temp_c,salinity,which_ks,pH_scale_conversion);
+            k2 = EquilibriumConstantsStatic.calculate_surface_k2(temp_c,salinity,which_ks,pH_scale_conversion);
+            kw = EquilibriumConstantsStatic.calculate_surface_kw(temp_c,salinity,which_ks,pH_scale_conversion);
+            kb = EquilibriumConstantsStatic.calculate_surface_kb(temp_c,salinity,which_ks,pH_scale_conversion);
+            kp1 = EquilibriumConstantsStatic.calculate_surface_kp1(temp_c,salinity,which_ks,pH_scale_conversion);
+            kp2 = EquilibriumConstantsStatic.calculate_surface_kp2(temp_c,salinity,which_ks,pH_scale_conversion);
+            kp3 = EquilibriumConstantsStatic.calculate_surface_kp3(temp_c,salinity,which_ks,pH_scale_conversion);
+            ksi = EquilibriumConstantsStatic.calculate_surface_ksi(temp_c,salinity,which_ks,pH_scale_conversion);
+            knh4 = EquilibriumConstantsStatic.calculate_surface_knh4(temp_c,salinity,which_ks,pH_scale_conversion);
+            kh2s = EquilibriumConstantsStatic.calculate_surface_kh2s(temp_c,salinity,which_ks,pH_scale_conversion);
             
             ks = EquilibriumConstantsStatic.calculate_surface_ks(temp_c,salinity,which_ks);
             kf = EquilibriumConstantsStatic.calculate_surface_kf(temp_c,salinity,which_ks);
@@ -955,39 +968,35 @@ classdef EquilibriumConstantsStatic
             Ks = containers.Map(["K0","K1","K2","KW","KB","KF","KS","KP1","KP2","KP3","KSi","KNH4","KH2S"], ...
                         {k0,k1,k2,kw,kb,kf,ks,kp1,kp2,kp3,ksi,knh4,kh2s});
         end
-        function pressure_correction = calculate_pressure_correction_all(which_ks,gas_constant,temp_c,pressure_bar,co2_correction)
-            k0_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_k0(which_ks,gas_constant,temp_c,pressure_bar,co2_correction);
-            k1_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_k1(which_ks,gas_constant,temp_c,pressure_bar);
-            k2_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_k2(which_ks,gas_constant,temp_c,pressure_bar);
-            kb_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kb(which_ks,gas_constant,temp_c,pressure_bar);
-            kw_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kw(which_ks,gas_constant,temp_c,pressure_bar);
-            kp1_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kp1(which_ks,gas_constant,temp_c,pressure_bar);
-            kp2_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kp2(which_ks,gas_constant,temp_c,pressure_bar);
-            kp3_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kp3(which_ks,gas_constant,temp_c,pressure_bar);
-            ksi_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_ksi(which_ks,gas_constant,temp_c,pressure_bar);
-            knh4_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_knh4(which_ks,gas_constant,temp_c,pressure_bar);
-            kh2s_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kh2s(which_ks,gas_constant,temp_c,pressure_bar);
+        function pressure_correction = calculate_pressure_correction_all(which_ks,temp_c,pressure_bar,co2_correction)
+            k0_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_k0(which_ks,temp_c,pressure_bar,co2_correction);
+            k1_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_k1(which_ks,temp_c,pressure_bar);
+            k2_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_k2(which_ks,temp_c,pressure_bar);
+            kb_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kb(which_ks,temp_c,pressure_bar);
+            kw_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kw(which_ks,temp_c,pressure_bar);
+            kp1_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kp1(which_ks,temp_c,pressure_bar);
+            kp2_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kp2(which_ks,temp_c,pressure_bar);
+            kp3_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kp3(which_ks,temp_c,pressure_bar);
+            ksi_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_ksi(which_ks,temp_c,pressure_bar);
+            knh4_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_knh4(which_ks,temp_c,pressure_bar);
+            kh2s_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kh2s(which_ks,temp_c,pressure_bar);
 
-            ks_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_ks(which_ks,gas_constant,temp_c,pressure_bar);
-            kf_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kf(which_ks,gas_constant,temp_c,pressure_bar);
+            ks_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_ks(which_ks,temp_c,pressure_bar);
+            kf_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_kf(which_ks,temp_c,pressure_bar);
 
             pressure_correction = containers.Map(["K0","K1","K2","KW","KB","KF","KS","KP1","KP2","KP3","KSi","KNH4","KH2S"], ...
                         {k0_pressure_correction,k1_pressure_correction,k2_pressure_correction,kw_pressure_correction,kb_pressure_correction,kf_pressure_correction,ks_pressure_correction,kp1_pressure_correction,kp2_pressure_correction,kp3_pressure_correction,ksi_pressure_correction,knh4_pressure_correction,kh2s_pressure_correction});
 
         end
-        function Ks = calculate_all(temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,composition,which_ks)
-            ks = EquilibriumConstantsStatic.calculate_surface_ks(temp_c,salinity,which_ks);
-            kf = EquilibriumConstantsStatic.calculate_surface_kf(temp_c,salinity,which_ks);
-            
-            seawater_to_total = EquilibriumConstantsStatic.calculate_seawater_to_total(composition,ks,kf);
+        function Ks = calculate_all(temp_c,pressure_bar,which_pH_scale,co2_correction,composition,which_ks)
+            pH_scale_conversion = [pHScale(which_pH_scale,composition,temp_c,composition.salinity,which_ks,0.0),...
+                                   pHScale(which_pH_scale,composition,temp_c,composition.salinity,which_ks,pressure_bar)];
+            pH_factor = pH_scale_conversion(2).calculate_pH_factor(temp_c,composition.salinity,which_ks);
 
-            temp_k    = temp_c + 273.15;
-            fH = calculate_fH(which_ks,salinity,temp_k);
-
-            Ks = EquilibriumConstantsStatic.calculate_surface_all(temp_c,salinity,which_ks,seawater_to_total);
+            Ks = EquilibriumConstantsStatic.calculate_surface_all(temp_c,composition.salinity,which_ks,pH_scale_conversion(1));
             [k0_surface,k1_surface,k2_surface,kw_surface,kb_surface,~,~,kp1_surface,kp2_surface,kp3_surface,ksi_surface,knh4_surface,kh2s_surface] = EquilibriumConstantsStatic.unpack_Ks(Ks);
         
-            Ks_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_all(which_ks,gas_constant,temp_c,pressure_bar,co2_correction);
+            Ks_pressure_correction = EquilibriumConstantsStatic.calculate_pressure_correction_all(which_ks,temp_c,pressure_bar,co2_correction);
             [k0_pressure_correction,k1_pressure_correction,k2_pressure_correction,kw_pressure_correction,kb_pressure_correction,~,~,kp1_pressure_correction,kp2_pressure_correction,kp3_pressure_correction,ksi_pressure_correction,knh4_pressure_correction,kh2s_pressure_correction] = EquilibriumConstantsStatic.unpack_Ks(Ks_pressure_correction);
         
             k0 = k0_surface.*k0_pressure_correction;
@@ -1002,14 +1011,9 @@ classdef EquilibriumConstantsStatic
             knh4 = knh4_surface.*knh4_pressure_correction;
             kh2s = kh2s_surface.*kh2s_pressure_correction;
 
-            ks = EquilibriumConstantsStatic.calculate_ks(temp_c,pressure_bar,salinity,gas_constant,which_ks);
-            kf = EquilibriumConstantsStatic.calculate_kf(temp_c,pressure_bar,salinity,gas_constant,which_ks);
+            ks = EquilibriumConstantsStatic.calculate_ks(temp_c,pressure_bar,composition.salinity,which_ks);
+            kf = EquilibriumConstantsStatic.calculate_kf(temp_c,pressure_bar,composition.salinity,which_ks);
 
-            seawater_to_total =  EquilibriumConstantsStatic.calculate_seawater_to_total(composition,ks,kf);
-            free_to_tot =  EquilibriumConstantsStatic.calculate_free_to_total(composition,ks);
-
-            pH_factor = EquilibriumConstantsStatic.calculate_pH_factor(pH_scale,temp_c,salinity,which_ks,seawater_to_total,free_to_tot);
-            
             % ConvertFromSWSpHScaleToChosenScale:
             K0 = k0; KS = ks; KF = kf;
             K1   = k1.* pH_factor;  K2   = k2.* pH_factor;
@@ -1042,12 +1046,5 @@ classdef EquilibriumConstantsStatic
                         {K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S});
         end
 
-        %% Utility
-        function seawater_to_total = calculate_seawater_to_total(composition,ks,kf)
-            seawater_to_total = (1 + composition.sulphate./ks)./(1 + composition.sulphate./ks + composition.fluorine./kf);
-        end
-        function free_to_tot = calculate_free_to_total(composition,ks)
-            free_to_tot =  1 + composition.sulphate./ks;
-        end
     end
 end

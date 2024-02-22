@@ -1,4 +1,4 @@
-function fugacity_factor = calculate_fugacity_factor(p_opt,gas_constant,number_of_points,which_k1_k2,temp_k)
+function fugacity_factor = calculate_fugacity_factor(p_opt,number_of_points,which_k1_k2,temp_k)
     % CalculateFugacityConstants:
     % In previos versions of CO2SYS, the fugacity factor was calculated
     % assuming pressure at one atmosphere, or close to it. Starting with
@@ -6,6 +6,8 @@ function fugacity_factor = calculate_fugacity_factor(p_opt,gas_constant,number_o
     %       Weiss, R. selected., Marine Chemistry 2:203-215, 1974.
     %       Delta and B in cm3/mol
     fugacity_factor = ones(number_of_points,1);
+    gas_constant = Constants.gas_constant;
+
     Delta = (57.7 - 0.118.*temp_k);
     b = -1636.75 + 12.0408.*temp_k - 0.0327957.*temp_k.^2 + 3.16528.*0.00001.*temp_k.^3;
     % For a mixture of CO2 and air at in situ pressure;
