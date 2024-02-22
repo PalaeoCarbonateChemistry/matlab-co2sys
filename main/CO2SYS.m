@@ -136,7 +136,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
 
     % Calculate the constants for all samples at input conditions
     % The constants calculated for each sample will be on the appropriate pH scale!
-    Ks_in = EquilibriumConstantsStatic.calculate_all(temperature_in,pressure_in/10,salinity,pH_scale_in,co2_pressure_correction,gas_constant,composition,which_ks);
+    Ks_in = EquilibriumConstantsStatic.calculate_all(temperature_in,pressure_in/10,pH_scale_in,co2_pressure_correction,gas_constant,composition,which_ks);
     
     K0_in = Ks_in("K0");
     
@@ -355,7 +355,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     clear K0 K1 K2 KW KB KF KS KP1 KP2 KP3 KSi KNH4 KH2S
     
     % Calculate the constants for all samples at output conditions
-    Ks_out = EquilibriumConstantsStatic.calculate_all(temperature_out,pressure_out/10,salinity,pH_scale_in,co2_pressure_correction,gas_constant,composition,which_ks);                
+    Ks_out = EquilibriumConstantsStatic.calculate_all(temperature_out,pressure_out/10,pH_scale_in,co2_pressure_correction,gas_constant,composition,which_ks);                
 
     % For output conditions, using conservative TA and TC, calculate pH, fCO2
     % and pCO2, HCO3, CO3, and CO2
