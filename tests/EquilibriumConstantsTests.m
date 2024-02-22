@@ -21,9 +21,6 @@ classdef EquilibriumConstantsTests < matlab.unittest.TestCase
              which_boron = inputs.which_boron;
              co2_correction = inputs.co2_pressure_correction;
 
-             gas_constant = 83.14462618; % ml bar-1 K-1 mol-1,
-
-
              composition = Composition(salinity)...
                             .set_silicate_concentration(silicate/1e6)...
                             .set_phosphate_concentration(phosphate/1e6)...
@@ -35,7 +32,7 @@ classdef EquilibriumConstantsTests < matlab.unittest.TestCase
                             .calculate_peng_correction(which_ks);
 
 
-             calculated = EquilibriumConstantsStatic.calculate_all(temp_c,pressure_bar,salinity,pH_scale,co2_correction,gas_constant,composition,which_ks);
+             calculated = EquilibriumConstantsStatic.calculate_all(temp_c,pressure_bar,pH_scale,co2_correction,composition,which_ks);
          end
          function calculated = calculate_individual_static(inputs)
              temp_c = inputs.temperature_in;
@@ -50,7 +47,7 @@ classdef EquilibriumConstantsTests < matlab.unittest.TestCase
              which_boron = inputs.which_boron;
              co2_correction = inputs.co2_pressure_correction;
 
-             pH_scale = inputs.pH_scale_in;
+             which_pH_scale = inputs.pH_scale_in;
 
              silicate = inputs.silicate;
              phosphate = inputs.phosphate;
@@ -69,32 +66,34 @@ classdef EquilibriumConstantsTests < matlab.unittest.TestCase
                             .adjust_geosecs_species(which_ks)...
                             .calculate_peng_correction(which_ks);
 
-
-             ks = EquilibriumConstantsStatic.calculate_surface_ks(temp_c,salinity,which_ks);
-             kf = EquilibriumConstantsStatic.calculate_surface_kf(temp_c,salinity,which_ks);
+            pH_scale_conversion = [pHScale(which_pH_scale,composition,temp_c,composition.salinity,which_ks,0.0),...
+                                   pHScale(which_pH_scale,composition,temp_c,composition.salinity,which_ks,pressure_bar)];
             
-             seawater_to_total = EquilibriumConstantsStatic.calculate_seawater_to_total(composition,ks,kf);
-             free_to_total = EquilibriumConstantsStatic.calculate_free_to_total(composition,ks);
+             % seawater_to_total = EquilibriumConstantsStatic.calculate_seawater_to_total(composition,ks,kf);
+             % free_to_total = EquilibriumConstantsStatic.calculate_free_to_total(composition,ks);
 
-             ks_deep = EquilibriumConstantsStatic.calculate_ks(temp_c,pressure_bar,salinity,gas_constant,which_ks);
-             kf_deep = EquilibriumConstantsStatic.calculate_kf(temp_c,pressure_bar,salinity,gas_constant,which_ks);
-            
-             seawater_to_total_deep = EquilibriumConstantsStatic.calculate_seawater_to_total(composition,ks_deep,kf_deep);
-             free_to_total_deep = EquilibriumConstantsStatic.calculate_free_to_total(composition,ks_deep);
+             % ks_deep = EquilibriumConstantsStatic.calculate_ks(temp_c,pressure_bar,salinity,gas_constant,which_ks);
+             % kf_deep = EquilibriumConstantsStatic.calculate_kf(temp_c,pressure_bar,salinity,gas_constant,which_ks);
+             % 
+             % seawater_to_total_deep = EquilibriumConstantsStatic.calculate_seawater_to_total(composition,ks_deep,kf_deep);
+             % free_to_total_deep = EquilibriumConstantsStatic.calculate_free_to_total(composition,ks_deep);
 
-             k0_individual = EquilibriumConstantsStatic.calculate_k0(temp_c,pressure_bar,salinity,co2_correction,gas_constant,which_ks,seawater_to_total);
-             k1_individual = EquilibriumConstantsStatic.calculate_k1(temp_c,pressure_bar,salinity,gas_constant,which_ks,seawater_to_total,seawater_to_total_deep,free_to_total,free_to_total_deep,pH_scale);
-             k2_individual = EquilibriumConstantsStatic.calculate_k2(temp_c,pressure_bar,salinity,gas_constant,which_ks,seawater_to_total,seawater_to_total_deep,free_to_total,free_to_total_deep,pH_scale);
-             kw_individual = EquilibriumConstantsStatic.calculate_kw(temp_c,pressure_bar,salinity,gas_constant,which_ks,seawater_to_total,seawater_to_total_deep,free_to_total,free_to_total_deep,pH_scale);
-             kb_individual = EquilibriumConstantsStatic.calculate_kb(temp_c,pressure_bar,salinity,gas_constant,which_ks,seawater_to_total,seawater_to_total_deep,free_to_total,free_to_total_deep,pH_scale);
-             kp1_individual = EquilibriumConstantsStatic.calculate_kp1(temp_c,pressure_bar,salinity,gas_constant,which_ks,seawater_to_total,seawater_to_total_deep,free_to_total,free_to_total_deep,pH_scale);
-             kp2_individual = EquilibriumConstantsStatic.calculate_kp2(temp_c,pressure_bar,salinity,gas_constant,which_ks,seawater_to_total,seawater_to_total_deep,free_to_total,free_to_total_deep,pH_scale);
-             kp3_individual = EquilibriumConstantsStatic.calculate_kp3(temp_c,pressure_bar,salinity,gas_constant,which_ks,seawater_to_total,seawater_to_total_deep,free_to_total,free_to_total_deep,pH_scale);
-             ksi_individual = EquilibriumConstantsStatic.calculate_ksi(temp_c,pressure_bar,salinity,gas_constant,which_ks,seawater_to_total,seawater_to_total_deep,free_to_total,free_to_total_deep,pH_scale);
-             knh4_individual = EquilibriumConstantsStatic.calculate_knh4(temp_c,pressure_bar,salinity,gas_constant,which_ks,seawater_to_total,seawater_to_total_deep,free_to_total,free_to_total_deep,pH_scale);
-             kh2s_individual = EquilibriumConstantsStatic.calculate_kh2s(temp_c,pressure_bar,salinity,gas_constant,which_ks,seawater_to_total,seawater_to_total_deep,free_to_total,free_to_total_deep,pH_scale);
+             k0_individual = EquilibriumConstantsStatic.calculate_k0(temp_c,pressure_bar,salinity,co2_correction,which_ks,pH_scale_conversion);
+             k1_individual = EquilibriumConstantsStatic.calculate_k1(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion);
+             k2_individual = EquilibriumConstantsStatic.calculate_k2(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion);
+             kw_individual = EquilibriumConstantsStatic.calculate_kw(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion);
+             kb_individual = EquilibriumConstantsStatic.calculate_kb(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion);
+             kp1_individual = EquilibriumConstantsStatic.calculate_kp1(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion);
+             kp2_individual = EquilibriumConstantsStatic.calculate_kp2(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion);
+             kp3_individual = EquilibriumConstantsStatic.calculate_kp3(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion);
+             ksi_individual = EquilibriumConstantsStatic.calculate_ksi(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion);
+             knh4_individual = EquilibriumConstantsStatic.calculate_knh4(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion);
+             kh2s_individual = EquilibriumConstantsStatic.calculate_kh2s(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion);
 
-             calculated = EquilibriumConstantsStatic.pack_Ks(k0_individual,k1_individual,k2_individual,kw_individual,kb_individual,kf_deep,ks_deep,kp1_individual,kp2_individual,kp3_individual,ksi_individual,knh4_individual,kh2s_individual);
+             ks_individual = EquilibriumConstantsStatic.calculate_ks(temp_c,pressure_bar,salinity,which_ks);
+             kf_individual = EquilibriumConstantsStatic.calculate_kf(temp_c,pressure_bar,salinity,which_ks);
+
+             calculated = EquilibriumConstantsStatic.pack_Ks(k0_individual,k1_individual,k2_individual,kw_individual,kb_individual,kf_individual,ks_individual,kp1_individual,kp2_individual,kp3_individual,ksi_individual,knh4_individual,kh2s_individual);
          end
          function calculated = calculate_all_bound(inputs)
              temp_c = inputs.temperature_in;
