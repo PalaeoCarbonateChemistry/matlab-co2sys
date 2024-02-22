@@ -54,8 +54,6 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     which_kf(1:number_of_points,1)         = which_kf(:);
     which_boron(1:number_of_points,1)      = which_boron(:);
     
-    gas_constant = 83.14462618; % ml bar-1 K-1 mol-1,
-    
     % Generate empty vectors for...
     alkalinity = nan(number_of_points,1);
     dic        = nan(number_of_points,1);
@@ -136,13 +134,13 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
 
     % Calculate the constants for all samples at input conditions
     % The constants calculated for each sample will be on the appropriate pH scale!
-    Ks_in = EquilibriumConstantsStatic.calculate_all(temperature_in,pressure_in/10,pH_scale_in,co2_pressure_correction,gas_constant,composition,which_ks);
+    Ks_in = EquilibriumConstantsStatic.calculate_all(temperature_in,pressure_in/10,pH_scale_in,co2_pressure_correction,composition,which_ks);
     
     K0_in = Ks_in("K0");
     
     % Make sure fCO2 is available for each sample that has pCO2 or CO2.
     temp_k = temperature_in+273.15;
-    fugacity_factor = calculate_fugacity_factor(co2_pressure_correction,gas_constant,number_of_points,which_k1_k2,temp_k);
+    fugacity_factor = calculate_fugacity_factor(co2_pressure_correction,number_of_points,which_k1_k2,temp_k);
     
     selected = (~isnan(pco2) & (parameter_1_type==4 | parameter_2_type==4));  
     fco2(selected) = pco2(selected).*fugacity_factor(selected);
@@ -334,7 +332,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     phosphate_alkalinity_in(selected) = phosphate_alkalinity_in(selected)+composition.peng_correction(selected);
     revelle_alkalinity_in(selected) = calculate_revelle_factor(alkalinity_in(selected)-composition.peng_correction(selected), dic_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k);
-    [saturation_state_calcite_in(selected),saturation_state_aragonite_in(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_in(selected), dic_in(selected), pH_in(selected), Ks_in, sqrt(salinity(selected)),gas_constant,composition.calcium,which_k1_k2,pressure_in/10,selected);
+    [saturation_state_calcite_in(selected),saturation_state_aragonite_in(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_in(selected), dic_in(selected), pH_in(selected), Ks_in, sqrt(salinity(selected)),composition.calcium,which_k1_k2,pressure_in/10,selected);
     vapour_pressure_factor = calculate_vapour_pressure_factor(salinity,temp_k);
     co2_dry_alkalinity_in(~isnan(pco2_in),1) = pco2_in(~isnan(pco2_in),1)./vapour_pressure_factor(~isnan(pco2_in),1); % ' this assumes pTot = 1 atm
     
@@ -355,7 +353,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     clear K0 K1 K2 KW KB KF KS KP1 KP2 KP3 KSi KNH4 KH2S
     
     % Calculate the constants for all samples at output conditions
-    Ks_out = EquilibriumConstantsStatic.calculate_all(temperature_out,pressure_out/10,pH_scale_in,co2_pressure_correction,gas_constant,composition,which_ks);                
+    Ks_out = EquilibriumConstantsStatic.calculate_all(temperature_out,pressure_out/10,pH_scale_in,co2_pressure_correction,composition,which_ks);                
 
     % For output conditions, using conservative TA and TC, calculate pH, fCO2
     % and pCO2, HCO3, CO3, and CO2
@@ -368,7 +366,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         [co3_out(selected),hco3_out(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_out(selected), Ks_out,selected);
     
     % Generate the associated pCO2 value:
-    fugacity_factor = calculate_fugacity_factor(co2_pressure_correction,gas_constant,number_of_points,which_k1_k2,temp_k);
+    fugacity_factor = calculate_fugacity_factor(co2_pressure_correction,number_of_points,which_k1_k2,temp_k);
     pco2_out  = fco2_out./fugacity_factor;
     % Generate the associated CO2 value:
 
@@ -387,7 +385,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     phosphate_alkalinity_out(selected)                 = phosphate_alkalinity_out(selected)+composition.peng_correction(selected);
     revelle_alkalinity_out(selected)              = calculate_revelle_factor(alkalinity_in(selected)-composition.peng_correction(selected), dic_in(selected),pH_scale_in,Ks_out,composition,selected,which_ks,salinity,temp_k);
-    [saturation_state_calcite_out(selected),saturation_state_aragonite_out(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_out(selected), dic_in(selected), pH_out(selected), Ks_out, sqrt(salinity(selected)), gas_constant, composition.calcium,which_k1_k2,pressure_out/10,selected);
+    [saturation_state_calcite_out(selected),saturation_state_aragonite_out(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_out(selected), dic_in(selected), pH_out(selected), Ks_out, sqrt(salinity(selected)), composition.calcium,which_k1_k2,pressure_out/10,selected);
     vapour_pressure_factor = calculate_vapour_pressure_factor(salinity,temp_k);
     co2_dry_alkalinity_out(~isnan(pco2_out),1)    = pco2_out(~isnan(pco2_out))./vapour_pressure_factor(~isnan(pco2_out)); % ' this assumes pTot = 1 atm
     substrate_inhibitor_ratio_out = hco3_out./(h_free_alkalinity_out.*1e6);
@@ -1276,7 +1274,7 @@ function [boron,oh,phosphate,silicate,ammonia,sulphide,h_free,sulphate,fluorine]
 end
 
 
-function [saturation_state_calcite,saturation_state_aragonite] = calculate_carbonate_solubility(salinity, TempC, TC, pH, Ks, sqrt_salinity, gas_constant, calcium_concentration,which_k1_k2,Pbar,selected)
+function [saturation_state_calcite,saturation_state_aragonite] = calculate_carbonate_solubility(salinity, TempC, TC, pH, Ks, sqrt_salinity, calcium_concentration,which_k1_k2,Pbar,selected)
     % '***********************************************************************
     % ' SUB calculate_carbonate_solubility, version 01.05, 05-23-97, written by Ernie Lewis.
     % ' Inputs: which_k1_k2%, salinity, temperature_in, pressure_in, TCi, pHi, K1, K2
@@ -1307,6 +1305,7 @@ function [saturation_state_calcite,saturation_state_aragonite] = calculate_carbo
 
     temp_k    = TempC + 273.15;
     log_temp_k = log(temp_k);
+    gas_constant = Constants.gas_constant;
 
     Ca=calcium_concentration(selected);
     Ar=nan(sum(selected),1);

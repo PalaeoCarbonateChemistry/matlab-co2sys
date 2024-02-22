@@ -10,12 +10,12 @@ classdef pHScale
         free_to_total
     end
     methods
-        function self = pHScale(which_pH_scale,composition,temp_c,salinity,which_ks,pressure_bar,gas_constant)
+        function self = pHScale(which_pH_scale,composition,temp_c,salinity,which_ks,pressure_bar)
             self.which_pH_scale = which_pH_scale;
             self.composition = composition;
             
-            self.ks = EquilibriumConstantsStatic.calculate_ks(temp_c,pressure_bar,salinity,gas_constant,which_ks);
-            self.kf = EquilibriumConstantsStatic.calculate_kf(temp_c,pressure_bar,salinity,gas_constant,which_ks);
+            self.ks = EquilibriumConstantsStatic.calculate_ks(temp_c,pressure_bar,salinity,which_ks);
+            self.kf = EquilibriumConstantsStatic.calculate_kf(temp_c,pressure_bar,salinity,which_ks);
 
             self.seawater_to_total = EquilibriumConstantsStatic.calculate_seawater_to_total(composition,self.ks,self.kf);
             self.free_to_total = EquilibriumConstantsStatic.calculate_free_to_total(composition,self.ks);
