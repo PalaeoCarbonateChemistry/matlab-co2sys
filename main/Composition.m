@@ -185,5 +185,24 @@ classdef Composition
             sulphate = self.sulphate;
             sulphide = self.sulphide;
         end
+   
+        function output = select(self,selected)
+            output = Composition(self.salinity(selected));
+            output.ammonia = self.ammonia(selected);
+            output.boron = self.boron(selected);
+            output.bromine = self.bromine(selected);
+            output.calcium = self.calcium(selected);
+            output.chloride = self.chloride(selected);
+            output.fluorine = self.fluorine(selected);
+            output.magnesium = self.magnesium(selected);
+            output.potassium = self.potassium(selected);
+            output.phosphate = self.phosphate(selected);
+            output.silicate = self.silicate(selected);
+            output.sodium = self.sodium(selected);
+            output.strontium = self.strontium(selected);
+            output.sulphate = self.sulphate(selected);
+            output.sulphide = self.sulphide(selected);
+            output.peng_correction = self.peng_correction(selected);
+        end
     end
 end

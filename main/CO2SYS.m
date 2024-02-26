@@ -9,16 +9,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
                                             varargin)
     
     % Input conditioning
-    
-    % set default for optional input argument
-    co2_pressure_correction = 0;
-    % parse optional input argument
-    for index = 1:2:length(varargin)-1
-        if strcmpi(varargin{index},'co2_press')
-            co2_pressure_correction = varargin{index+1};
-        end
-    end
-    
+
     % Determine lengths of input vectors
     input_lengths = [length(parameter_1) length(parameter_2) length(parameter_1_type)...
                 length(parameter_2_type) length(salinity_in) length(temperature_in)...
@@ -33,6 +24,15 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     % Find the longest column vector:
     number_of_points = max(input_lengths);
+        
+    % set default for optional input argument
+    co2_pressure_correction = zeros(numel(number_of_points),1);
+    % parse optional input argument
+    for index = 1:2:length(varargin)-1
+        if strcmpi(varargin{index},'co2_press')
+            co2_pressure_correction = varargin{index+1};
+        end
+    end
     
     % Populate column vectors
     parameter_1(1:number_of_points,1)      = parameter_1(:);
@@ -53,6 +53,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     which_kso4(1:number_of_points,1)       = which_kso4(:);
     which_kf(1:number_of_points,1)         = which_kf(:);
     which_boron(1:number_of_points,1)      = which_boron(:);
+    co2_pressure_correction(1:number_of_points,1) = co2_pressure_correction(:);
     
     % Generate empty vectors for...
     alkalinity = nan(number_of_points,1);
@@ -139,15 +140,15 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
                pH_scale_in,...
                which_ks,...
                co2_pressure_correction)...
-             .calculate_all()...
-             .as_map();
-    K0 = Ks_in("K0");
+             .calculate_all();
+
+    K0 = Ks_in.k0;
     
     % Make sure fCO2 is available for each sample that has pCO2 or CO2.
     temp_k = temperature_in+273.15;
     fugacity_factor = calculate_fugacity_factor(co2_pressure_correction,number_of_points,which_k1_k2,temp_k);
     
-    selected = (~isnan(pco2) & (parameter_1_type==4 | parameter_2_type==4));  
+    selected = (~isnan(pco2) & (parameter_1_type==4 | parameter_2_type==4));
     fco2(selected) = pco2(selected).*fugacity_factor(selected);
 
     selected = (~isnan(co2) & (parameter_1_type==8 | parameter_2_type==8)); 
@@ -174,6 +175,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     if any(selected)
     selected = (~isnan(alkalinity_in) & ~isnan(dic_in) & selected);
         pH_in(selected) = calculate_pH_from_alkalinity_dic(alkalinity_in(selected)-composition.peng_correction(selected),dic_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k);
+
         selected = (~isnan(pH_in) & selected);
         if any(selected)
            fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
@@ -352,7 +354,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     [pHicT(selected),pHicS(selected),pHicF(selected),pHicN(selected)]=find_pH_on_all_scales(pH_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k);
     
     % Merge the Ks at input into an array. Ks at output will be glued to this later.
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks_in);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks_in.unpack();
     k_in_vector = [K0,K1,K2,-log10(K1),-log10(K2),KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S];
 
     clear K0 K1 K2 KW KB KF KS KP1 KP2 KP3 KSi KNH4 KH2S
@@ -364,8 +366,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
                 pH_scale_in,...
                 which_ks,...
                 co2_pressure_correction)...
-              .calculate_all()...
-              .as_map();
+              .calculate_all();
 
 
     % For output conditions, using conservative TA and TC, calculate pH, fCO2
@@ -383,7 +384,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     pco2_out  = fco2_out./fugacity_factor;
     % Generate the associated CO2 value:
 
-    K0_out = Ks_out("K0");
+    K0_out = Ks_out.k0;
     co2_out = fco2_out.*K0_out;
     
     % Calculate Other Params At Output Conditions
@@ -410,7 +411,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     pH_out_NBS = nan(number_of_points,1);
     [pH_out_total(selected),pH_out_seawater(selected),pH_out_free(selected),pH_out_NBS(selected)]=find_pH_on_all_scales(pH_out(selected),pH_scale_in,Ks_out,composition,selected,which_ks,salinity,temp_k);
     
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks_out);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks_out.unpack();
     k_out_vector = [K0,K1,K2,-log10(K1),-log10(K2),KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S];
     concentration_vector =[composition.boron,composition.fluorine,composition.sulphate,composition.phosphate,composition.silicate,composition.ammonia,composition.sulphide];
     
@@ -549,7 +550,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
 end 
 
 function pH_out = calculate_pH_from_alkalinity_dic(alkalinity,dic,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
 
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
     
@@ -606,14 +607,14 @@ function pH_out = calculate_pH_from_alkalinity_dic(alkalinity,dic,pH_scale_in,Ks
 end
 
 function fco2 = calculate_fco2_from_dic_pH(dic, pH, Ks, selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
 
     H = 10.^(-pH);
     fco2 = dic.*H.*H./(H.*H + K1(selected).*H + K1(selected).*K2(selected))./K0(selected);
 end
     
 function dic = calculate_dic_from_alkalinity_pH(alkalinity, pH,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
-    [~,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [~,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
 
     H = 10.^(-pH);
@@ -636,7 +637,7 @@ function dic = calculate_dic_from_alkalinity_pH(alkalinity, pH,pH_scale_in,Ks,co
 end
 
 function pH_out = calculate_pH_from_alkalinity_fco2(alkalinity, fco2, pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
 
     % Find initital pH guess using method of Munhoven (2013)
@@ -693,7 +694,7 @@ function pH_out = calculate_pH_from_alkalinity_fco2(alkalinity, fco2, pH_scale_i
 end
 
 function alkalinity = calculate_alkalinity_from_dic_pH(dic,pH,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
-    [~,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [~,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
 
     H = 10.^(-pH);
@@ -717,7 +718,7 @@ function alkalinity = calculate_alkalinity_from_dic_pH(dic,pH,pH_scale_in,Ks,com
 end
 
 function pH = calculate_pH_from_dic_fco2(dic,fco2,Ks,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     RR = K0(selected).*fco2./dic;
     %       if RR >= 1
     %          varargout{1}= missingn;
@@ -734,14 +735,14 @@ function pH = calculate_pH_from_dic_fco2(dic,fco2,Ks,selected)
 end
 
 function dic = calculate_dic_from_pH_fco2(pHi, fCO2i, Ks,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
 
     H = 10.^(-pHi);
     dic = K0(selected).*fCO2i.*(H.*H + K1(selected).*H + K1(selected).*K2(selected))./(H.*H);
 end
 
 function alkalinity = calculate_alkalinity_from_pH_hco3(pH,hco3,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
 
     H = 10.^(-pH);
@@ -764,7 +765,7 @@ function alkalinity = calculate_alkalinity_from_pH_hco3(pH,hco3,pH_scale_in,Ks,c
 end
 
 function pH_out = calculate_pH_from_alkalinity_hco3(TAi, HCO3i,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
 
     pH_initial_guess = calculate_pH_from_alkalinity_hco3_munhoven(TAi,HCO3i,Ks,boron,selected);
@@ -817,7 +818,7 @@ function pH_out = calculate_pH_from_alkalinity_hco3(TAi, HCO3i,pH_scale_in,Ks,co
 end
 
 function pH_out = CalculatepHfromTCHCO3(dic, hco3, Ks,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     
     RR = dic./hco3;
     discriminant = ((1-RR).*(1-RR) - 4.*(1./(K1(selected))).*(K2(selected)));
@@ -827,7 +828,7 @@ function pH_out = CalculatepHfromTCHCO3(dic, hco3, Ks,selected)
 end
 
 function pH_out = calculate_pH_from_fco2_hco3(fco2, hco3, Ks, selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     H = (fco2.*K0(selected).*K1(selected))./hco3;  % removed incorrect (selected) index from HCO3i // MPH
     pH_out = -log10(H);
 end
@@ -838,7 +839,7 @@ function [pH,fco2] = calculate_pH_fco2_from_dic_hco3(dic, hco3, Ks,selected)
 end
 
 function alkalinity = calculate_alkalinity_from_pH_co3(pHi, CO3i,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
 
     H = 10.^(-pHi);
@@ -862,7 +863,7 @@ function alkalinity = calculate_alkalinity_from_pH_co3(pHi, CO3i,pH_scale_in,Ks,
 end
 
 function pH_out = calculate_pH_from_alkalinity_co3(alkalinity,co3,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
 
     pH_initial_guess = calculate_pH_from_alkalinity_co3_munhoven(alkalinity,co3,Ks,boron,selected);
@@ -915,7 +916,7 @@ function pH_out = calculate_pH_from_alkalinity_co3(alkalinity,co3,pH_scale_in,Ks
 end
 
 function pH = CalculatepHfromTCCO3(dic, co3, Ks, selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
 
     RR = dic./co3;
 
@@ -925,7 +926,7 @@ function pH = CalculatepHfromTCCO3(dic, co3, Ks, selected)
 end
 
 function pH = calculate_pH_from_fco2_co3(fco2, co3, Ks, selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     H = sqrt((fco2.*K0(selected).*K1(selected).*K2(selected))./co3);    % removed incorrect (selected) index from CO3i // MPH
     pH = -log10(H);
 end
@@ -936,33 +937,33 @@ function [pH,fco2] = calculate_pH_fco2_from_dic_co3(dic, co3, Ks, selected)
 end
 
 function pH = calculate_pH_from_co3_hco3(co3, hco3, Ks, selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     H = hco3.*K2(selected)./co3;
     pH = -log10(H);
 end
 
 function [co3,hco3] = calculate_co3_hco3_from_dic_pH(dic, pH, Ks, selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     H = 10.^(-pH);
     co3 = dic.*K1(selected).*K2(selected)./(K1(selected).*H + H.*H + K1(selected).*K2(selected));
     hco3 = dic.*K1(selected).*H./(K1(selected).*H + H.*H + K1(selected).*K2(selected));
 end
 
 function co3 = calculate_co3_from_dic_pH(dic, pH, Ks,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     H = 10.^(-pH);
     co3 = dic.*K1(selected).*K2(selected)./(K1(selected).*H + H.*H + K1(selected).*K2(selected));
 end
 
 function hco3 = calculate_hco3_from_dic_pH(dic, pH, Ks,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     H = 10.^(-pH);
     hco3 = dic.*K1(selected).*H./(K1(selected).*H + H.*H + K1(selected).*K2(selected));
 end
 
 
 function pH_out = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, Ks, boron_concentration, selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
 
     g0 = K1(selected).*K2(selected).*KB(selected).*(1-(2.*dic+boron_concentration(selected))./alkalinity);
     g1 = K1(selected).*(KB(selected).*(1-boron_concentration(selected)./alkalinity-dic./alkalinity)+K2(selected).*(1-2.*dic./alkalinity));
@@ -1001,7 +1002,7 @@ function pH_out = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, Ks,
 end
 
 function pH_out = calculate_pH_from_alkalinity_co2_munhoven(TAi, CO2x, Ks, boron_concentration,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     K1F=K1(selected);     K2F=K2(selected);     TBF =boron_concentration(selected);    KBF=KB(selected);
     g0 = -2.*K1F.*K2F.*KBF.*CO2x./TAi;
     g1 = -K1F.*(2.*K2F.*CO2x+KBF.*CO2x)./TAi;
@@ -1031,7 +1032,7 @@ function pH_out = calculate_pH_from_alkalinity_co2_munhoven(TAi, CO2x, Ks, boron
 end
 
 function pH_out = calculate_pH_from_alkalinity_hco3_munhoven(TAi, HCO3x, Ks, boron_concentration,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     K1F=K1(selected);     K2F=K2(selected);     TBF =boron_concentration(selected);    KBF=KB(selected);
     g0 = 2.*K2F.*KBF.*HCO3x;
     g1 = KBF.*(HCO3x+TBF-TAi)+2.*K2F.*HCO3x;
@@ -1047,7 +1048,7 @@ function pH_out = calculate_pH_from_alkalinity_hco3_munhoven(TAi, HCO3x, Ks, bor
 end
 
 function pH_out = calculate_pH_from_alkalinity_co3_munhoven(TAi, CO3x, Ks, boron_concentration,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
 
     K1F=K1(selected);     K2F=K2(selected);     TBF =boron_concentration(selected);    KBF=KB(selected);
     g0 = K2F.*KBF.*(2.*CO3x+TBF-TAi);
@@ -1064,7 +1065,7 @@ function pH_out = calculate_pH_from_alkalinity_co3_munhoven(TAi, CO3x, Ks, boron
 end
 
 function revelle = calculate_revelle_factor(alkalinity, dic, pH_scale,Ks,composition,selected,which_ks,salinity,temp_k)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
 
     dic_start = dic;
     delta_dic = 0.00000001;% ' 0.01 umol/kg-SW (lower than prior versions of CO2SYS)
@@ -1085,7 +1086,7 @@ end
 
 
 function [boron,oh,phosphate,silicate,ammonia,sulphide,h_free,sulphate,fluorine] = calculate_alkalinity_parts(pH,pH_scale,Ks,composition,selected,which_ks,salinity,temp_k)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
     
     KWF =KW(selected);
@@ -1115,7 +1116,7 @@ end
 
 
 function [saturation_state_calcite,saturation_state_aragonite] = calculate_carbonate_solubility(salinity, TempC, TC, pH, Ks, sqrt_salinity, calcium_concentration,which_k1_k2,Pbar,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
 
     temp_k    = TempC + 273.15;
     log_temp_k = log(temp_k);
@@ -1203,7 +1204,7 @@ function [saturation_state_calcite,saturation_state_aragonite] = calculate_carbo
 end
     
 function [pH_total,pH_seawater,pH_free,pH_NBS] = find_pH_on_all_scales(pH,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     fH = calculate_fH(which_ks,salinity,temp_k);
 
     TSx=composition.sulphate(selected); KSx=KS(selected); TFx=composition.fluorine(selected); KFx=KF(selected);fHx=fH(selected);
@@ -1237,18 +1238,18 @@ function show_failed(failed)
     end
 end
 
-function [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks)
-    K0 = Ks("K0");
-    K1 = Ks("K1");
-    K2 = Ks("K2");
-    KW = Ks("KW");
-    KB = Ks("KB");
-    KF = Ks("KF");
-    KS = Ks("KS");
-    KP1 = Ks("KP1");
-    KP2 = Ks("KP2");
-    KP3 = Ks("KP3");
-    KSi = Ks("KSi");
-    KNH4 = Ks("KNH4");
-    KH2S = Ks("KH2S");
+function [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(ks)
+    K0 = ks("K0");
+    K1 = ks("K1");
+    K2 = ks("K2");
+    KW = ks("KW");
+    KB = ks("KB");
+    KF = ks("KF");
+    KS = ks("KS");
+    KP1 = ks("KP1");
+    KP2 = ks("KP2");
+    KP3 = ks("KP3");
+    KSi = ks("KSi");
+    KNH4 = ks("KNH4");
+    KH2S = ks("KH2S");
 end

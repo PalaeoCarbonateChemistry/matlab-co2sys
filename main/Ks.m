@@ -77,7 +77,7 @@ classdef Ks
                        .calculate_kh2s();
         end
 
-        function [k0,k1,k2,kw,kb,kf,ks,kp1,kp2,kp3,ksi,knh4,kh2s] = unpack_ks(self)
+        function [k0,k1,k2,kw,kb,kf,ks,kp1,kp2,kp3,ksi,knh4,kh2s] = unpack(self)
             k0 = self.k0;
             k1 = self.k1;
             k2 = self.k2;
@@ -98,8 +98,12 @@ classdef Ks
         end
     
         function ks = select(self,selected)
-            ks = Ks(self.controls.temperature_celcius(selected),self.controls.pressure(selected),self.controls.composition(selected),...
-                self.controls.which_pH_scale(selected),self.controls.which_ks(selected),self.controls.co2_pressure_correction(selected));
+            if sum(selected)>0
+                ks = Ks(self.controls.temperature_celcius(selected),self.controls.pressure(selected),self.controls.composition.select(selected),...
+                    self.controls.which_pH_scale(selected),self.controls.which_ks.select(selected),self.controls.co2_pressure_correction(selected));
+            else
+                ks = NaN;
+            end
         end
     end
 end
