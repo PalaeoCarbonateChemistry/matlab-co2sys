@@ -12,7 +12,7 @@ classdef KFunctions
             temp_k    = temp_c + 273.15;
             log_temp_k = log(temp_k);
 
-            fH = calculate_fH(which_ks,salinity,temp_k);
+            fH = KFunctions.calculate_fH(which_ks,salinity,temp_k);
             lnK1 = NaN([numel(temp_c),1]);
             pK1 = NaN([numel(temp_c),1]);
             K1 = NaN([numel(temp_c),1]);
@@ -148,7 +148,7 @@ classdef KFunctions
             temp_k    = temp_c + 273.15;
             log_temp_k = log(temp_k);
 
-            fH = calculate_fH(which_ks,salinity,temp_k);
+            fH = KFunctions.calculate_fH(which_ks,salinity,temp_k);
         
             % CalculateK1K2:
             lnK2 = NaN(numel(temp_c),1);
@@ -319,7 +319,7 @@ classdef KFunctions
         function kb = calculate_surface_kb(temp_c,salinity,which_ks,pH_scale_conversion)
             temp_k    = temp_c + 273.15;
             log_temp_k = log(temp_k);
-            fH = calculate_fH(which_ks,salinity,temp_k);
+            fH = KFunctions.calculate_fH(which_ks,salinity,temp_k);
             
             % CalculateKB:
             KB = NaN(numel(temp_c),1); 
@@ -383,7 +383,7 @@ classdef KFunctions
         function kp2 = calculate_surface_kp2(temp_c,salinity,which_ks,pH_scale_conversion)
             temp_k    = temp_c + 273.15;
             log_temp_k = log(temp_k);
-            fH = calculate_fH(which_ks,salinity,temp_k);
+            fH = KFunctions.calculate_fH(which_ks,salinity,temp_k);
             
             % Calculate KP2:
             KP2 = nan(numel(temp_c),1);
@@ -411,7 +411,7 @@ classdef KFunctions
         end
         function kp3 = calculate_surface_kp3(temp_c,salinity,which_ks,pH_scale_conversion)
             temp_k    = temp_c + 273.15;
-            fH = calculate_fH(which_ks,salinity,temp_k);
+            fH = KFunctions.calculate_fH(which_ks,salinity,temp_k);
             
             % Calculate KP3:
             KP3 = nan(numel(temp_c),1);
@@ -441,7 +441,7 @@ classdef KFunctions
             temp_k    = temp_c + 273.15;
             log_temp_k = log(temp_k);
             IonS         = 19.924 .* salinity ./ (1000 - 1.005   .* salinity);
-            fH = calculate_fH(which_ks,salinity,temp_k);
+            fH = KFunctions.calculate_fH(which_ks,salinity,temp_k);
             
             % Calculate KSi:
             KSi = nan(numel(temp_c),1);
@@ -924,30 +924,38 @@ classdef KFunctions
 
             kf = kf_surface.*kf_pressure_correction;
         end
-
-        %% pH Scale
-        function pH_factor = calculate_pH_factor_old(pH_scale,temp_c,salinity,which_ks,seawater_to_total,free_to_total)
-            temp_k = temp_c+273.15;
-            
-            fH = calculate_fH(which_ks,salinity,temp_k);
-
-            % FindpHScaleConversionFactor:
-            % this is the scale they will be put on
-            pH_factor = NaN(numel(temp_c),1);
-
-            selected=(pH_scale==1); % Total
-            pH_factor(selected) = seawater_to_total(selected);
-
-            selected=(pH_scale==2); % SWS, they are all on this now
-            pH_factor(selected) = 1;
-
-            selected=(pH_scale==3); % pH free
-            pH_factor(selected) = seawater_to_total(selected)./free_to_total(selected);
-
-            selected=(pH_scale==4); % pH NBS
-            pH_factor(selected) = fH(selected);
-        end
         
+
+        %% Related
+        function fH = calculate_fH(which_ks,salinity,temp_k)
+            % CalculatefH
+            fH = nan(numel(temp_k),1);
+        
+            % Use GEOSECS's value for cases 1,2,3,4,5 (and 6) to convert pH scales.
+            selected=(which_ks.k1_k2==8);
+            if any(selected)
+                fH(selected) = 1; % this shouldn't occur in the program for this case
+            end
+        
+            selected=(which_ks.k1_k2==7);
+            if any(selected)
+                fH(selected) = 1.29 - 0.00204.*  temp_k(selected) + (0.00046 -...
+                    0.00000148.*temp_k(selected)).*salinity(selected).*salinity(selected);
+                % Peng et al, Tellus 39B:439-458, 1987:
+                % They reference the GEOSECS report, but round the value
+                % given there off so that it is about .008 (1%) lower. It
+                % doesn't agree with the check value they give on p. 456.
+            end
+            
+            selected=(which_ks.k1_k2~=7 & which_ks.k1_k2~=8);
+            if any(selected)
+                fH(selected) = 1.2948 - 0.002036.*temp_k(selected) + (0.0004607 -...
+                    0.000001475.*temp_k(selected)).*salinity(selected).^2;
+                % Takahashi et al, Chapter 3 in GEOSECS Pacific Expedition,
+                % v. 3, 1982 (p. 80);
+            end
+        end
+
         %% Combination
         function Ks = calculate_surface_all(temp_c,salinity,which_ks,pH_scale_conversion)
             k0 = KFunctions.calculate_surface_k0(temp_c,salinity,which_ks,pH_scale_conversion);

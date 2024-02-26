@@ -23,7 +23,7 @@ classdef pHScale
         function pH_factor = calculate_pH_factor(self,temp_c,salinity,which_ks)
             temp_k = temp_c+273.15;
             
-            fH = calculate_fH(which_ks,salinity,temp_k);
+            fH = KFunctions.calculate_fH(which_ks,salinity,temp_k);
 
             % FindpHScaleConversionFactor:
             % this is the scale they will be put on
@@ -40,6 +40,35 @@ classdef pHScale
 
             selected = (self.which_pH_scale==4); % pH NBS
             pH_factor(selected) = fH(selected);
+        end
+        function [pH_total,pH_seawater,pH_free,pH_NBS] = find_pH_on_all_scales(self,pH,Ks,selected,which_ks,salinity,temp_c)
+
+            temp_k = temp_c+273.15;
+
+            [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+            fH = calculate_fH(which_ks,salinity,temp_k);
+        
+            TSx=self.composition.sulphate(selected); KSx=KS(selected); TFx=self.composition.fluorine(selected); KFx=KF(selected);fHx=fH(selected);
+            FREEtoTOT = (1 + TSx./KSx); % ' pH scale conversion factor
+            SWStoTOT  = (1 + TSx./KSx)./(1 + TSx./KSx + TFx./KFx);% ' pH scale conversion factor
+            factor=nan(sum(selected),1);
+            nF=pH_scale_in(selected)==1;  %'"pHtot"
+            factor(nF) = 0;
+            nF=pH_scale_in(selected)==2; % '"pHsws"
+            factor(nF) = -log(SWStoTOT(nF))./log(0.1);
+            nF=pH_scale_in(selected)==3; % '"pHfree"
+            factor(nF) = -log(FREEtoTOT(nF))./log(0.1);
+            nF=pH_scale_in(selected)==4;  %'"pHNBS"
+            factor(nF) = -log(SWStoTOT(nF))./log(0.1) + log(fHx(nF))./log(0.1);
+            pHtot  = pH    - factor;    % ' pH comes into this sub on the given scale
+            pHNBS  = pHtot - log(SWStoTOT) ./log(0.1) + log(fHx)./log(0.1);
+            pHfree = pHtot - log(FREEtoTOT)./log(0.1);
+            pHsws  = pHtot - log(SWStoTOT) ./log(0.1);
+            
+            pH_total = pHtot;
+            pH_seawater = pHsws;
+            pH_free = pHfree;
+            pH_NBS = pHNBS;
         end
     end
     methods (Static=true)

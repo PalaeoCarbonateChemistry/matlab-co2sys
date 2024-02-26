@@ -1205,7 +1205,7 @@ end
     
 function [pH_total,pH_seawater,pH_free,pH_NBS] = find_pH_on_all_scales(pH,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
-    fH = calculate_fH(which_ks,salinity,temp_k);
+    fH = KFunctions.calculate_fH(which_ks,salinity,temp_k);
 
     TSx=composition.sulphate(selected); KSx=KS(selected); TFx=composition.fluorine(selected); KFx=KF(selected);fHx=fH(selected);
     FREEtoTOT = (1 + TSx./KSx); % ' pH scale conversion factor
