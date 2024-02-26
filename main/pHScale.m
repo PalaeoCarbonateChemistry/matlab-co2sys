@@ -14,8 +14,8 @@ classdef pHScale
             self.which_pH_scale = which_pH_scale;
             self.composition = composition;
             
-            self.ks = EquilibriumConstantsStatic.calculate_ks(temp_c,pressure_bar,salinity,which_ks);
-            self.kf = EquilibriumConstantsStatic.calculate_kf(temp_c,pressure_bar,salinity,which_ks);
+            self.ks = KFunctions.calculate_ks(temp_c,pressure_bar,salinity,which_ks);
+            self.kf = KFunctions.calculate_kf(temp_c,pressure_bar,salinity,which_ks);
 
             self.seawater_to_total = pHScale.calculate_seawater_to_total(composition,self.ks,self.kf);
             self.free_to_total = pHScale.calculate_free_to_total(composition,self.ks);
