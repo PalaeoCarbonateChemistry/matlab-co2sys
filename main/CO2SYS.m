@@ -56,14 +56,14 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     co2_pressure_correction(1:number_of_points,1) = co2_pressure_correction(:);
     
     % Generate empty vectors for...
-    alkalinity = nan(number_of_points,1);
-    dic        = nan(number_of_points,1);
-    pH         = nan(number_of_points,1);
-    pco2       = nan(number_of_points,1);
-    fco2       = nan(number_of_points,1);
-    hco3       = nan(number_of_points,1);
-    co3        = nan(number_of_points,1);
-    co2        = nan(number_of_points,1);
+    alkalinity = NaN(number_of_points,1);
+    dic        = NaN(number_of_points,1);
+    pH         = NaN(number_of_points,1);
+    pco2       = NaN(number_of_points,1);
+    fco2       = NaN(number_of_points,1);
+    hco3       = NaN(number_of_points,1);
+    co3        = NaN(number_of_points,1);
+    co2        = NaN(number_of_points,1);
 
     which_ks = WhichKs(which_k1_k2,which_kso4,which_kf);
 
@@ -347,10 +347,10 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     substrate_inhibitor_ratio_in = hco3_in./(h_free_alkalinity_in.*1e6);
     
     % % Just for reference, convert pH at input conditions to the other scales
-    pHicT = nan(number_of_points,1);
-    pHicS = nan(number_of_points,1);
-    pHicF = nan(number_of_points,1);
-    pHicN = nan(number_of_points,1);
+    pHicT = NaN(number_of_points,1);
+    pHicS = NaN(number_of_points,1);
+    pHicF = NaN(number_of_points,1);
+    pHicN = NaN(number_of_points,1);
     relevant_ks = Ks_in.select(selected);
     [pHicT(selected),pHicS(selected),pHicF(selected),pHicN(selected)]=relevant_ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH_in(selected),relevant_ks.controls);
     
@@ -406,10 +406,10 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     substrate_inhibitor_ratio_out = hco3_out./(h_free_alkalinity_out.*1e6);
     
     % Just for reference, convert pH at output conditions to the other scales
-    pH_out_total = nan(number_of_points,1);
-    pH_out_seawater = nan(number_of_points,1);
-    pH_out_free = nan(number_of_points,1);
-    pH_out_NBS = nan(number_of_points,1);
+    pH_out_total = NaN(number_of_points,1);
+    pH_out_seawater = NaN(number_of_points,1);
+    pH_out_free = NaN(number_of_points,1);
+    pH_out_NBS = NaN(number_of_points,1);
         
     relevant_ks = Ks_out.select(selected);
     [pH_out_total(selected),pH_out_seawater(selected),pH_out_free(selected),pH_out_NBS(selected)] = relevant_ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH_out(selected),relevant_ks.controls);
@@ -1010,18 +1010,18 @@ function pH_out = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, Ks)
     % Determine g21min
     g21min = g2.^2-3.*g1;
     g21min_positive = g21min > 0;
-    sq21 = nan(size(alkalinity,1),1);
+    sq21 = NaN(size(alkalinity,1),1);
     sq21(g21min_positive) = sqrt(g21min(g21min_positive));
     sq21(~g21min_positive) = 0;
 
     % Determine Hmin
-    Hmin = nan(size(alkalinity,1),1);
+    Hmin = NaN(size(alkalinity,1),1);
     g2_positive = g2 >=0;
     Hmin(~g2_positive) = (-g2(~g2_positive) + sq21(~g2_positive))./3;
     Hmin(g2_positive) = -g1(g2_positive)./(g2(g2_positive) + sq21(g2_positive));
 
     % Calculate initial pH
-    pH_initial_guess = nan(size(alkalinity,1),1);
+    pH_initial_guess = NaN(size(alkalinity,1),1);
     negative_alkalinity = alkalinity <= 0;
     pH_initial_guess(negative_alkalinity) = -log10(1e-3);
 
@@ -1039,72 +1039,85 @@ function pH_out = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, Ks)
     pH_out = pH_initial_guess;
 end
 
-function pH_out = calculate_pH_from_alkalinity_co2_munhoven(TAi, CO2x, Ks)
+function pH_out = calculate_pH_from_alkalinity_co2_munhoven(alkalinity, co2, Ks)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     boron = Ks.controls.composition.boron;
 
-    K1F=K1;     K2F=K2;     TBF =boron;    KBF=KB;
-    g0 = -2.*K1F.*K2F.*KBF.*CO2x./TAi;
-    g1 = -K1F.*(2.*K2F.*CO2x+KBF.*CO2x)./TAi;
-    g2 = KBF-(TBF.*KBF+K1F.*CO2x)./TAi;
+    g0 = -2.*K1.*K2.*KB.*co2./alkalinity;
+    g1 = -K1.*(2.*K2.*co2+KB.*co2)./alkalinity;
+    g2 = KB-(boron.*KB+K1.*co2)./alkalinity;
+
     % Determine Hmin
     g21min = g2.^2-3.*g1;
     g21min_positive = g21min > 0;
-    sq21 = nan(size(TAi,1),1);
+
+    sq21 = NaN(size(alkalinity,1),1);
     sq21(g21min_positive) = sqrt(g21min(g21min_positive));
     sq21(~g21min_positive) = 0;
-    Hmin = nan(size(TAi,1),1);
+
     g2_positive = g2 >=0;
+    Hmin = NaN(size(alkalinity,1),1);
     Hmin(~g2_positive) = (-g2(~g2_positive) + sq21(~g2_positive))./3;
     Hmin(g2_positive) = -g1(g2_positive)./(g2(g2_positive) + sq21(g2_positive));
+
     % Calculate initial pH
-    pHGuess = nan(size(TAi,1),1);
-    idx = TAi <= 0;
-    pHGuess(idx) = -log10(1e-3);
-    idx = TAi > 0;
-    pHGuess(idx & g21min_positive) = ...
-        -log10(Hmin(idx & g21min_positive) + ...
-        sqrt(-(Hmin(idx & g21min_positive).^3 + g2(idx & g21min_positive).*Hmin(idx & g21min_positive).^2 + ...
-        g1(idx & g21min_positive).*Hmin(idx & g21min_positive)+...
-        g0(idx & g21min_positive))./sq21(idx & g21min_positive)));
-    pHGuess(idx & ~g21min_positive) = -log10(1e-7);
-    pH_out = pHGuess;
+    pH_initial_guess = NaN(size(alkalinity,1),1);
+
+    negative_alkalinity = alkalinity <= 0;
+    pH_initial_guess(negative_alkalinity) = -log10(1e-3);
+
+    positive_alkalinity = alkalinity > 0;
+    pH_initial_guess(positive_alkalinity & g21min_positive) = ...
+        -log10(Hmin(positive_alkalinity & g21min_positive) + ...
+        sqrt(-(Hmin(positive_alkalinity & g21min_positive).^3 + g2(positive_alkalinity & g21min_positive).*Hmin(positive_alkalinity & g21min_positive).^2 + ...
+        g1(positive_alkalinity & g21min_positive).*Hmin(positive_alkalinity & g21min_positive)+...
+        g0(positive_alkalinity & g21min_positive))./sq21(positive_alkalinity & g21min_positive)));
+
+    pH_initial_guess(positive_alkalinity & ~g21min_positive) = -log10(1e-7);
+
+    pH_out = pH_initial_guess;
 end
 
-function pH_out = calculate_pH_from_alkalinity_hco3_munhoven(TAi, HCO3x, Ks)
+function pH_out = calculate_pH_from_alkalinity_hco3_munhoven(alkalinity, hco3, Ks)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     boron = Ks.controls.composition.boron;
 
-    K1F=K1;     K2F=K2;     TBF =boron;    KBF=KB;
-    g0 = 2.*K2F.*KBF.*HCO3x;
-    g1 = KBF.*(HCO3x+TBF-TAi)+2.*K2F.*HCO3x;
-    g2 = HCO3x-TAi;
+    g0 = 2.*K2.*KB.*hco3;
+    g1 = KB.*(hco3+boron-alkalinity)+2.*K2.*hco3;
+    g2 = hco3-alkalinity;
+
     % Calculate initial pH
-    pHGuess = nan(size(TAi,1),1);
-    idx = TAi <= HCO3x;
-    pHGuess(idx) = -log10(1e-3);
-    idx = TAi > HCO3x;
-    pHGuess(idx) = ...
-        -log10((-g1(idx)-sqrt(g1(idx).^2-4.*g0(idx).*g2(idx)))./(2.*g2(idx)));
-    pH_out = pHGuess;
+    pH_initial_guess = NaN(size(alkalinity,1),1);
+
+    low_alkalinity = alkalinity <= hco3;
+    pH_initial_guess(low_alkalinity) = -log10(1e-3);
+
+    high_alkalinity = alkalinity > hco3;
+    pH_initial_guess(high_alkalinity) = ...
+        -log10((-g1(high_alkalinity)-sqrt(g1(high_alkalinity).^2-4.*g0(high_alkalinity).*g2(high_alkalinity)))./(2.*g2(high_alkalinity)));
+    
+    pH_out = pH_initial_guess;
 end
 
-function pH_out = calculate_pH_from_alkalinity_co3_munhoven(TAi, CO3x, Ks)
+function pH_out = calculate_pH_from_alkalinity_co3_munhoven(alkalinity, co3, Ks)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     boron = Ks.controls.composition.boron;
 
-    K1F=K1;     K2F=K2;     TBF =boron;    KBF=KB;
-    g0 = K2F.*KBF.*(2.*CO3x+TBF-TAi);
-    g1 = KBF.*CO3x+K2F.*(2.*CO3x-TAi);
-    g2 = CO3x;
+    g0 = K2.*KB.*(2.*co3+boron-alkalinity);
+    g1 = KB.*co3+K2.*(2.*co3-alkalinity);
+    g2 = co3;
+
     % Calculate initial pH
-    pHGuess = nan(size(TAi,1),1);
-    idx = TAi <= 2.*CO3x+TBF;
-    pHGuess(idx) = -log10(1e-3);
-    idx = TAi > 2.*CO3x+TBF;
-    pHGuess(idx) = ...
-        -log10((-g1(idx)+sqrt(g1(idx).^2-4.*g0(idx).*g2(idx)))./(2.*g2(idx)));
-    pH_out = pHGuess;
+    pH_initial_guess = NaN(size(alkalinity,1),1);
+
+    low_alkalinity = alkalinity <= 2.*co3+boron;
+    pH_initial_guess(low_alkalinity) = -log10(1e-3);
+
+    high_alkalinity = alkalinity > 2.*co3+boron;
+    pH_initial_guess(high_alkalinity) = ...
+        -log10((-g1(high_alkalinity)+sqrt(g1(high_alkalinity).^2-4.*g0(high_alkalinity).*g2(high_alkalinity)))./(2.*g2(high_alkalinity)));
+    
+    pH_out = pH_initial_guess;
 end
 
 
@@ -1137,9 +1150,9 @@ function [saturation_state_calcite,saturation_state_aragonite] = calculate_carbo
     gas_constant = Constants.gas_constant;
 
     Ca=calcium_concentration(selected);
-    Ar=nan(sum(selected),1);
-    KCa=nan(sum(selected),1);
-    KAr=nan(sum(selected),1);
+    Ar=NaN(sum(selected),1);
+    KCa=NaN(sum(selected),1);
+    KAr=NaN(sum(selected),1);
     TempKx=temp_k;
     logTempKx=log_temp_k;
     sqrSalx=sqrt_salinity;
