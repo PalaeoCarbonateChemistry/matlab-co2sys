@@ -560,7 +560,7 @@ function pH_out = calculate_pH_from_alkalinity_dic(alkalinity,dic,Ks,composition
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.select(selected).unpack_alkalinity();
     
     % Find initital pH guess using method of Munhoven (2013)
-    initial_pH_guess = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, relevant_ks, boron);
+    initial_pH_guess = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, relevant_ks);
     pH = initial_pH_guess;
     pH_tolerance = 1e-4;  % tolerance for iterations end
     
@@ -620,7 +620,7 @@ function pH_out = calculate_pH_from_alkalinity_fco2(alkalinity, fco2,Ks,composit
     % Find initital pH guess using method of Munhoven (2013)
     co2 = fco2.*K0(selected); % Convert fCO2 to CO2
     
-    pH_initial_guess = calculate_pH_from_alkalinity_co2_munhoven(alkalinity, co2, relevant_ks,boron);
+    pH_initial_guess = calculate_pH_from_alkalinity_co2_munhoven(alkalinity, co2, relevant_ks);
     pH = pH_initial_guess;
     pH_tolerance = 1e-4;
 
@@ -694,7 +694,7 @@ function pH_out = calculate_pH_from_alkalinity_hco3(TAi, HCO3i,Ks,composition,se
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.select(selected).unpack_alkalinity();
 
-    pH_initial_guess = calculate_pH_from_alkalinity_hco3_munhoven(TAi,HCO3i,Ks,boron);
+    pH_initial_guess = calculate_pH_from_alkalinity_hco3_munhoven(TAi,HCO3i,Ks);
     pH = pH_initial_guess;
     pH_tolerance = 1e-4; % tolerance
     delta_pH = pH_tolerance+1;
@@ -760,7 +760,7 @@ function pH_out = calculate_pH_from_alkalinity_co3(alkalinity,co3,Ks,composition
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.select(selected).unpack_alkalinity();
 
-    pH_initial_guess = calculate_pH_from_alkalinity_co3_munhoven(alkalinity,co3,Ks,boron);
+    pH_initial_guess = calculate_pH_from_alkalinity_co3_munhoven(alkalinity,co3,Ks);
     pH = pH_initial_guess;
     pH_tolerance = 1e-4; % tolerance
     delta_pH = pH_tolerance + 1.0;
@@ -999,12 +999,13 @@ end
 
 
 %% Munhovens
-function pH_out = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, Ks, boron_concentration)
+function pH_out = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, Ks)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    boron = Ks.controls.composition.boron;
 
-    g0 = K1.*K2.*KB.*(1-(2.*dic+boron_concentration)./alkalinity);
-    g1 = K1.*(KB.*(1-boron_concentration./alkalinity-dic./alkalinity)+K2.*(1-2.*dic./alkalinity));
-    g2 = KB.*(1-boron_concentration./alkalinity)+K1.*(1-dic./alkalinity);
+    g0 = K1.*K2.*KB.*(1-(2.*dic+boron)./alkalinity);
+    g1 = K1.*(KB.*(1-boron./alkalinity-dic./alkalinity)+K2.*(1-2.*dic./alkalinity));
+    g2 = KB.*(1-boron./alkalinity)+K1.*(1-dic./alkalinity);
 
     % Determine g21min
     g21min = g2.^2-3.*g1;
@@ -1024,7 +1025,7 @@ function pH_out = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, Ks,
     negative_alkalinity = alkalinity <= 0;
     pH_initial_guess(negative_alkalinity) = -log10(1e-3);
 
-    medium_alkalinity = alkalinity > 0 & alkalinity < 2*dic + boron_concentration;
+    medium_alkalinity = alkalinity > 0 & alkalinity < 2*dic + boron;
     pH_initial_guess(medium_alkalinity & g21min_positive) = ...
         -log10(Hmin(medium_alkalinity & g21min_positive) + ...
         sqrt(-(Hmin(medium_alkalinity & g21min_positive).^3 + g2(medium_alkalinity & g21min_positive).*Hmin(medium_alkalinity & g21min_positive).^2 + ...
@@ -1032,15 +1033,17 @@ function pH_out = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, Ks,
         g0(medium_alkalinity & g21min_positive))./sq21(medium_alkalinity & g21min_positive)));
     pH_initial_guess(medium_alkalinity & ~g21min_positive) = -log10(1e-7);
 
-    high_alkalinity = alkalinity >= 2.*dic + boron_concentration;
+    high_alkalinity = alkalinity >= 2.*dic + boron;
     pH_initial_guess(high_alkalinity) = -log10(1e-10);
 
     pH_out = pH_initial_guess;
 end
 
-function pH_out = calculate_pH_from_alkalinity_co2_munhoven(TAi, CO2x, Ks, boron_concentration)
+function pH_out = calculate_pH_from_alkalinity_co2_munhoven(TAi, CO2x, Ks)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
-    K1F=K1;     K2F=K2;     TBF =boron_concentration;    KBF=KB;
+    boron = Ks.controls.composition.boron;
+
+    K1F=K1;     K2F=K2;     TBF =boron;    KBF=KB;
     g0 = -2.*K1F.*K2F.*KBF.*CO2x./TAi;
     g1 = -K1F.*(2.*K2F.*CO2x+KBF.*CO2x)./TAi;
     g2 = KBF-(TBF.*KBF+K1F.*CO2x)./TAi;
@@ -1068,9 +1071,11 @@ function pH_out = calculate_pH_from_alkalinity_co2_munhoven(TAi, CO2x, Ks, boron
     pH_out = pHGuess;
 end
 
-function pH_out = calculate_pH_from_alkalinity_hco3_munhoven(TAi, HCO3x, Ks, boron_concentration)
+function pH_out = calculate_pH_from_alkalinity_hco3_munhoven(TAi, HCO3x, Ks)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
-    K1F=K1;     K2F=K2;     TBF =boron_concentration;    KBF=KB;
+    boron = Ks.controls.composition.boron;
+
+    K1F=K1;     K2F=K2;     TBF =boron;    KBF=KB;
     g0 = 2.*K2F.*KBF.*HCO3x;
     g1 = KBF.*(HCO3x+TBF-TAi)+2.*K2F.*HCO3x;
     g2 = HCO3x-TAi;
@@ -1084,10 +1089,11 @@ function pH_out = calculate_pH_from_alkalinity_hco3_munhoven(TAi, HCO3x, Ks, bor
     pH_out = pHGuess;
 end
 
-function pH_out = calculate_pH_from_alkalinity_co3_munhoven(TAi, CO3x, Ks, boron_concentration)
+function pH_out = calculate_pH_from_alkalinity_co3_munhoven(TAi, CO3x, Ks)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    boron = Ks.controls.composition.boron;
 
-    K1F=K1;     K2F=K2;     TBF =boron_concentration;    KBF=KB;
+    K1F=K1;     K2F=K2;     TBF =boron;    KBF=KB;
     g0 = K2F.*KBF.*(2.*CO3x+TBF-TAi);
     g1 = KBF.*CO3x+K2F.*(2.*CO3x-TAi);
     g2 = CO3x;
