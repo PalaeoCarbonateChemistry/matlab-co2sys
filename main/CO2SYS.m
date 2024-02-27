@@ -351,7 +351,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     pHicS = nan(number_of_points,1);
     pHicF = nan(number_of_points,1);
     pHicN = nan(number_of_points,1);
-    [pHicT(selected),pHicS(selected),pHicF(selected),pHicN(selected)]=Ks_in.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH_in(selected),Ks_in,selected,which_ks,salinity,temp_k-273.15);
+    [pHicT(selected),pHicS(selected),pHicF(selected),pHicN(selected)]=Ks_in.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH_in(selected),Ks_in,selected);
     
     % Merge the Ks at input into an array. Ks at output will be glued to this later.
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks_in.unpack();
@@ -409,7 +409,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     pH_out_seawater = nan(number_of_points,1);
     pH_out_free = nan(number_of_points,1);
     pH_out_NBS = nan(number_of_points,1);
-    [pH_out_total(selected),pH_out_seawater(selected),pH_out_free(selected),pH_out_NBS(selected)]=Ks_out.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH_out(selected),Ks_out,selected,which_ks,salinity,temp_k-273.15);
+    [pH_out_total(selected),pH_out_seawater(selected),pH_out_free(selected),pH_out_NBS(selected)]=Ks_out.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH_out(selected),Ks_out,selected);
     
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks_out.unpack();
     k_out_vector = [K0,K1,K2,-log10(K1),-log10(K2),KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S];
@@ -575,8 +575,7 @@ function pH_out = calculate_pH_from_alkalinity_dic(alkalinity,dic,Ks,composition
         silicate_alkalinity = silicate(selected).*KSi(selected)./(KSi(selected) + H);
         ammonia_alkalinity = ammonia(selected).*KNH4(selected)./(KNH4(selected) + H);
         sulphide_alkalinity = sulphide(selected).*KH2S(selected)./(KH2S(selected) + H);
-                                                                           % self,pH,Ks,selected,which_ks,salinity,temp_c
-        [~,~,pHfree,~] = Ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,Ks,selected,which_ks,salinity,temp_k-273.15); % this converts pH to pHfree no matter the scale
+        [~,~,pHfree,~] = Ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,Ks,selected); % this converts pH to pHfree no matter the scale
         
         hydrogen_free = 10.^-pHfree; % this converts pHfree to Hfree
         sulphate_acidity = sulphate(selected)./(1 + KS(selected)./hydrogen_free); % since KS is on the free scale
@@ -628,7 +627,7 @@ function dic = calculate_dic_from_alkalinity_pH(alkalinity, pH,Ks,composition,se
     ammonia_alkalinity = ammonia(selected).*KNH4(selected)./(KNH4(selected) + H);
     sulphide_alkalinity = sulphide(selected).*KH2S(selected)./(KH2S(selected) + H);
     
-    [~,~,pHfree,~] = Ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,Ks,selected,which_ks,salinity,temp_k-273.15); % this converts pH to pHfree no matter the scale
+    [~,~,pHfree,~] = Ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,Ks,selected); % this converts pH to pHfree no matter the scale
     
     hydrogen_free = 10.^-pHfree; % this converts pHfree to Hfree
     sulphate_acidity = sulphate(selected)./(1 + KS(selected)./hydrogen_free); %' since KS is on the free scale
@@ -666,7 +665,7 @@ function pH_out = calculate_pH_from_alkalinity_fco2(alkalinity, fco2,Ks,composit
         ammonia_alkalinity = ammonia(selected).*KNH4(selected)./(KNH4(selected) + H);
         sulphide_alkalinity = sulphide(selected).*KH2S(selected)./(KH2S(selected) + H);
         
-        [~,~,pHfree,~] = Ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,Ks,selected,which_ks,salinity,temp_k-273.15); % this converts pH to pHfree no matter the scale
+        [~,~,pHfree,~] = Ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,Ks,selected); % this converts pH to pHfree no matter the scale
         
         hydrogen_free = 10.^-pHfree; % this converts pHfree to Hfree
         sulphate_acidity = sulphate(selected)./(1 + KS(selected)./hydrogen_free); %' since KS is on the free scale
@@ -709,7 +708,7 @@ function alkalinity = calculate_alkalinity_from_dic_pH(dic,pH,Ks,composition,sel
     ammonia_alkalinity = ammonia(selected).*KNH4(selected)./(KNH4(selected) + H);
     sulphide_alkalinity = sulphide(selected).*KH2S(selected)./(KH2S(selected) + H);
     
-    [~,~,pHfree,~] = Ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,Ks,selected,which_ks,salinity,temp_k-273.15); % this converts pH to pHfree no matter the scale
+    [~,~,pHfree,~] = Ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,Ks,selected); % this converts pH to pHfree no matter the scale
     
     hydrogen_free = 10.^-pHfree;
     sulphate_acidity = sulphate(selected)./(1 + KS(selected)./hydrogen_free);% ' since KS is on the free scale
@@ -757,7 +756,7 @@ function alkalinity = calculate_alkalinity_from_pH_hco3(pH,hco3,Ks,composition,s
     ammonia_alkalinity = ammonia(selected).*KNH4(selected)./(KNH4(selected) + H);
     sulphide_alkalinity = sulphide(selected).*KH2S(selected)./(KH2S(selected) + H);
     
-    [~,~,pHfree,~] = Ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,Ks,selected,which_ks,salinity,temp_k-273.15); % this converts pH to pHfree no matter the scale
+    [~,~,pHfree,~] = Ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,Ks,selected); % this converts pH to pHfree no matter the scale
     
     hydrogen_free = 10.^-pHfree; % this converts pHfree to Hfree
     sulphate_acidity = sulphate(selected)./(1 + KS(selected)./hydrogen_free);% ' since KS is on the free scale
@@ -789,7 +788,7 @@ function pH_out = calculate_pH_from_alkalinity_hco3(TAi, HCO3i,Ks,composition,se
         ammonia_alkalinity = ammonia(selected).*KNH4(selected)./(KNH4(selected) + H);
         sulphide_alkalinity     = sulphide(selected).*KH2S(selected)./(KH2S(selected) + H);
         
-        [~,~,pHfree,~] = Ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,Ks,selected,which_ks,salinity,temp_k-273.15); % this converts pH to pHfree no matter the scale
+        [~,~,pHfree,~] = Ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,Ks,selected); % this converts pH to pHfree no matter the scale
         
         hydrogen_free = 10.^-pHfree; % this converts pHfree to Hfree
         sulphate_acidity = sulphate(selected)./(1 + KS(selected)./hydrogen_free); %' since KS is on the free scale
@@ -854,7 +853,7 @@ function alkalinity = calculate_alkalinity_from_pH_co3(pH, CO3i,Ks,composition,s
     ammonia_alkalinity = ammonia(selected).*KNH4(selected)./(KNH4(selected) + H);
     sulphide_alkalinity = sulphide(selected).*KH2S(selected)./(KH2S(selected) + H);
     
-    [~,~,pHfree,~] = Ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,Ks,selected,which_ks,salinity,temp_k-273.15); % this converts pH to pHfree no matter the scale
+    [~,~,pHfree,~] = Ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,Ks,selected); % this converts pH to pHfree no matter the scale
     
     hydrogen_free = 10.^-pHfree; % this converts pHfree to Hfree
     sulphate_acidity = sulphate(selected)./(1 + KS(selected)./hydrogen_free);% ' since KS is on the free scale
@@ -887,7 +886,7 @@ function pH_out = calculate_pH_from_alkalinity_co3(alkalinity,co3,Ks,composition
         ammonia_alkalinity = ammonia(selected).*KNH4(selected)./(KNH4(selected) + H);
         sulphide_alkalinity = sulphide(selected).*KH2S(selected)./(KH2S(selected) + H);
         
-        [~,~,pHfree,~] = Ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,Ks,selected,which_ks,salinity,temp_k-273.15); % this converts pH to pHfree no matter the scale
+        [~,~,pHfree,~] = Ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,Ks,selected); % this converts pH to pHfree no matter the scale
         
         hydrogen_free = 10.^-pHfree; % this converts pHfree to Hfree
         sulphate_acidity = sulphate(selected)./(1 + KS(selected)./hydrogen_free); %' since KS is on the free scale
@@ -1105,7 +1104,7 @@ function [boron,oh,phosphate,silicate,ammonia,sulphide,h_free,sulphate,fluorine]
     SiAlk     = TSiF.*KSiF./(KSiF + H);
     AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
     HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-    [~,~,pHfree,~] = Ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH(selected),Ks,selected,which_ks,salinity,temp_k-273.15);
+    [~,~,pHfree,~] = Ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH(selected),Ks,selected);
     Hfree = 10.^-pHfree; % this converts pHfree to Hfree
     HSO4      = TSF./(1 + KSF./Hfree); %' since KS is on the free scale
     HF        = TFF./(1 + KFF./Hfree); %' since KF is on the free scale

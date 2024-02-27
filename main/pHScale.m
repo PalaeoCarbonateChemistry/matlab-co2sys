@@ -41,34 +41,35 @@ classdef pHScale
             selected = (self.which_pH_scale==4); % pH NBS
             pH_factor(selected) = fH(selected);
         end
-        function [pH_total,pH_seawater,pH_free,pH_NBS] = find_pH_on_all_scales(self,pH,Ks,selected,which_ks,salinity,temp_c)
+        function [pH_total,pH_seawater,pH_free,pH_NBS] = find_pH_on_all_scales(self,pH,Ks,selected)
 
-            temp_k = temp_c+273.15;
+            temp_k = Ks.controls.temperature_celcius + 273.15;
 
             [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
-            fH = KFunctions.calculate_fH(which_ks,salinity,temp_k);
+            fH = KFunctions.calculate_fH(Ks.controls.which_ks,Ks.controls.composition.salinity,temp_k);
         
             fH_selected = fH(selected);
-            FREEtoTOT = (1 + self.composition.sulphate(selected)./KS(selected)); % ' pH scale conversion factor
-            SWStoTOT  = (1 + self.composition.sulphate(selected)./KS(selected))./(1 + self.composition.sulphate(selected)./KS(selected) + self.composition.fluorine(selected)./KF(selected));% ' pH scale conversion factor
-            factor=nan(sum(selected),1);
-            nF=self.which_pH_scale(selected)==1;  %'"pHtot"
-            factor(nF) = 0;
-            nF=self.which_pH_scale(selected)==2; % '"pHsws"
-            factor(nF) = -log(SWStoTOT(nF))./log(0.1);
-            nF=self.which_pH_scale(selected)==3; % '"pHfree"
-            factor(nF) = -log(FREEtoTOT(nF))./log(0.1);
-            nF=self.which_pH_scale(selected)==4;  %'"pHNBS"
-            factor(nF) = -log(SWStoTOT(nF))./log(0.1) + log(fH_selected(nF))./log(0.1);
-            pHtot  = pH    - factor;    % ' pH comes into this sub on the given scale
-            pHNBS  = pHtot - log(SWStoTOT) ./log(0.1) + log(fH_selected)./log(0.1);
-            pHfree = pHtot - log(FREEtoTOT)./log(0.1);
-            pHsws  = pHtot - log(SWStoTOT) ./log(0.1);
+            free_to_total = self.free_to_total(selected);
+            seawater_to_total = self.seawater_to_total(selected);
+           
+            pH_factor = NaN(sum(selected),1);
+
+            current_pH_scale = self.which_pH_scale(selected)==1;  %'"pHtot"
+            pH_factor(current_pH_scale) = 0;
+
+            current_pH_scale=self.which_pH_scale(selected)==2; % '"pHsws"
+            pH_factor(current_pH_scale) = -log(seawater_to_total(current_pH_scale))./log(0.1);
+
+            current_pH_scale=self.which_pH_scale(selected)==3; % '"pHfree"
+            pH_factor(current_pH_scale) = -log(free_to_total(current_pH_scale))./log(0.1);
+
+            current_pH_scale=self.which_pH_scale(selected)==4;  %'"pHNBS"
+            pH_factor(current_pH_scale) = -log(seawater_to_total(current_pH_scale))./log(0.1) + log(fH_selected(current_pH_scale))./log(0.1);
             
-            pH_total = pHtot;
-            pH_seawater = pHsws;
-            pH_free = pHfree;
-            pH_NBS = pHNBS;
+            pH_total  = pH    - pH_factor;    % ' pH comes into this sub on the given scale
+            pH_NBS  = pH_total - log(seawater_to_total) ./log(0.1) + log(fH_selected)./log(0.1);
+            pH_free = pH_total - log(free_to_total)./log(0.1);
+            pH_seawater  = pH_total - log(seawater_to_total) ./log(0.1);            
         end
     end
     methods (Static=true)
