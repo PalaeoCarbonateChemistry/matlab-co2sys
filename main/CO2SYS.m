@@ -612,76 +612,76 @@ function pH_out = calculate_pH_from_alkalinity_dic(alkalinity,dic,Ks,composition
 end
 
 function fco2 = calculate_fco2_from_dic_pH(dic, pH, Ks, selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    relevant_ks = Ks.select(selected);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
 
     H = 10.^(-pH);
-    fco2 = dic.*H.*H./(H.*H + K1(selected).*H + K1(selected).*K2(selected))./K0(selected);
+    fco2 = dic.*H.*H./(H.*H + K1.*H + K1.*K2)./K0;
 end
     
 function dic = calculate_dic_from_alkalinity_pH(alkalinity, pH,Ks,composition,selected)
-    [~,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
-    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
+    relevant_ks = Ks.select(selected);
+    [~,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
+    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.select(selected).unpack_alkalinity();
 
     H = 10.^(-pH);
-    boron_alkalinity = boron(selected).*KB(selected)./(KB(selected) + H);
-    hydroxide_alkalinity = KW(selected)./H;
-    phosphate_top = KP1(selected).*KP2(selected).*H + 2.*KP1(selected).*KP2(selected).*KP3(selected) - H.*H.*H;
-    phosphate_bottom = H.*H.*H + KP1(selected).*H.*H + KP1(selected).*KP2(selected).*H + KP1(selected).*KP2(selected).*KP3(selected);
-    phosphate_alkalinity = phosphate(selected).*phosphate_top./phosphate_bottom;
-    silicate_alkalinity = silicate(selected).*KSi(selected)./(KSi(selected) + H);
-    ammonia_alkalinity = ammonia(selected).*KNH4(selected)./(KNH4(selected) + H);
-    sulphide_alkalinity = sulphide(selected).*KH2S(selected)./(KH2S(selected) + H);
+    boron_alkalinity = boron.*KB./(KB + H);
+    hydroxide_alkalinity = KW./H;
+    phosphate_top = KP1.*KP2.*H + 2.*KP1.*KP2.*KP3 - H.*H.*H;
+    phosphate_bottom = H.*H.*H + KP1.*H.*H + KP1.*KP2.*H + KP1.*KP2.*KP3;
+    phosphate_alkalinity = phosphate.*phosphate_top./phosphate_bottom;
+    silicate_alkalinity = silicate.*KSi./(KSi + H);
+    ammonia_alkalinity = ammonia.*KNH4./(KNH4 + H);
+    sulphide_alkalinity = sulphide.*KH2S./(KH2S + H);
     
-    relevant_ks = Ks.select(selected);
     [~,~,pHfree,~] = relevant_ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,relevant_ks.controls);
         
     hydrogen_free = 10.^-pHfree; % this converts pHfree to Hfree
-    sulphate_acidity = sulphate(selected)./(1 + KS(selected)./hydrogen_free); %' since KS is on the free scale
-    fluorine_acidity = fluorine(selected)./(1 + KF(selected)./hydrogen_free); %' since KF is on the free scale
+    sulphate_acidity = sulphate./(1 + KS./hydrogen_free); %' since KS is on the free scale
+    fluorine_acidity = fluorine./(1 + KF./hydrogen_free); %' since KF is on the free scale
     carbonate_alkalinity = alkalinity - boron_alkalinity - hydroxide_alkalinity - phosphate_alkalinity - silicate_alkalinity - ammonia_alkalinity - sulphide_alkalinity + hydrogen_free + sulphate_acidity + fluorine_acidity;
-    dic = carbonate_alkalinity.*(H.*H + K1(selected).*H + K1(selected).*K2(selected))./(K1(selected).*(H + 2.*K2(selected)));
+    dic = carbonate_alkalinity.*(H.*H + K1.*H + K1.*K2)./(K1.*(H + 2.*K2));
 end
 
 function pH_out = calculate_pH_from_alkalinity_fco2(alkalinity, fco2,Ks,composition,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
-    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
+    relevant_ks = Ks.select(selected);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
+    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.select(selected).unpack_alkalinity();
 
     % Find initital pH guess using method of Munhoven (2013)
     co2 = fco2.*K0(selected); % Convert fCO2 to CO2
     
-    pH_initial_guess = calculate_pH_from_alkalinity_co2_munhoven(alkalinity, co2, Ks,boron,selected);
+    pH_initial_guess = calculate_pH_from_alkalinity_co2_munhoven(alkalinity, co2, relevant_ks,boron);
     pH = pH_initial_guess;
     pH_tolerance = 1e-4;
 
     delta_pH = pH_tolerance + 1;
     counter = 0;
     
-    relevant_ks = Ks.select(selected);
 
     above_tolerance = (abs(delta_pH) > pH_tolerance);
     while any(above_tolerance)
         H = 10.^(-pH);
-        hco3 = K0(selected).*K1(selected).*fco2./H;
-        co3 = K0(selected).*K1(selected).*K2(selected).*fco2./(H.*H);
+        hco3 = K0.*K1.*fco2./H;
+        co3 = K0.*K1.*K2.*fco2./(H.*H);
         carbonate_alkalinity = hco3 + 2.*co3;
-        boron_alkalinity = boron(selected).*KB(selected)./(KB(selected) + H);
-        hydroxide_alkalinity = KW(selected)./H;
-        phosphate_top = KP1(selected).*KP2(selected).*H + 2.*KP1(selected).*KP2(selected).*KP3(selected) - H.*H.*H;
-        phosphate_bottom = H.*H.*H + KP1(selected).*H.*H + KP1(selected).*KP2(selected).*H + KP1(selected).*KP2(selected).*KP3(selected);
-        phosphate_alkalinity = phosphate(selected).*phosphate_top./phosphate_bottom;
-        silicate_alkalinity = silicate(selected).*KSi(selected)./(KSi(selected) + H);
-        ammonia_alkalinity = ammonia(selected).*KNH4(selected)./(KNH4(selected) + H);
-        sulphide_alkalinity = sulphide(selected).*KH2S(selected)./(KH2S(selected) + H);
+        boron_alkalinity = boron.*KB./(KB + H);
+        hydroxide_alkalinity = KW./H;
+        phosphate_top = KP1.*KP2.*H + 2.*KP1.*KP2.*KP3 - H.*H.*H;
+        phosphate_bottom = H.*H.*H + KP1.*H.*H + KP1.*KP2.*H + KP1.*KP2.*KP3;
+        phosphate_alkalinity = phosphate.*phosphate_top./phosphate_bottom;
+        silicate_alkalinity = silicate.*KSi./(KSi + H);
+        ammonia_alkalinity = ammonia.*KNH4./(KNH4 + H);
+        sulphide_alkalinity = sulphide.*KH2S./(KH2S + H);
         
-    
         [~,~,pHfree,~] = relevant_ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,relevant_ks.controls);
         
         hydrogen_free = 10.^-pHfree; % this converts pHfree to Hfree
-        sulphate_acidity = sulphate(selected)./(1 + KS(selected)./hydrogen_free); %' since KS is on the free scale
-        fluorine_acidity = fluorine(selected)./(1 + KF(selected)./hydrogen_free);% ' since KF is on the free scale
+        sulphate_acidity = sulphate./(1 + KS./hydrogen_free); %' since KS is on the free scale
+        fluorine_acidity = fluorine./(1 + KF./hydrogen_free);% ' since KF is on the free scale
         
         residual  = alkalinity - carbonate_alkalinity - boron_alkalinity - hydroxide_alkalinity - phosphate_alkalinity - silicate_alkalinity - ammonia_alkalinity - sulphide_alkalinity + hydrogen_free + sulphate_acidity + fluorine_acidity;
-        slope = log(10).*(hco3 + 4.*co3 + boron_alkalinity.*H./(KB(selected) + H) + hydroxide_alkalinity + H);
+        slope = log(10).*(hco3 + 4.*co3 + boron_alkalinity.*H./(KB + H) + hydroxide_alkalinity + H);
         delta_pH   = residual./slope;
 
         while any(abs(delta_pH) > 1)
@@ -703,40 +703,41 @@ function pH_out = calculate_pH_from_alkalinity_fco2(alkalinity, fco2,Ks,composit
 end
 
 function alkalinity = calculate_alkalinity_from_dic_pH(dic,pH,Ks,composition,selected)
-    [~,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
-    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
+    relevant_ks = Ks.select(selected);
+    [~,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
+    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.select(selected).unpack_alkalinity();
 
     H = 10.^(-pH);
-    carbonate_alkalinity = dic.*K1(selected).*(H + 2.*K2(selected))./(H.*H + K1(selected).*H + K1(selected).*K2(selected));
-    boron_alkalinity = boron(selected).*KB(selected)./(KB(selected) + H);
-    hydroxide_alkalinity = KW(selected)./H;
-    phosphate_top = KP1(selected).*KP2(selected).*H + 2.*KP1(selected).*KP2(selected).*KP3(selected) - H.*H.*H;
-    phosphate_bottom = H.*H.*H + KP1(selected).*H.*H + KP1(selected).*KP2(selected).*H + KP1(selected).*KP2(selected).*KP3(selected);
-    phosphate_alkalinity = phosphate(selected).*phosphate_top./phosphate_bottom;
-    silicate_alkalinity = silicate(selected).*KSi(selected)./(KSi(selected) + H);
-    ammonia_alkalinity = ammonia(selected).*KNH4(selected)./(KNH4(selected) + H);
-    sulphide_alkalinity = sulphide(selected).*KH2S(selected)./(KH2S(selected) + H);
+    carbonate_alkalinity = dic.*K1.*(H + 2.*K2)./(H.*H + K1.*H + K1.*K2);
+    boron_alkalinity = boron.*KB./(KB + H);
+    hydroxide_alkalinity = KW./H;
+    phosphate_top = KP1.*KP2.*H + 2.*KP1.*KP2.*KP3 - H.*H.*H;
+    phosphate_bottom = H.*H.*H + KP1.*H.*H + KP1.*KP2.*H + KP1.*KP2.*KP3;
+    phosphate_alkalinity = phosphate.*phosphate_top./phosphate_bottom;
+    silicate_alkalinity = silicate.*KSi./(KSi + H);
+    ammonia_alkalinity = ammonia.*KNH4./(KNH4 + H);
+    sulphide_alkalinity = sulphide.*KH2S./(KH2S + H);
     
-    relevant_ks = Ks.select(selected);
     [~,~,pHfree,~] = relevant_ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,relevant_ks.controls);
         
     hydrogen_free = 10.^-pHfree;
-    sulphate_acidity = sulphate(selected)./(1 + KS(selected)./hydrogen_free);% ' since KS is on the free scale
-    fluorine_acidity = fluorine(selected)./(1 + KF(selected)./hydrogen_free);% ' since KF is on the free scale
+    sulphate_acidity = sulphate./(1 + KS./hydrogen_free);% ' since KS is on the free scale
+    fluorine_acidity = fluorine./(1 + KF./hydrogen_free);% ' since KF is on the free scale
     
     alkalinity = carbonate_alkalinity + boron_alkalinity + hydroxide_alkalinity + phosphate_alkalinity + silicate_alkalinity + ammonia_alkalinity + sulphide_alkalinity - hydrogen_free - sulphate_acidity - fluorine_acidity;
 end
 
 function pH = calculate_pH_from_dic_fco2(dic,fco2,Ks,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
-    RR = K0(selected).*fco2./dic;
+    relevant_ks = Ks.select(selected);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
+    RR = K0.*fco2./dic;
     %       if RR >= 1
     %          varargout{1}= missingn;
     %          disp('nein!');return;
     %       end
     % check after sub to see if pH = missingn.
-    Discr = (K1(selected).*RR).*(K1(selected).*RR) + 4.*(1 - RR).*(K1(selected).*K2(selected).*RR);
-    H     = 0.5.*(K1(selected).*RR + sqrt(Discr))./(1 - RR);
+    Discr = (K1.*RR).*(K1.*RR) + 4.*(1 - RR).*(K1.*K2.*RR);
+    H     = 0.5.*(K1.*RR + sqrt(Discr))./(1 - RR);
     %       if (H <= 0)
     %           pHctemp = missingn;
     %       else
@@ -744,71 +745,72 @@ function pH = calculate_pH_from_dic_fco2(dic,fco2,Ks,selected)
     %       end
 end
 
-function dic = calculate_dic_from_pH_fco2(pHi, fCO2i, Ks,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+function dic = calculate_dic_from_pH_fco2(pH, fco2, Ks,selected)
+    relavent_ks = Ks.select(selected);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relavent_ks.unpack();
 
-    H = 10.^(-pHi);
-    dic = K0(selected).*fCO2i.*(H.*H + K1(selected).*H + K1(selected).*K2(selected))./(H.*H);
+    H = 10.^(-pH);
+    dic = K0.*fco2.*(H.*H + K1.*H + K1.*K2)./(H.*H);
 end
 
 function alkalinity = calculate_alkalinity_from_pH_hco3(pH,hco3,Ks,composition,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
-    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
+    relevant_ks = Ks.select(selected);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
+    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.select(selected).unpack_alkalinity();
 
     H = 10.^(-pH);
-    carbonate_alkalinity = hco3.*(2.*K2(selected)./H + 1);
-    boron_alkalinity = boron(selected).*KB(selected)./(KB(selected) + H);
-    hydroxide_alkalinity = KW(selected)./H;
-    phosphate_top = KP1(selected).*KP2(selected).*H + 2.*KP1(selected).*KP2(selected).*KP3(selected) - H.*H.*H;
-    phosphate_bottom = H.*H.*H + KP1(selected).*H.*H + KP1(selected).*KP2(selected).*H + KP1(selected).*KP2(selected).*KP3(selected);
-    phosphate_alkalinity = phosphate(selected).*phosphate_top./phosphate_bottom;
-    silicate_alkalinity = silicate(selected).*KSi(selected)./(KSi(selected) + H);
-    ammonia_alkalinity = ammonia(selected).*KNH4(selected)./(KNH4(selected) + H);
-    sulphide_alkalinity = sulphide(selected).*KH2S(selected)./(KH2S(selected) + H);
+    carbonate_alkalinity = hco3.*(2.*K2./H + 1);
+    boron_alkalinity = boron.*KB./(KB + H);
+    hydroxide_alkalinity = KW./H;
+    phosphate_top = KP1.*KP2.*H + 2.*KP1.*KP2.*KP3 - H.*H.*H;
+    phosphate_bottom = H.*H.*H + KP1.*H.*H + KP1.*KP2.*H + KP1.*KP2.*KP3;
+    phosphate_alkalinity = phosphate.*phosphate_top./phosphate_bottom;
+    silicate_alkalinity = silicate.*KSi./(KSi + H);
+    ammonia_alkalinity = ammonia.*KNH4./(KNH4 + H);
+    sulphide_alkalinity = sulphide.*KH2S./(KH2S + H);
     
-    relevant_ks = Ks.select(selected);
     [~,~,pHfree,~] = relevant_ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,relevant_ks.controls);
         
     hydrogen_free = 10.^-pHfree; % this converts pHfree to Hfree
-    sulphate_acidity = sulphate(selected)./(1 + KS(selected)./hydrogen_free);% ' since KS is on the free scale
-    fluorine_acidity = fluorine(selected)./(1 + KF(selected)./hydrogen_free);% ' since KF is on the free scale
+    sulphate_acidity = sulphate./(1 + KS./hydrogen_free);% ' since KS is on the free scale
+    fluorine_acidity = fluorine./(1 + KF./hydrogen_free);% ' since KF is on the free scale
     alkalinity = carbonate_alkalinity + boron_alkalinity + hydroxide_alkalinity + phosphate_alkalinity + silicate_alkalinity + ammonia_alkalinity + sulphide_alkalinity - hydrogen_free - sulphate_acidity - fluorine_acidity;
 end
 
 function pH_out = calculate_pH_from_alkalinity_hco3(TAi, HCO3i,Ks,composition,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
-    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
+    relevant_ks = Ks.select(selected);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
+    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.select(selected).unpack_alkalinity();
 
-    pH_initial_guess = calculate_pH_from_alkalinity_hco3_munhoven(TAi,HCO3i,Ks,boron,selected);
+    pH_initial_guess = calculate_pH_from_alkalinity_hco3_munhoven(TAi,HCO3i,Ks,boron);
     pH = pH_initial_guess;
     pH_tolerance = 1e-4; % tolerance
     delta_pH = pH_tolerance+1;
 
     counter = 0;
 
-    relevant_ks = Ks.select(selected);
 
     above_tolerance = (abs(delta_pH) > pH_tolerance);
     while any(above_tolerance)
         H = 10.^(-pH);
-        carbonate_alkalinity = HCO3i.*(H+2.*K2(selected))./H;
-        boron_alkalinity = boron(selected).*KB(selected)./(KB(selected) + H);
-        hydroxide_alkalinity = KW(selected)./H;
-        phosphate_top = KP1(selected).*KP2(selected).*H + 2.*KP1(selected).*KP2(selected).*KP3(selected) - H.*H.*H;
-        phosphate_bottom = H.*H.*H + KP1(selected).*H.*H + KP1(selected).*KP2(selected).*H + KP1(selected).*KP2(selected).*KP3(selected);
-        phosphate_alkalinity = phosphate(selected).*phosphate_top./phosphate_bottom;
-        silicate_alkalinity = silicate(selected).*KSi(selected)./(KSi(selected) + H);
-        ammonia_alkalinity = ammonia(selected).*KNH4(selected)./(KNH4(selected) + H);
-        sulphide_alkalinity     = sulphide(selected).*KH2S(selected)./(KH2S(selected) + H);
+        carbonate_alkalinity = HCO3i.*(H+2.*K2)./H;
+        boron_alkalinity = boron.*KB./(KB + H);
+        hydroxide_alkalinity = KW./H;
+        phosphate_top = KP1.*KP2.*H + 2.*KP1.*KP2.*KP3 - H.*H.*H;
+        phosphate_bottom = H.*H.*H + KP1.*H.*H + KP1.*KP2.*H + KP1.*KP2.*KP3;
+        phosphate_alkalinity = phosphate.*phosphate_top./phosphate_bottom;
+        silicate_alkalinity = silicate.*KSi./(KSi + H);
+        ammonia_alkalinity = ammonia.*KNH4./(KNH4 + H);
+        sulphide_alkalinity     = sulphide.*KH2S./(KH2S + H);
     
         [~,~,pHfree,~] = relevant_ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,relevant_ks.controls);
         
         hydrogen_free = 10.^-pHfree; % this converts pHfree to Hfree
-        sulphate_acidity = sulphate(selected)./(1 + KS(selected)./hydrogen_free); %' since KS is on the free scale
-        fluorine_acidity = fluorine(selected)./(1 + KF(selected)./hydrogen_free);% ' since KF is on the free scale
+        sulphate_acidity = sulphate./(1 + KS./hydrogen_free); %' since KS is on the free scale
+        fluorine_acidity = fluorine./(1 + KF./hydrogen_free);% ' since KF is on the free scale
         residual  = TAi - carbonate_alkalinity - boron_alkalinity - hydroxide_alkalinity - phosphate_alkalinity - silicate_alkalinity - ammonia_alkalinity - sulphide_alkalinity + hydrogen_free + sulphate_acidity + fluorine_acidity;
 
-        slope = log(10) .* (2 .* HCO3i .* K2(selected) ./ H + boron_alkalinity .* H ./ (KB(selected) + H) + hydroxide_alkalinity + H);
+        slope = log(10) .* (2 .* HCO3i .* K2 ./ H + boron_alkalinity .* H ./ (KB + H) + hydroxide_alkalinity + H);
         
         delta_pH   = residual./slope; %' this is Newton's method
         
@@ -831,18 +833,20 @@ function pH_out = calculate_pH_from_alkalinity_hco3(TAi, HCO3i,Ks,composition,se
 end
 
 function pH_out = CalculatepHfromTCHCO3(dic, hco3, Ks,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    relevant_ks = Ks.select(selected);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
     
     RR = dic./hco3;
-    discriminant = ((1-RR).*(1-RR) - 4.*(1./(K1(selected))).*(K2(selected)));
-    H = 0.5.*((-(1-RR)) - sqrt(discriminant))./(1./(K1(selected))); % Subtraction
+    discriminant = ((1-RR).*(1-RR) - 4.*(1./(K1)).*(K2));
+    H = 0.5.*((-(1-RR)) - sqrt(discriminant))./(1./(K1)); % Subtraction
     
     pH_out = log(H)./log(0.1);
 end
 
 function pH_out = calculate_pH_from_fco2_hco3(fco2, hco3, Ks, selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
-    H = (fco2.*K0(selected).*K1(selected))./hco3;  % removed incorrect (selected) index from HCO3i // MPH
+    relevant_ks = Ks.select(selected);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
+    H = (fco2.*K0.*K1)./hco3;  % removed incorrect (selected) index from HCO3i // MPH
     pH_out = -log10(H);
 end
 
@@ -852,65 +856,65 @@ function [pH,fco2] = calculate_pH_fco2_from_dic_hco3(dic, hco3, Ks,selected)
 end
 
 function alkalinity = calculate_alkalinity_from_pH_co3(pH, CO3i,Ks,composition,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
-    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
+    relevant_ks = Ks.select(selected);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
+    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.select(selected).unpack_alkalinity();
 
     H = 10.^(-pH);
-    carbonate_alkalinity = CO3i.*(H./K2(selected) + 2);
-    boron_alkalinity = boron(selected).*KB(selected)./(KB(selected) + H);
-    hydroxide_alkalinity = KW(selected)./H;
-    phosphate_top = KP1(selected).*KP2(selected).*H + 2.*KP1(selected).*KP2(selected).*KP3(selected) - H.*H.*H;
-    phosphate_bottom = H.*H.*H + KP1(selected).*H.*H + KP1(selected).*KP2(selected).*H + KP1(selected).*KP2(selected).*KP3(selected);
-    phosphate_alkalinity = phosphate(selected).*phosphate_top./phosphate_bottom;
-    silicate_alkalinity = silicate(selected).*KSi(selected)./(KSi(selected) + H);
-    ammonia_alkalinity = ammonia(selected).*KNH4(selected)./(KNH4(selected) + H);
-    sulphide_alkalinity = sulphide(selected).*KH2S(selected)./(KH2S(selected) + H);
+    carbonate_alkalinity = CO3i.*(H./K2 + 2);
+    boron_alkalinity = boron.*KB./(KB + H);
+    hydroxide_alkalinity = KW./H;
+    phosphate_top = KP1.*KP2.*H + 2.*KP1.*KP2.*KP3 - H.*H.*H;
+    phosphate_bottom = H.*H.*H + KP1.*H.*H + KP1.*KP2.*H + KP1.*KP2.*KP3;
+    phosphate_alkalinity = phosphate.*phosphate_top./phosphate_bottom;
+    silicate_alkalinity = silicate.*KSi./(KSi + H);
+    ammonia_alkalinity = ammonia.*KNH4./(KNH4 + H);
+    sulphide_alkalinity = sulphide.*KH2S./(KH2S + H);
     
-    relevant_ks = Ks.select(selected);
     [~,~,pHfree,~] = relevant_ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,relevant_ks.controls);
         
     hydrogen_free = 10.^-pHfree; % this converts pHfree to Hfree
-    sulphate_acidity = sulphate(selected)./(1 + KS(selected)./hydrogen_free);% ' since KS is on the free scale
-    fluorine_acidity = fluorine(selected)./(1 + KF(selected)./hydrogen_free);% ' since KF is on the free scale
+    sulphate_acidity = sulphate./(1 + KS./hydrogen_free);% ' since KS is on the free scale
+    fluorine_acidity = fluorine./(1 + KF./hydrogen_free);% ' since KF is on the free scale
     
     alkalinity = carbonate_alkalinity + boron_alkalinity + hydroxide_alkalinity + phosphate_alkalinity + silicate_alkalinity + ammonia_alkalinity + sulphide_alkalinity - hydrogen_free - sulphate_acidity - fluorine_acidity;
 end
 
 function pH_out = calculate_pH_from_alkalinity_co3(alkalinity,co3,Ks,composition,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
-    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
+    relevant_ks = Ks.select(selected);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
+    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.select(selected).unpack_alkalinity();
 
-    pH_initial_guess = calculate_pH_from_alkalinity_co3_munhoven(alkalinity,co3,Ks,boron,selected);
+    pH_initial_guess = calculate_pH_from_alkalinity_co3_munhoven(alkalinity,co3,Ks,boron);
     pH = pH_initial_guess;
     pH_tolerance = 1e-4; % tolerance
     delta_pH = pH_tolerance + 1.0;
 
     counter = 0;
 
-    relevant_ks = Ks.select(selected);
     
     above_tolerance = (abs(delta_pH) > pH_tolerance);
     while any(above_tolerance)
         H = 10.^(-pH);
-        carbonate_alkalinity = co3.*(H+2.*K2(selected))./K2(selected);
-        boron_alkalinity = boron(selected).*KB(selected)./(KB(selected) + H);
-        hydroxide_alkalinity = KW(selected)./H;
-        phosphate_top = KP1(selected).*KP2(selected).*H + 2.*KP1(selected).*KP2(selected).*KP3(selected) - H.*H.*H;
-        phosphate_bottom = H.*H.*H + KP1(selected).*H.*H + KP1(selected).*KP2(selected).*H + KP1(selected).*KP2(selected).*KP3(selected);
-        phosphate_alkalinity = phosphate(selected).*phosphate_top./phosphate_bottom;
-        silicate_alkalinity = silicate(selected).*KSi(selected)./(KSi(selected) + H);
-        ammonia_alkalinity = ammonia(selected).*KNH4(selected)./(KNH4(selected) + H);
-        sulphide_alkalinity = sulphide(selected).*KH2S(selected)./(KH2S(selected) + H);
+        carbonate_alkalinity = co3.*(H+2.*K2)./K2;
+        boron_alkalinity = boron.*KB./(KB + H);
+        hydroxide_alkalinity = KW./H;
+        phosphate_top = KP1.*KP2.*H + 2.*KP1.*KP2.*KP3 - H.*H.*H;
+        phosphate_bottom = H.*H.*H + KP1.*H.*H + KP1.*KP2.*H + KP1.*KP2.*KP3;
+        phosphate_alkalinity = phosphate.*phosphate_top./phosphate_bottom;
+        silicate_alkalinity = silicate.*KSi./(KSi + H);
+        ammonia_alkalinity = ammonia.*KNH4./(KNH4 + H);
+        sulphide_alkalinity = sulphide.*KH2S./(KH2S + H);
         
         [~,~,pHfree,~] = relevant_ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,relevant_ks.controls);
         
         hydrogen_free = 10.^-pHfree; % this converts pHfree to Hfree
-        sulphate_acidity = sulphate(selected)./(1 + KS(selected)./hydrogen_free); %' since KS is on the free scale
-        fluorine_acidity = fluorine(selected)./(1 + KF(selected)./hydrogen_free);% ' since KF is on the free scale
+        sulphate_acidity = sulphate./(1 + KS./hydrogen_free); %' since KS is on the free scale
+        fluorine_acidity = fluorine./(1 + KF./hydrogen_free);% ' since KF is on the free scale
         residual  = alkalinity - carbonate_alkalinity - boron_alkalinity - hydroxide_alkalinity - phosphate_alkalinity - silicate_alkalinity - ammonia_alkalinity - sulphide_alkalinity + hydrogen_free + sulphate_acidity + fluorine_acidity;
 
 
-        slope = log(10) .* (-co3 .* H ./ K2(selected) + boron_alkalinity .* H ./ (KB(selected) + H) + hydroxide_alkalinity + H);
+        slope = log(10) .* (-co3 .* H ./ K2 + boron_alkalinity .* H ./ (KB + H) + hydroxide_alkalinity + H);
         delta_pH   = residual./slope;
 
         while any(abs(delta_pH) > 1)
@@ -932,18 +936,20 @@ function pH_out = calculate_pH_from_alkalinity_co3(alkalinity,co3,Ks,composition
 end
 
 function pH = CalculatepHfromTCCO3(dic, co3, Ks, selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    relevant_ks = Ks.select(selected);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
 
     RR = dic./co3;
 
-    discriminant = ((1./K2(selected)).*(1./K2(selected)) - 4.*(1./(K1(selected).*K2(selected))).*(1-RR));
-    H = 0.5.*((-1./K2(selected)) + sqrt(discriminant))./(1./(K1(selected).*K2(selected))); % Addition
+    discriminant = ((1./K2).*(1./K2) - 4.*(1./(K1.*K2)).*(1-RR));
+    H = 0.5.*((-1./K2) + sqrt(discriminant))./(1./(K1.*K2)); % Addition
     pH = log(H)./log(0.1);
 end
 
 function pH = calculate_pH_from_fco2_co3(fco2, co3, Ks, selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
-    H = sqrt((fco2.*K0(selected).*K1(selected).*K2(selected))./co3);    % removed incorrect (selected) index from CO3i // MPH
+    relevant_ks = Ks.select(selected);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
+    H = sqrt((fco2.*K0.*K1.*K2)./co3);    % removed incorrect (selected) index from CO3i // MPH
     pH = -log10(H);
 end
 
@@ -953,28 +959,32 @@ function [pH,fco2] = calculate_pH_fco2_from_dic_co3(dic, co3, Ks, selected)
 end
 
 function pH = calculate_pH_from_co3_hco3(co3, hco3, Ks, selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
-    H = hco3.*K2(selected)./co3;
+    relevant_ks = Ks.select(selected);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
+    H = hco3.*K2./co3;
     pH = -log10(H);
 end
 
 function [co3,hco3] = calculate_co3_hco3_from_dic_pH(dic, pH, Ks, selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    relevant_ks = Ks.select(selected);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
     H = 10.^(-pH);
-    co3 = dic.*K1(selected).*K2(selected)./(K1(selected).*H + H.*H + K1(selected).*K2(selected));
-    hco3 = dic.*K1(selected).*H./(K1(selected).*H + H.*H + K1(selected).*K2(selected));
+    co3 = dic.*K1.*K2./(K1.*H + H.*H + K1.*K2);
+    hco3 = dic.*K1.*H./(K1.*H + H.*H + K1.*K2);
 end
 
 function co3 = calculate_co3_from_dic_pH(dic, pH, Ks,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    relevant_ks = Ks.select(selected);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
     H = 10.^(-pH);
-    co3 = dic.*K1(selected).*K2(selected)./(K1(selected).*H + H.*H + K1(selected).*K2(selected));
+    co3 = dic.*K1.*K2./(K1.*H + H.*H + K1.*K2);
 end
 
 function hco3 = calculate_hco3_from_dic_pH(dic, pH, Ks,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    relevant_ks = Ks.select(selected);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
     H = 10.^(-pH);
-    hco3 = dic.*K1(selected).*H./(K1(selected).*H + H.*H + K1(selected).*K2(selected));
+    hco3 = dic.*K1.*H./(K1.*H + H.*H + K1.*K2);
 end
 
 
@@ -1017,9 +1027,9 @@ function pH_out = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, Ks,
     pH_out = pH_initial_guess;
 end
 
-function pH_out = calculate_pH_from_alkalinity_co2_munhoven(TAi, CO2x, Ks, boron_concentration,selected)
+function pH_out = calculate_pH_from_alkalinity_co2_munhoven(TAi, CO2x, Ks, boron_concentration)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
-    K1F=K1(selected);     K2F=K2(selected);     TBF =boron_concentration(selected);    KBF=KB(selected);
+    K1F=K1;     K2F=K2;     TBF =boron_concentration;    KBF=KB;
     g0 = -2.*K1F.*K2F.*KBF.*CO2x./TAi;
     g1 = -K1F.*(2.*K2F.*CO2x+KBF.*CO2x)./TAi;
     g2 = KBF-(TBF.*KBF+K1F.*CO2x)./TAi;
@@ -1047,9 +1057,9 @@ function pH_out = calculate_pH_from_alkalinity_co2_munhoven(TAi, CO2x, Ks, boron
     pH_out = pHGuess;
 end
 
-function pH_out = calculate_pH_from_alkalinity_hco3_munhoven(TAi, HCO3x, Ks, boron_concentration,selected)
+function pH_out = calculate_pH_from_alkalinity_hco3_munhoven(TAi, HCO3x, Ks, boron_concentration)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
-    K1F=K1(selected);     K2F=K2(selected);     TBF =boron_concentration(selected);    KBF=KB(selected);
+    K1F=K1;     K2F=K2;     TBF =boron_concentration;    KBF=KB;
     g0 = 2.*K2F.*KBF.*HCO3x;
     g1 = KBF.*(HCO3x+TBF-TAi)+2.*K2F.*HCO3x;
     g2 = HCO3x-TAi;
@@ -1063,10 +1073,10 @@ function pH_out = calculate_pH_from_alkalinity_hco3_munhoven(TAi, HCO3x, Ks, bor
     pH_out = pHGuess;
 end
 
-function pH_out = calculate_pH_from_alkalinity_co3_munhoven(TAi, CO3x, Ks, boron_concentration,selected)
+function pH_out = calculate_pH_from_alkalinity_co3_munhoven(TAi, CO3x, Ks, boron_concentration)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
 
-    K1F=K1(selected);     K2F=K2(selected);     TBF =boron_concentration(selected);    KBF=KB(selected);
+    K1F=K1;     K2F=K2;     TBF =boron_concentration;    KBF=KB;
     g0 = K2F.*KBF.*(2.*CO3x+TBF-TAi);
     g1 = KBF.*CO3x+K2F.*(2.*CO3x-TAi);
     g2 = CO3x;
@@ -1100,14 +1110,16 @@ end
 
 
 function [boron,oh,phosphate,silicate,ammonia,sulphide,h_free,sulphate,fluorine] = calculate_alkalinity_parts(pH,Ks,composition,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
-    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
+    relevant_ks = Ks.select(selected);
+
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
+    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.select(selected).unpack_alkalinity();
     
-    KWF =KW(selected);
-    KP1F=KP1(selected);   KP2F=KP2(selected);   KP3F=KP3(selected);   TPF=phosphate(selected);
-    TSiF=silicate(selected);   KSiF=KSi(selected);   TNH4F=ammonia(selected); KNH4F=KNH4(selected);
-    TH2SF=sulphide(selected); KH2SF=KH2S(selected); TBF =boron(selected);    KBF=KB(selected);
-    TSF =sulphate(selected);    KSF =KS(selected);    TFF =fluorine(selected);    KFF=KF(selected);
+    KWF =KW;
+    KP1F=KP1;   KP2F=KP2;   KP3F=KP3;   TPF=phosphate;
+    TSiF=silicate;   KSiF=KSi;   TNH4F=ammonia; KNH4F=KNH4;
+    TH2SF=sulphide; KH2SF=KH2S; TBF =boron;    KBF=KB;
+    TSF =sulphate;    KSF =KS;    TFF =fluorine;    KFF=KF;
     
     H         = 10.^(-pH(selected));
     BAlk      = TBF.*KBF./(KBF + H);
@@ -1119,7 +1131,6 @@ function [boron,oh,phosphate,silicate,ammonia,sulphide,h_free,sulphate,fluorine]
     AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
     HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
 
-    relevant_ks = Ks.select(selected);
     [~,~,pHfree,~] = relevant_ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH(selected),relevant_ks.controls);
         
     Hfree = 10.^-pHfree; % this converts pHfree to Hfree
@@ -1226,20 +1237,4 @@ function show_failed(failed)
     else
         disp(['pH value did not converge for data on row: ',num2str((failed)')]);
     end
-end
-
-function [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(ks)
-    K0 = ks("K0");
-    K1 = ks("K1");
-    K2 = ks("K2");
-    KW = ks("KW");
-    KB = ks("KB");
-    KF = ks("KF");
-    KS = ks("KS");
-    KP1 = ks("KP1");
-    KP2 = ks("KP2");
-    KP3 = ks("KP3");
-    KSi = ks("KSi");
-    KNH4 = ks("KNH4");
-    KH2S = ks("KH2S");
 end
