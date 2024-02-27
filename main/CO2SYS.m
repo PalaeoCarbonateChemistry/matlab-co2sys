@@ -174,7 +174,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (combination==12); % input TA, TC
     if any(selected)
     selected = (~isnan(alkalinity_in) & ~isnan(dic_in) & selected);
-        pH_in(selected) = calculate_pH_from_alkalinity_dic(alkalinity_in(selected)-composition.peng_correction(selected),dic_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k);
+        pH_in(selected) = calculate_pH_from_alkalinity_dic(alkalinity_in(selected)-composition.peng_correction(selected),dic_in(selected),Ks_in,composition,selected);
 
         selected = (~isnan(pH_in) & selected);
         if any(selected)
@@ -186,7 +186,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (combination==13); % input TA, pH
     if any(selected)
     selected = (~isnan(alkalinity_in) & ~isnan(pH_in) & selected);
-        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k);
+        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in,composition,selected);
         fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
         [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
     end
@@ -194,10 +194,10 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (combination==14 | combination==15 | combination==18); % input TA, (pCO2 or fCO2 or CO2)
     if any(selected)
     selected=(~isnan(alkalinity_in) & ~isnan(fco2_in) & selected);
-        pH_in(selected) = calculate_pH_from_alkalinity_fco2(alkalinity_in(selected)-composition.peng_correction(selected),fco2_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k);
+        pH_in(selected) = calculate_pH_from_alkalinity_fco2(alkalinity_in(selected)-composition.peng_correction(selected),fco2_in(selected),Ks_in,composition,selected);
         selected = (~isnan(pH_in) & selected);
         if any(selected)
-           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k);
+           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in,composition,selected);
            [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
         end
     end
@@ -205,10 +205,10 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (combination==16); % input TA, HCO3
     if any(selected)
     selected = (~isnan(alkalinity_in) & ~isnan(hco3_in) & selected);
-        pH_in(selected) = calculate_pH_from_alkalinity_hco3(alkalinity_in(selected)-composition.peng_correction(selected),hco3_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k);  % added Peng correction // MPH
+        pH_in(selected) = calculate_pH_from_alkalinity_hco3(alkalinity_in(selected)-composition.peng_correction(selected),hco3_in(selected),Ks_in,composition,selected);  % added Peng correction // MPH
         selected=(~isnan(pH_in) & selected);
         if any(selected)
-           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k);
+           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in,composition,selected);
            fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected); 
            co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
         end
@@ -217,10 +217,10 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (combination==17); % input TA, CO3
     if any(selected)
     selected = (~isnan(alkalinity_in) & ~isnan(co3_in) & selected);
-        pH_in(selected) = calculate_pH_from_alkalinity_co3(alkalinity_in(selected)-composition.peng_correction(selected),co3_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k);  % added Peng correction // MPH
+        pH_in(selected) = calculate_pH_from_alkalinity_co3(alkalinity_in(selected)-composition.peng_correction(selected),co3_in(selected),Ks_in,composition,selected);  % added Peng correction // MPH
         selected=(~isnan(pH_in) & selected);
         if any(selected)
-           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k);
+           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in,composition,selected);
            fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected); 
            hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
         end
@@ -229,7 +229,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (combination==23); % input TC, pH
     if any(selected)
     selected = (~isnan(dic_in) & ~isnan(pH_in) & selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,composition,selected) + composition.peng_correction(selected);
         fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
         [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected), pH_in(selected),Ks_in,selected);
     end
@@ -238,7 +238,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     if any(selected)
     selected = (~isnan(dic_in) & ~isnan(fco2_in) & selected);
         pH_in(selected) = calculate_pH_from_dic_fco2(dic_in(selected),fco2_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,composition,selected) + composition.peng_correction(selected);
         [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
 
@@ -246,7 +246,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     if any(selected)
     selected = (~isnan(dic_in) & ~isnan(hco3_in) & selected);
         [pH_in(selected),fco2_in(selected)] = calculate_pH_fco2_from_dic_hco3(dic_in(selected),hco3_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,composition,selected) + composition.peng_correction(selected);
         co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
     end
 
@@ -254,7 +254,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     if any(selected)
     selected = (~isnan(dic_in) & ~isnan(co3_in) & selected);
         [pH_in(selected),fco2_in(selected)] = calculate_pH_fco2_from_dic_co3(dic_in(selected),co3_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,composition,selected) + composition.peng_correction(selected);
         hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
 
@@ -262,15 +262,15 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     if any(selected)
     selected = (~isnan(pH_in) & ~isnan(fco2_in) & selected);
         dic_in(selected) = calculate_dic_from_pH_fco2(pH_in(selected),fco2_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,composition,selected) + composition.peng_correction(selected);
         [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
 
     selected = (combination==36); % input pH, HCO3
     if any(selected)
     selected = (~isnan(pH_in) & ~isnan(hco3_in) & selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_pH_hco3(pH_in(selected),hco3_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
-        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k);
+        alkalinity_in(selected) = calculate_alkalinity_from_pH_hco3(pH_in(selected),hco3_in(selected),Ks_in,composition,selected) + composition.peng_correction(selected);
+        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in,composition,selected);
         fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
         co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
@@ -278,8 +278,8 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (combination==37); % input pH, CO3
     if any(selected)
     selected = (~isnan(pH_in) & ~isnan(co3_in) & selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_pH_co3(pH_in(selected),co3_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
-        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k);
+        alkalinity_in(selected) = calculate_alkalinity_from_pH_co3(pH_in(selected),co3_in(selected),Ks_in,composition,selected) + composition.peng_correction(selected);
+        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in,composition,selected);
         fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
         hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
@@ -289,7 +289,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (~isnan(fco2_in) & ~isnan(hco3_in) & selected);
         pH_in(selected) = calculate_pH_from_fco2_hco3(fco2_in(selected),hco3_in(selected), Ks_in,selected);
         dic_in(selected) = calculate_dic_from_pH_fco2(pH_in(selected),fco2_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,composition,selected) + composition.peng_correction(selected);
         co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
 
@@ -298,7 +298,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (~isnan(fco2_in) & ~isnan(co3_in) & selected);
         pH_in(selected) = calculate_pH_from_fco2_co3(fco2_in(selected),co3_in(selected), Ks_in,selected);
         dic_in(selected) = calculate_dic_from_pH_fco2 (pH_in(selected),fco2_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,composition,selected) + composition.peng_correction(selected);
         hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
     end
 
@@ -306,8 +306,8 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     if any(selected)
     selected = (~isnan(hco3_in) & ~isnan(co3_in) & selected);
         pH_in(selected) = calculate_pH_from_co3_hco3(co3_in(selected),hco3_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_pH_co3(pH_in(selected),co3_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
-        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k);
+        alkalinity_in(selected) = calculate_alkalinity_from_pH_co3(pH_in(selected),co3_in(selected),Ks_in,composition,selected) + composition.peng_correction(selected);
+        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in,composition,selected);
         fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
         %CO2ic(selected)                = CalculateCO2fromTCpH(TCc(selected),PHic(selected));
     end
@@ -335,10 +335,10 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     [boron_alkalinity_in(selected),oh_alkalinity_in(selected),phosphate_alkalinity_in(selected),...
         silicate_alkalinity_in(selected),ammonia_alkalinity_in(selected),sulphide_alkalinity_in(selected),...
         h_free_alkalinity_in(selected),sulphate_alkalinity_in(selected),fluorine_alkalinity_in(selected),...
-    ] = calculate_alkalinity_parts(pH_in,Ks_in,composition,selected,which_ks,salinity,temp_k);
+    ] = calculate_alkalinity_parts(pH_in,Ks_in,composition,selected);
     
     phosphate_alkalinity_in(selected) = phosphate_alkalinity_in(selected)+composition.peng_correction(selected);
-    revelle_alkalinity_in(selected) = calculate_revelle_factor(alkalinity_in(selected)-composition.peng_correction(selected), dic_in(selected),Ks_in,composition,selected,which_ks,salinity,temp_k);
+    revelle_alkalinity_in(selected) = calculate_revelle_factor(alkalinity_in(selected)-composition.peng_correction(selected), dic_in(selected),Ks_in,composition,selected);
     [saturation_state_calcite_in(selected),saturation_state_aragonite_in(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_in(selected), dic_in(selected), pH_in(selected), Ks_in, sqrt(salinity(selected)),composition.calcium,which_k1_k2,pressure_in/10,selected);
     vapour_pressure_factor = calculate_vapour_pressure_factor(salinity,temp_k);
     co2_dry_alkalinity_in(~isnan(pco2_in),1) = pco2_in(~isnan(pco2_in),1)./vapour_pressure_factor(~isnan(pco2_in),1); % ' this assumes pTot = 1 atm
@@ -376,7 +376,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected=(~isnan(alkalinity_in) & ~isnan(dic_in)); % i.e., do for all samples that have TA and TC values
     pH_out = NaN(number_of_points,1);
     [co3_out,hco3_out,fco2_out] = deal(pH_out);
-    pH_out(selected) = calculate_pH_from_alkalinity_dic(alkalinity_in(selected)-composition.peng_correction(selected), dic_in(selected),Ks_out,composition,selected,which_ks,salinity,temp_k); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
+    pH_out(selected) = calculate_pH_from_alkalinity_dic(alkalinity_in(selected)-composition.peng_correction(selected), dic_in(selected),Ks_out,composition,selected); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
         fco2_out(selected) = calculate_fco2_from_dic_pH(dic_in(selected), pH_out(selected), Ks_out,selected);
         [co3_out(selected),hco3_out(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_out(selected), Ks_out,selected);
     
@@ -396,10 +396,10 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         co2_dry_alkalinity_out] = deal(nan_vector);
 
     [boron_alkalinity_out(selected),oh_alkalinity_out(selected),phosphate_alkalinity_out(selected),silicate_alkalinity_out(selected),ammonia_alkalinity_out(selected),...
-        sulphide_alkalinity_out(selected), h_free_alkalinity_out(selected),sulphate_alkalinity_out(selected),fluorine_alkalinity_out(selected)] = calculate_alkalinity_parts(pH_out,Ks_out,composition,selected,which_ks,salinity,temp_k);
+        sulphide_alkalinity_out(selected), h_free_alkalinity_out(selected),sulphate_alkalinity_out(selected),fluorine_alkalinity_out(selected)] = calculate_alkalinity_parts(pH_out,Ks_out,composition,selected);
     
     phosphate_alkalinity_out(selected)                 = phosphate_alkalinity_out(selected)+composition.peng_correction(selected);
-    revelle_alkalinity_out(selected)              = calculate_revelle_factor(alkalinity_in(selected)-composition.peng_correction(selected), dic_in(selected),Ks_out,composition,selected,which_ks,salinity,temp_k);
+    revelle_alkalinity_out(selected)              = calculate_revelle_factor(alkalinity_in(selected)-composition.peng_correction(selected), dic_in(selected),Ks_out,composition,selected);
     [saturation_state_calcite_out(selected),saturation_state_aragonite_out(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_out(selected), dic_in(selected), pH_out(selected), Ks_out, sqrt(salinity(selected)), composition.calcium,which_k1_k2,pressure_out/10,selected);
     vapour_pressure_factor = calculate_vapour_pressure_factor(salinity,temp_k);
     co2_dry_alkalinity_out(~isnan(pco2_out),1)    = pco2_out(~isnan(pco2_out))./vapour_pressure_factor(~isnan(pco2_out)); % ' this assumes pTot = 1 atm
@@ -552,7 +552,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         '99 - sulphide_concentration             (umol/kgSW) '};	
 end 
 
-function pH_out = calculate_pH_from_alkalinity_dic(alkalinity,dic,Ks,composition,selected,which_ks,salinity,temp_k)
+function pH_out = calculate_pH_from_alkalinity_dic(alkalinity,dic,Ks,composition,selected)
     relevant_ks = Ks.select(selected);
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
 
@@ -618,7 +618,7 @@ function fco2 = calculate_fco2_from_dic_pH(dic, pH, Ks, selected)
     fco2 = dic.*H.*H./(H.*H + K1(selected).*H + K1(selected).*K2(selected))./K0(selected);
 end
     
-function dic = calculate_dic_from_alkalinity_pH(alkalinity, pH,Ks,composition,selected,which_ks,salinity,temp_k)
+function dic = calculate_dic_from_alkalinity_pH(alkalinity, pH,Ks,composition,selected)
     [~,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
 
@@ -642,7 +642,7 @@ function dic = calculate_dic_from_alkalinity_pH(alkalinity, pH,Ks,composition,se
     dic = carbonate_alkalinity.*(H.*H + K1(selected).*H + K1(selected).*K2(selected))./(K1(selected).*(H + 2.*K2(selected)));
 end
 
-function pH_out = calculate_pH_from_alkalinity_fco2(alkalinity, fco2,Ks,composition,selected,which_ks,salinity,temp_k)
+function pH_out = calculate_pH_from_alkalinity_fco2(alkalinity, fco2,Ks,composition,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
 
@@ -702,7 +702,7 @@ function pH_out = calculate_pH_from_alkalinity_fco2(alkalinity, fco2,Ks,composit
     pH_out = pH;
 end
 
-function alkalinity = calculate_alkalinity_from_dic_pH(dic,pH,Ks,composition,selected,which_ks,salinity,temp_k)
+function alkalinity = calculate_alkalinity_from_dic_pH(dic,pH,Ks,composition,selected)
     [~,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
 
@@ -751,7 +751,7 @@ function dic = calculate_dic_from_pH_fco2(pHi, fCO2i, Ks,selected)
     dic = K0(selected).*fCO2i.*(H.*H + K1(selected).*H + K1(selected).*K2(selected))./(H.*H);
 end
 
-function alkalinity = calculate_alkalinity_from_pH_hco3(pH,hco3,Ks,composition,selected,which_ks,salinity,temp_k)
+function alkalinity = calculate_alkalinity_from_pH_hco3(pH,hco3,Ks,composition,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
 
@@ -775,7 +775,7 @@ function alkalinity = calculate_alkalinity_from_pH_hco3(pH,hco3,Ks,composition,s
     alkalinity = carbonate_alkalinity + boron_alkalinity + hydroxide_alkalinity + phosphate_alkalinity + silicate_alkalinity + ammonia_alkalinity + sulphide_alkalinity - hydrogen_free - sulphate_acidity - fluorine_acidity;
 end
 
-function pH_out = calculate_pH_from_alkalinity_hco3(TAi, HCO3i,Ks,composition,selected,which_ks,salinity,temp_k)
+function pH_out = calculate_pH_from_alkalinity_hco3(TAi, HCO3i,Ks,composition,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
 
@@ -851,7 +851,7 @@ function [pH,fco2] = calculate_pH_fco2_from_dic_hco3(dic, hco3, Ks,selected)
     fco2 = calculate_fco2_from_dic_pH(dic, pH, Ks,selected);
 end
 
-function alkalinity = calculate_alkalinity_from_pH_co3(pH, CO3i,Ks,composition,selected,which_ks,salinity,temp_k)
+function alkalinity = calculate_alkalinity_from_pH_co3(pH, CO3i,Ks,composition,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
 
@@ -876,7 +876,7 @@ function alkalinity = calculate_alkalinity_from_pH_co3(pH, CO3i,Ks,composition,s
     alkalinity = carbonate_alkalinity + boron_alkalinity + hydroxide_alkalinity + phosphate_alkalinity + silicate_alkalinity + ammonia_alkalinity + sulphide_alkalinity - hydrogen_free - sulphate_acidity - fluorine_acidity;
 end
 
-function pH_out = calculate_pH_from_alkalinity_co3(alkalinity,co3,Ks,composition,selected,which_ks,salinity,temp_k)
+function pH_out = calculate_pH_from_alkalinity_co3(alkalinity,co3,Ks,composition,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
 
@@ -1080,20 +1080,18 @@ function pH_out = calculate_pH_from_alkalinity_co3_munhoven(TAi, CO3x, Ks, boron
     pH_out = pHGuess;
 end
 
-function revelle = calculate_revelle_factor(alkalinity, dic,Ks,composition,selected,which_ks,salinity,temp_k)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
-
+function revelle = calculate_revelle_factor(alkalinity, dic,Ks,composition,selected)
     dic_start = dic;
     delta_dic = 0.00000001;% ' 0.01 umol/kg-SW (lower than prior versions of CO2SYS)
 
     % ' Find fCO2 at TA, TC + dTC
     dic_high = dic_start + delta_dic;
-    pH_high = calculate_pH_from_alkalinity_dic(alkalinity, dic_high,Ks,composition,selected,which_ks,salinity,temp_k);
+    pH_high = calculate_pH_from_alkalinity_dic(alkalinity, dic_high,Ks,composition,selected);
     fco2_high = calculate_fco2_from_dic_pH(dic_high, pH_high, Ks,selected);
 
     % ' Find fCO2 at TA, TC - dTC
     dic = dic_start - delta_dic;
-    pH_low = calculate_pH_from_alkalinity_dic(alkalinity, dic,Ks,composition,selected,which_ks,salinity,temp_k);
+    pH_low = calculate_pH_from_alkalinity_dic(alkalinity, dic,Ks,composition,selected);
     fco2_low = calculate_fco2_from_dic_pH(dic, pH_low, Ks,selected);
 
     % CalculateRevelleFactor:
@@ -1101,7 +1099,7 @@ function revelle = calculate_revelle_factor(alkalinity, dic,Ks,composition,selec
 end
 
 
-function [boron,oh,phosphate,silicate,ammonia,sulphide,h_free,sulphate,fluorine] = calculate_alkalinity_parts(pH,Ks,composition,selected,which_ks,salinity,temp_k)
+function [boron,oh,phosphate,silicate,ammonia,sulphide,h_free,sulphate,fluorine] = calculate_alkalinity_parts(pH,Ks,composition,selected)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
     
