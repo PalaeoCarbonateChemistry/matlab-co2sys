@@ -9,16 +9,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
                                             varargin)
     
     % Input conditioning
-    
-    % set default for optional input argument
-    co2_pressure_correction = 0;
-    % parse optional input argument
-    for index = 1:2:length(varargin)-1
-        if strcmpi(varargin{index},'co2_press')
-            co2_pressure_correction = varargin{index+1};
-        end
-    end
-    
+
     % Determine lengths of input vectors
     input_lengths = [length(parameter_1) length(parameter_2) length(parameter_1_type)...
                 length(parameter_2_type) length(salinity_in) length(temperature_in)...
@@ -33,6 +24,15 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     % Find the longest column vector:
     number_of_points = max(input_lengths);
+        
+    % set default for optional input argument
+    co2_pressure_correction = zeros(numel(number_of_points),1);
+    % parse optional input argument
+    for index = 1:2:length(varargin)-1
+        if strcmpi(varargin{index},'co2_press')
+            co2_pressure_correction = varargin{index+1};
+        end
+    end
     
     % Populate column vectors
     parameter_1(1:number_of_points,1)      = parameter_1(:);
@@ -53,16 +53,17 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     which_kso4(1:number_of_points,1)       = which_kso4(:);
     which_kf(1:number_of_points,1)         = which_kf(:);
     which_boron(1:number_of_points,1)      = which_boron(:);
+    co2_pressure_correction(1:number_of_points,1) = co2_pressure_correction(:);
     
     % Generate empty vectors for...
-    alkalinity = nan(number_of_points,1);
-    dic        = nan(number_of_points,1);
-    pH         = nan(number_of_points,1); % pH
-    pco2       = nan(number_of_points,1); % pCO2
-    fco2       = nan(number_of_points,1); % fCO2
-    hco3       = nan(number_of_points,1); % [HCO3]
-    co3        = nan(number_of_points,1); % [CO3]
-    co2        = nan(number_of_points,1); % [CO2*]
+    alkalinity = NaN(number_of_points,1);
+    dic        = NaN(number_of_points,1);
+    pH         = NaN(number_of_points,1);
+    pco2       = NaN(number_of_points,1);
+    fco2       = NaN(number_of_points,1);
+    hco3       = NaN(number_of_points,1);
+    co3        = NaN(number_of_points,1);
+    co2        = NaN(number_of_points,1);
 
     which_ks = WhichKs(which_k1_k2,which_kso4,which_kf);
 
@@ -133,26 +134,25 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
                     .calculate_peng_correction(which_ks);
 
     % Calculate the constants for all samples at input conditions
-    Ks_in = EquilibriumConstants(temperature_in,...
-                                 pressure_in/10,...
-                                 composition,...
-                                 pH_scale_in,...
-                                 which_ks,...
-                                 co2_pressure_correction)...
-                    .calculate_all()...
-                    .as_map();
+    Ks_in = Ks(temperature_in,...
+               pressure_in/10,...
+               composition,...
+               pH_scale_in,...
+               which_ks,...
+               co2_pressure_correction)...
+             .calculate_all();
 
-    K0_in = Ks_in("K0");
+    K0 = Ks_in.k0;
     
     % Make sure fCO2 is available for each sample that has pCO2 or CO2.
     temp_k = temperature_in+273.15;
     fugacity_factor = calculate_fugacity_factor(co2_pressure_correction,number_of_points,which_k1_k2,temp_k);
     
-    selected = (~isnan(pco2) & (parameter_1_type==4 | parameter_2_type==4));  
+    selected = (~isnan(pco2) & (parameter_1_type==4 | parameter_2_type==4));
     fco2(selected) = pco2(selected).*fugacity_factor(selected);
 
     selected = (~isnan(co2) & (parameter_1_type==8 | parameter_2_type==8)); 
-    fco2(selected) = co2(selected)./K0_in(selected);
+    fco2(selected) = co2(selected)./K0(selected);
     
     % Generate vectors for results, and copy the raw input values into them
     alkalinity_in = alkalinity;
@@ -174,140 +174,141 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (combination==12); % input TA, TC
     if any(selected)
     selected = (~isnan(alkalinity_in) & ~isnan(dic_in) & selected);
-        pH_in(selected) = calculate_pH_from_alkalinity_dic(alkalinity_in(selected)-composition.peng_correction(selected),dic_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k);
+        pH_in(selected) = calculate_pH_from_alkalinity_dic(alkalinity_in(selected)-composition.peng_correction(selected),dic_in(selected),Ks_in.select(selected));
+
         selected = (~isnan(pH_in) & selected);
         if any(selected)
-           fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected), pH_in(selected),Ks_in,selected);
-           [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
+           fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
+           [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
         end
     end
 
     selected = (combination==13); % input TA, pH
     if any(selected)
     selected = (~isnan(alkalinity_in) & ~isnan(pH_in) & selected);
-        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k);
-        fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
-        [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
+        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in.select(selected));
+        fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
+        [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
     end
 
     selected = (combination==14 | combination==15 | combination==18); % input TA, (pCO2 or fCO2 or CO2)
     if any(selected)
     selected=(~isnan(alkalinity_in) & ~isnan(fco2_in) & selected);
-        pH_in(selected) = calculate_pH_from_alkalinity_fco2(alkalinity_in(selected)-composition.peng_correction(selected),fco2_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k);
+        pH_in(selected) = calculate_pH_from_alkalinity_fco2(alkalinity_in(selected)-composition.peng_correction(selected),fco2_in(selected),Ks_in.select(selected));
         selected = (~isnan(pH_in) & selected);
         if any(selected)
-           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k);
-           [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
+           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in.select(selected));
+           [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
         end
     end
 
     selected = (combination==16); % input TA, HCO3
     if any(selected)
     selected = (~isnan(alkalinity_in) & ~isnan(hco3_in) & selected);
-        pH_in(selected) = calculate_pH_from_alkalinity_hco3(alkalinity_in(selected)-composition.peng_correction(selected),hco3_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k);  % added Peng correction // MPH
+        pH_in(selected) = calculate_pH_from_alkalinity_hco3(alkalinity_in(selected)-composition.peng_correction(selected),hco3_in(selected),Ks_in.select(selected));  % added Peng correction // MPH
         selected=(~isnan(pH_in) & selected);
         if any(selected)
-           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k);
-           fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected); 
-           co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
+           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in.select(selected));
+           fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in.select(selected));
+           co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in.select(selected));
         end
     end
 
     selected = (combination==17); % input TA, CO3
     if any(selected)
     selected = (~isnan(alkalinity_in) & ~isnan(co3_in) & selected);
-        pH_in(selected) = calculate_pH_from_alkalinity_co3(alkalinity_in(selected)-composition.peng_correction(selected),co3_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k);  % added Peng correction // MPH
+        pH_in(selected) = calculate_pH_from_alkalinity_co3(alkalinity_in(selected)-composition.peng_correction(selected),co3_in(selected),Ks_in.select(selected));  % added Peng correction // MPH
         selected=(~isnan(pH_in) & selected);
         if any(selected)
-           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k);
-           fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected); 
-           hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
+           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in.select(selected));
+           fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in.select(selected));
+           hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in.select(selected));
         end
     end
 
     selected = (combination==23); % input TC, pH
     if any(selected)
     selected = (~isnan(dic_in) & ~isnan(pH_in) & selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
-        fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
-        [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected), pH_in(selected),Ks_in,selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected)) + composition.peng_correction(selected);
+        fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
+        [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected), pH_in(selected),Ks_in.select(selected));
     end
     
     selected = (combination==24 | combination==25 | combination==28);  % input TC, (pCO2 or fCO2 or CO2)
     if any(selected)
     selected = (~isnan(dic_in) & ~isnan(fco2_in) & selected);
-        pH_in(selected) = calculate_pH_from_dic_fco2(dic_in(selected),fco2_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
-        [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
+        pH_in(selected) = calculate_pH_from_dic_fco2(dic_in(selected),fco2_in(selected), Ks_in.select(selected));
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected)) + composition.peng_correction(selected);
+        [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in.select(selected));
     end
 
     selected = (combination==26); % input TC, HCO3
     if any(selected)
     selected = (~isnan(dic_in) & ~isnan(hco3_in) & selected);
-        [pH_in(selected),fco2_in(selected)] = calculate_pH_fco2_from_dic_hco3(dic_in(selected),hco3_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
-        co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in,selected);
+        [pH_in(selected),fco2_in(selected)] = calculate_pH_fco2_from_dic_hco3(dic_in(selected),hco3_in(selected), Ks_in.select(selected));
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected)) + composition.peng_correction(selected);
+        co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
     end
 
     selected = (combination==27); % input TC, CO3
     if any(selected)
     selected = (~isnan(dic_in) & ~isnan(co3_in) & selected);
-        [pH_in(selected),fco2_in(selected)] = calculate_pH_fco2_from_dic_co3(dic_in(selected),co3_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
-        hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
+        [pH_in(selected),fco2_in(selected)] = calculate_pH_fco2_from_dic_co3(dic_in(selected),co3_in(selected), Ks_in.select(selected));
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected)) + composition.peng_correction(selected);
+        hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in.select(selected));
     end
 
     selected = (combination==34 | combination==35 | combination==38); % input pH, (pCO2 or fCO2 or CO2)
     if any(selected)
     selected = (~isnan(pH_in) & ~isnan(fco2_in) & selected);
-        dic_in(selected) = calculate_dic_from_pH_fco2(pH_in(selected),fco2_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
-        [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
+        dic_in(selected) = calculate_dic_from_pH_fco2(pH_in(selected),fco2_in(selected), Ks_in.select(selected));
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected)) + composition.peng_correction(selected);
+        [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in.select(selected));
     end
 
     selected = (combination==36); % input pH, HCO3
     if any(selected)
     selected = (~isnan(pH_in) & ~isnan(hco3_in) & selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_pH_hco3(pH_in(selected),hco3_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
-        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k);
-        fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
-        co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_pH_hco3(pH_in(selected),hco3_in(selected),Ks_in.select(selected)) + composition.peng_correction(selected);
+        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in.select(selected));
+        fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in.select(selected));
+        co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in.select(selected));
     end
 
     selected = (combination==37); % input pH, CO3
     if any(selected)
     selected = (~isnan(pH_in) & ~isnan(co3_in) & selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_pH_co3(pH_in(selected),co3_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
-        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k);
-        fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
-        hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
+        alkalinity_in(selected) = calculate_alkalinity_from_pH_co3(pH_in(selected),co3_in(selected),Ks_in.select(selected)) + composition.peng_correction(selected);
+        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in.select(selected));
+        fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
+        hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in.select(selected));
     end
 
     selected = (combination==46 | combination==56 | combination==68); % input (pCO2 or fCO2 or CO2), HCO3
     if any(selected)
     selected = (~isnan(fco2_in) & ~isnan(hco3_in) & selected);
-        pH_in(selected) = calculate_pH_from_fco2_hco3(fco2_in(selected),hco3_in(selected), Ks_in,selected);
-        dic_in(selected) = calculate_dic_from_pH_fco2(pH_in(selected),fco2_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
-        co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
+        pH_in(selected) = calculate_pH_from_fco2_hco3(fco2_in(selected),hco3_in(selected), Ks_in.select(selected));
+        dic_in(selected) = calculate_dic_from_pH_fco2(pH_in(selected),fco2_in(selected), Ks_in.select(selected));
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected)) + composition.peng_correction(selected);
+        co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in.select(selected));
     end
 
     selected = (combination==47 | combination==57 | combination==78); % input (pCO2 or fCO2 or CO2), CO3
     if any(selected)
     selected = (~isnan(fco2_in) & ~isnan(co3_in) & selected);
-        pH_in(selected) = calculate_pH_from_fco2_co3(fco2_in(selected),co3_in(selected), Ks_in,selected);
-        dic_in(selected) = calculate_dic_from_pH_fco2 (pH_in(selected),fco2_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
-        hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
+        pH_in(selected) = calculate_pH_from_fco2_co3(fco2_in(selected),co3_in(selected), Ks_in.select(selected));
+        dic_in(selected) = calculate_dic_from_pH_fco2 (pH_in(selected),fco2_in(selected), Ks_in.select(selected));
+        alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected)) + composition.peng_correction(selected);
+        hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in.select(selected));
     end
 
     selected = (combination==67); % input HCO3, CO3
     if any(selected)
     selected = (~isnan(hco3_in) & ~isnan(co3_in) & selected);
-        pH_in(selected) = calculate_pH_from_co3_hco3(co3_in(selected),hco3_in(selected), Ks_in,selected);
-        alkalinity_in(selected) = calculate_alkalinity_from_pH_co3(pH_in(selected),co3_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k) + composition.peng_correction(selected);
-        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k);
-        fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in,selected);
+        pH_in(selected) = calculate_pH_from_co3_hco3(co3_in(selected),hco3_in(selected), Ks_in.select(selected));
+        alkalinity_in(selected) = calculate_alkalinity_from_pH_co3(pH_in(selected),co3_in(selected),Ks_in.select(selected)) + composition.peng_correction(selected);
+        dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in.select(selected));
+        fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
         %CO2ic(selected)                = CalculateCO2fromTCpH(TCc(selected),PHic(selected));
     end
     
@@ -318,7 +319,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
 
     % Generate the associated CO2 value:
     selected = (isnan(co2_in) & (parameter_1_type~=8 | parameter_2_type~=8)); 
-    co2_in(selected) = fco2_in(selected).*K0_in(selected);
+    co2_in(selected) = fco2_in(selected).*K0(selected);
     
     % Calculate Other Params At Input Conditions
     % Generate vector of NaN
@@ -334,10 +335,10 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     [boron_alkalinity_in(selected),oh_alkalinity_in(selected),phosphate_alkalinity_in(selected),...
         silicate_alkalinity_in(selected),ammonia_alkalinity_in(selected),sulphide_alkalinity_in(selected),...
         h_free_alkalinity_in(selected),sulphate_alkalinity_in(selected),fluorine_alkalinity_in(selected),...
-        ] = calculate_alkalinity_parts(pH_in,pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k);
+    ] = calculate_alkalinity_parts(pH_in(selected),Ks_in.select(selected));
     
     phosphate_alkalinity_in(selected) = phosphate_alkalinity_in(selected)+composition.peng_correction(selected);
-    revelle_alkalinity_in(selected) = calculate_revelle_factor(alkalinity_in(selected)-composition.peng_correction(selected), dic_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k);
+    revelle_alkalinity_in(selected) = calculate_revelle_factor(alkalinity_in(selected)-composition.peng_correction(selected), dic_in(selected),Ks_in.select(selected));
     [saturation_state_calcite_in(selected),saturation_state_aragonite_in(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_in(selected), dic_in(selected), pH_in(selected), Ks_in, sqrt(salinity(selected)),composition.calcium,which_k1_k2,pressure_in/10,selected);
     vapour_pressure_factor = calculate_vapour_pressure_factor(salinity,temp_k);
     co2_dry_alkalinity_in(~isnan(pco2_in),1) = pco2_in(~isnan(pco2_in),1)./vapour_pressure_factor(~isnan(pco2_in),1); % ' this assumes pTot = 1 atm
@@ -346,27 +347,27 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     substrate_inhibitor_ratio_in = hco3_in./(h_free_alkalinity_in.*1e6);
     
     % % Just for reference, convert pH at input conditions to the other scales
-    pHicT = nan(number_of_points,1);
-    pHicS = nan(number_of_points,1);
-    pHicF = nan(number_of_points,1);
-    pHicN = nan(number_of_points,1);
-    [pHicT(selected),pHicS(selected),pHicF(selected),pHicN(selected)]=find_pH_on_all_scales(pH_in(selected),pH_scale_in,Ks_in,composition,selected,which_ks,salinity,temp_k);
+    pHicT = NaN(number_of_points,1);
+    pHicS = NaN(number_of_points,1);
+    pHicF = NaN(number_of_points,1);
+    pHicN = NaN(number_of_points,1);
+    relevant_ks = Ks_in.select(selected);
+    [pHicT(selected),pHicS(selected),pHicF(selected),pHicN(selected)]=relevant_ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH_in(selected),relevant_ks.controls);
     
     % Merge the Ks at input into an array. Ks at output will be glued to this later.
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks_in);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks_in.unpack();
     k_in_vector = [K0,K1,K2,-log10(K1),-log10(K2),KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S];
 
     clear K0 K1 K2 KW KB KF KS KP1 KP2 KP3 KSi KNH4 KH2S
     
     % Calculate the constants for all samples at output conditions
-    Ks_out = EquilibriumConstants(temperature_out,...
-                                  pressure_out/10,...
-                                  composition,...
-                                  pH_scale_in,...
-                                  which_ks,...
-                                  co2_pressure_correction)...
-                .calculate_all()...
-                .as_map();
+    Ks_out = Ks(temperature_out,...
+                pressure_out/10,...
+                composition,...
+                pH_scale_in,...
+                which_ks,...
+                co2_pressure_correction)...
+              .calculate_all();
 
 
     % For output conditions, using conservative TA and TC, calculate pH, fCO2
@@ -375,16 +376,16 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected=(~isnan(alkalinity_in) & ~isnan(dic_in)); % i.e., do for all samples that have TA and TC values
     pH_out = NaN(number_of_points,1);
     [co3_out,hco3_out,fco2_out] = deal(pH_out);
-    pH_out(selected) = calculate_pH_from_alkalinity_dic(alkalinity_in(selected)-composition.peng_correction(selected), dic_in(selected),pH_scale_in,Ks_out,composition,selected,which_ks,salinity,temp_k); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
-        fco2_out(selected) = calculate_fco2_from_dic_pH(dic_in(selected), pH_out(selected), Ks_out,selected);
-        [co3_out(selected),hco3_out(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_out(selected), Ks_out,selected);
+    pH_out(selected) = calculate_pH_from_alkalinity_dic(alkalinity_in(selected)-composition.peng_correction(selected), dic_in(selected),Ks_out.select(selected)); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
+        fco2_out(selected) = calculate_fco2_from_dic_pH(dic_in(selected), pH_out(selected), Ks_out.select(selected));
+        [co3_out(selected),hco3_out(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_out(selected), Ks_out.select(selected));
     
     % Generate the associated pCO2 value:
     fugacity_factor = calculate_fugacity_factor(co2_pressure_correction,number_of_points,which_k1_k2,temp_k);
     pco2_out  = fco2_out./fugacity_factor;
     % Generate the associated CO2 value:
 
-    K0_out = Ks_out("K0");
+    K0_out = Ks_out.k0;
     co2_out = fco2_out.*K0_out;
     
     % Calculate Other Params At Output Conditions
@@ -395,23 +396,25 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         co2_dry_alkalinity_out] = deal(nan_vector);
 
     [boron_alkalinity_out(selected),oh_alkalinity_out(selected),phosphate_alkalinity_out(selected),silicate_alkalinity_out(selected),ammonia_alkalinity_out(selected),...
-        sulphide_alkalinity_out(selected), h_free_alkalinity_out(selected),sulphate_alkalinity_out(selected),fluorine_alkalinity_out(selected)] = calculate_alkalinity_parts(pH_out,pH_scale_in,Ks_out,composition,selected,which_ks,salinity,temp_k);
+        sulphide_alkalinity_out(selected), h_free_alkalinity_out(selected),sulphate_alkalinity_out(selected),fluorine_alkalinity_out(selected)] = calculate_alkalinity_parts(pH_out(selected),Ks_out.select(selected));
     
     phosphate_alkalinity_out(selected)                 = phosphate_alkalinity_out(selected)+composition.peng_correction(selected);
-    revelle_alkalinity_out(selected)              = calculate_revelle_factor(alkalinity_in(selected)-composition.peng_correction(selected), dic_in(selected),pH_scale_in,Ks_out,composition,selected,which_ks,salinity,temp_k);
+    revelle_alkalinity_out(selected)              = calculate_revelle_factor(alkalinity_in(selected)-composition.peng_correction(selected), dic_in(selected),Ks_out.select(selected));
     [saturation_state_calcite_out(selected),saturation_state_aragonite_out(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_out(selected), dic_in(selected), pH_out(selected), Ks_out, sqrt(salinity(selected)), composition.calcium,which_k1_k2,pressure_out/10,selected);
     vapour_pressure_factor = calculate_vapour_pressure_factor(salinity,temp_k);
     co2_dry_alkalinity_out(~isnan(pco2_out),1)    = pco2_out(~isnan(pco2_out))./vapour_pressure_factor(~isnan(pco2_out)); % ' this assumes pTot = 1 atm
     substrate_inhibitor_ratio_out = hco3_out./(h_free_alkalinity_out.*1e6);
     
     % Just for reference, convert pH at output conditions to the other scales
-    pH_out_total = nan(number_of_points,1);
-    pH_out_seawater = nan(number_of_points,1);
-    pH_out_free = nan(number_of_points,1);
-    pH_out_NBS = nan(number_of_points,1);
-    [pH_out_total(selected),pH_out_seawater(selected),pH_out_free(selected),pH_out_NBS(selected)]=find_pH_on_all_scales(pH_out(selected),pH_scale_in,Ks_out,composition,selected,which_ks,salinity,temp_k);
-    
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks_out);
+    pH_out_total = NaN(number_of_points,1);
+    pH_out_seawater = NaN(number_of_points,1);
+    pH_out_free = NaN(number_of_points,1);
+    pH_out_NBS = NaN(number_of_points,1);
+        
+    relevant_ks = Ks_out.select(selected);
+    [pH_out_total(selected),pH_out_seawater(selected),pH_out_free(selected),pH_out_NBS(selected)] = relevant_ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH_out(selected),relevant_ks.controls);
+
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks_out.unpack();
     k_out_vector = [K0,K1,K2,-log10(K1),-log10(K2),KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S];
     concentration_vector =[composition.boron,composition.fluorine,composition.sulphate,composition.phosphate,composition.silicate,composition.ammonia,composition.sulphide];
     
@@ -549,782 +552,490 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         '99 - sulphide_concentration             (umol/kgSW) '};	
 end 
 
-function pH_out = calculate_pH_from_alkalinity_dic(TAi,TCi,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
-    [~,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
+%% Calculate pH
+function pH_out = calculate_pH_from_alkalinity_dic(alkalinity,dic,Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     
     % Find initital pH guess using method of Munhoven (2013)
-    pHGuess = calculate_pH_from_alkalinity_dicMunhoven(TAi, TCi, Ks, boron,selected);
-    pH = pHGuess;
-    pHTol = 1e-4;  % tolerance for iterations end
-    deltapH(1:sum(selected),1) = pHTol+1;
+    initial_pH_guess = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, Ks);
+    pH = initial_pH_guess;
+    pH_tolerance = 1e-4;  % tolerance for iterations end
+    
     counter = 0;
+    delta_pH(1:numel(alkalinity),1) = pH_tolerance+1;
+    above_tolerance = (abs(delta_pH) > pH_tolerance);
 
-    above_tolerance = (abs(deltapH) > pHTol);
     
     while any(above_tolerance)
-        H         = 10.^(-pH);
-        Denom     = (H.^2 + K1(selected).*H + K1(selected).*K2(selected));
-        CAlk      = TCi.*K1(selected).*(H + 2.*K2(selected))./Denom;
-        BAlk      = boron(selected).*KB(selected)./(KB(selected) + H);
-        OH        = KW(selected)./H;
-        PhosTop   = KP1(selected).*KP2(selected).*H + 2.*KP1(selected).*KP2(selected).*KP3(selected) - H.*H.*H;
-        PhosBot   = H.^3 + KP1(selected).*H.*H + KP1(selected).*KP2(selected).*H + KP1(selected).*KP2(selected).*KP3(selected);
-        PAlk      = phosphate(selected).*PhosTop./PhosBot;
-        SiAlk     = silicate(selected).*KSi(selected)./(KSi(selected) + H);
-        AmmAlk    = ammonia(selected).*KNH4(selected)./(KNH4(selected) + H);
-        HSAlk     = sulphide(selected).*KH2S(selected)./(KH2S(selected) + H);
-        [~,~,pHfree,~] = find_pH_on_all_scales(pH,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k); % this converts pH to pHfree no matter the scale
-        Hfree     = 10.^-pHfree; % this converts pHfree to Hfree
-        HSO4      = sulphate(selected)./(1 + KS(selected)./Hfree); % since KS is on the free scale
-        HF        = fluorine(selected)./(1 + KF(selected)./Hfree); % since KF is on the free scale
-        Residual  = TAi - CAlk - BAlk - OH - PAlk - SiAlk  - AmmAlk - HSAlk + Hfree + HSO4 + HF;
+        H = 10.^(-pH);
+        carbonate_denominator = (H.^2 + K1.*H + K1.*K2);
+        carbonate_alkalinity = dic.*K1.*(H + 2.*K2)./carbonate_denominator;        
+        
+        [boron_alkalinity,hydroxide_alkalinity,phosphate_alkalinity,silicate_alkalinity,ammonia_alkalinity,sulphide_alkalinity,hydrogen_free,sulphate_acidity,fluorine_acidity] = calculate_alkalinity_parts(pH,Ks);
+
+        residual  = alkalinity - carbonate_alkalinity - boron_alkalinity - hydroxide_alkalinity - phosphate_alkalinity - silicate_alkalinity  - ammonia_alkalinity - sulphide_alkalinity + hydrogen_free + sulphate_acidity + fluorine_acidity;
+        
         % find Slope dTA/dpH;
         % (this is not exact, but keeps all important terms);
-        Slope     = log(10).*(TCi.*K1(selected).*H.*(H.*H + K1(selected).*K2(selected) + 4.*H.*K2(selected))./Denom./Denom + BAlk.*H./(KB(selected) + H) + OH + H);
-        deltapH   = Residual./Slope; %' this is Newton's method
+        slope = log(10).*(dic.*K1.*H.*(H.*H + K1.*K2 + 4.*H.*K2)./carbonate_denominator./carbonate_denominator + boron_alkalinity.*H./(KB + H) + hydroxide_alkalinity + H);
+        delta_pH = residual./slope; %' this is Newton's method
+        
         % ' to keep the jump from being too big:
-        while any(abs(deltapH) > 1)
-            FF=abs(deltapH)>1; deltapH(FF)=deltapH(FF)./2;
+        while any(abs(delta_pH) > 1)
+            high_delta = abs(delta_pH)>1; 
+            delta_pH(high_delta) = delta_pH(high_delta)/2;
         end
-        pH(above_tolerance) = pH(above_tolerance) + deltapH(above_tolerance);
-        above_tolerance     = abs(deltapH) > pHTol;
+
+        pH(above_tolerance) = pH(above_tolerance) + delta_pH(above_tolerance);
+        above_tolerance     = abs(delta_pH) > pH_tolerance;
         counter=counter+1;
      
         if counter>10000
-            Fr=find(abs(deltapH) > pHTol);
-            pH(Fr)=NaN;  disp(['pH value did not converge for data on row(s): ' num2str((Fr)')]);
-            deltapH=pHTol*0.9;
+            failed = find(abs(delta_pH) > pH_tolerance);
+            pH(failed) = NaN;
+            show_failed(failed);
         end
     end
     pH_out = pH;
 end
 
-function fco2 = calculate_fco2_from_dic_pH(TCx, pHx, Ks,selected)
-    % ' SUB calculate_fco2_from_dic_pH, version 02.02, 12-13-96, written by Ernie Lewis.
-    % ' Inputs: TC, pH, K0, K1, K2
-    % ' Output: fCO2
-    % ' This calculates fCO2 from TC and pH, using K0, K1, and K2.
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+function pH_out = calculate_pH_from_alkalinity_fco2(alkalinity, fco2,Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
 
-    H            = 10.^(-pHx);
-    fCO2x        = TCx.*H.*H./(H.*H + K1(selected).*H + K1(selected).*K2(selected))./K0(selected);
-    fco2 = fCO2x;
-end % end nested function
-    
-function dic = calculate_dic_from_alkalinity_pH(TAx, pHx,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
-    
-    K1F=K1(selected);     K2F=K2(selected);     KWF =KW(selected);
-    KP1F=KP1(selected);   KP2F=KP2(selected);   KP3F=KP3(selected);   TPF=phosphate(selected);
-    TSiF=silicate(selected);   KSiF=KSi(selected);   TNH4F=ammonia(selected); KNH4F=KNH4(selected);
-    TH2SF=sulphide(selected); KH2SF=KH2S(selected); TBF =boron(selected);    KBF=KB(selected);
-    TSF =sulphate(selected);    KSF =KS(selected);    TFF =fluorine(selected);    KFF=KF(selected);
-    % ' SUB calculate_dic_from_alkalinity_pH, version 02.03, 10-10-97, written by Ernie Lewis.
-    % ' Inputs: TA, pH, K(), T()
-    % ' Output: TC
-    % ' This calculates TC from TA and pH.
-    H         = 10.^(-pHx);
-    BAlk      = TBF.*KBF./(KBF + H);
-    OH        = KWF./H;
-    PhosTop   = KP1F.*KP2F.*H + 2.*KP1F.*KP2F.*KP3F - H.*H.*H;
-    PhosBot   = H.*H.*H + KP1F.*H.*H + KP1F.*KP2F.*H + KP1F.*KP2F.*KP3F;
-    PAlk      = TPF.*PhosTop./PhosBot;
-    SiAlk     = TSiF.*KSiF./(KSiF + H);
-    AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
-    HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-    [~,~,pHfree,~] = find_pH_on_all_scales(pHx,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k); % this converts pH to pHfree no matter the scale
-    Hfree     = 10.^-pHfree; % this converts pHfree to Hfree
-    HSO4      = TSF./(1 + KSF./Hfree); %' since KS is on the free scale
-    HF        = TFF./(1 + KFF./Hfree); %' since KF is on the free scale
-    CAlk      = TAx - BAlk - OH - PAlk - SiAlk - AmmAlk - HSAlk + Hfree + HSO4 + HF;
-    TCxtemp   = CAlk.*(H.*H + K1F.*H + K1F.*K2F)./(K1F.*(H + 2.*K2F));
-    dic = TCxtemp;
-end % end nested function
-
-function pH_out = calculate_pH_from_alkalinity_fco2(TAi, fCO2i, pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
-    % ' SUB calculate_pH_from_alkalinity_fco2, version 04.01, 10-13-97, written by Ernie
-    % ' Lewis with modifications from Denis Pierrot.
-    % ' Inputs: TA, fCO2, K0, K(), T()
-    % ' Output: pH
-    % ' This calculates pH from TA and fCO2 using K1 and K2 by Newton's method.
-    % ' It tries to solve for the pH at which Residual = 0.
-    % ' The starting guess is determined by the method introduced by Munhoven
-    % ' (2013) and extended by Humphreys et al. (2021).
-    %
-    % ' This will continue iterating until all values in the vector are
-    % ' "abs(deltapH) < pHTol"
-    % ' However, once a given abs(deltapH) is less than pHTol, that pH value
-    % ' will be locked in. This avoids erroneous contributions to results from
-    % ' other lines of input.
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
-
-    K0F=K0(selected);     K1F=K1(selected);     K2F=K2(selected);     KWF =KW(selected);
-    KP1F=KP1(selected);   KP2F=KP2(selected);   KP3F=KP3(selected);   TPF=phosphate(selected);
-    TSiF=silicate(selected);   KSiF=KSi(selected);   TNH4F=ammonia(selected); KNH4F=KNH4(selected);
-    TH2SF=sulphide(selected); KH2SF=KH2S(selected); TBF =boron(selected);    KBF=KB(selected);
-    TSF =sulphate(selected);    KSF =KS(selected);    TFF =fluorine(selected);    KFF=KF(selected);
-    vl         = sum(selected); % vectorlength
     % Find initital pH guess using method of Munhoven (2013)
-    CO2i       = fCO2i.*K0F; % Convert fCO2 to CO2
-    pHGuess    = calculate_pH_from_alkalinity_co2_munhoven(TAi, CO2i, Ks,boron,selected);
-    ln10       = log(10);
-    pH         = pHGuess;
-    pHTol      = 0.0001; % tolerance
-    deltapH = pHTol+pH;
-    loopc=0;
-    nF=(abs(deltapH) > pHTol);
-    while any(nF)
-        H         = 10.^(-pH);
-        HCO3      = K0F.*K1F.*fCO2i./H;
-        CO3       = K0F.*K1F.*K2F.*fCO2i./(H.*H);
-        CAlk      = HCO3 + 2.*CO3;
-        BAlk      = TBF.*KBF./(KBF + H);
-        OH        = KWF./H;
-        PhosTop   = KP1F.*KP2F.*H + 2.*KP1F.*KP2F.*KP3F - H.*H.*H;
-        PhosBot   = H.*H.*H + KP1F.*H.*H + KP1F.*KP2F.*H + KP1F.*KP2F.*KP3F;
-        PAlk      = TPF.*PhosTop./PhosBot;
-        SiAlk     = TSiF.*KSiF./(KSiF + H);
-        AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
-        HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-        [~,~,pHfree,~] = find_pH_on_all_scales(pH,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k); % this converts pH to pHfree no matter the scale
-        Hfree     = 10.^-pHfree; % this converts pHfree to Hfree
-        HSO4      = TSF./(1 + KSF./Hfree); %' since KS is on the free scale
-        HF        = TFF./(1 + KFF./Hfree);% ' since KF is on the free scale
-        Residual  = TAi - CAlk - BAlk - OH - PAlk - SiAlk - AmmAlk - HSAlk + Hfree + HSO4 + HF;
-        % '               find Slope dTA/dpH
-        % '               (this is not exact, but keeps all important terms):
-        Slope     = ln10.*(HCO3 + 4.*CO3 + BAlk.*H./(KBF + H) + OH + H);
-        deltapH   = Residual./Slope; %' this is Newton's method
-        % ' to keep the jump from being too big:
-        while any(abs(deltapH) > 1)
-            FF=abs(deltapH)>1; deltapH(FF)=deltapH(FF)./2;
+    co2 = fco2.*K0; % Convert fCO2 to CO2
+    
+    pH_initial_guess = calculate_pH_from_alkalinity_co2_munhoven(alkalinity, co2, Ks);
+    pH = pH_initial_guess;
+    pH_tolerance = 1e-4;
+
+    delta_pH = pH_tolerance + 1;
+    counter = 0;
+    
+
+    above_tolerance = (abs(delta_pH) > pH_tolerance);
+    while any(above_tolerance)
+        H = 10.^(-pH);
+        hco3 = K0.*K1.*fco2./H;
+        co3 = K0.*K1.*K2.*fco2./(H.*H);
+        carbonate_alkalinity = hco3 + 2.*co3;
+
+        [boron_alkalinity,hydroxide_alkalinity,phosphate_alkalinity,silicate_alkalinity,ammonia_alkalinity,sulphide_alkalinity,hydrogen_free,sulphate_acidity,fluorine_acidity] = calculate_alkalinity_parts(pH,Ks);
+        
+        residual  = alkalinity - carbonate_alkalinity - boron_alkalinity - hydroxide_alkalinity - phosphate_alkalinity - silicate_alkalinity - ammonia_alkalinity - sulphide_alkalinity + hydrogen_free + sulphate_acidity + fluorine_acidity;
+        slope = log(10).*(hco3 + 4.*co3 + boron_alkalinity.*H./(KB + H) + hydroxide_alkalinity + H);
+        delta_pH   = residual./slope;
+
+        while any(abs(delta_pH) > 1)
+            high_delta = abs(delta_pH)>1; 
+            delta_pH(high_delta) = delta_pH(high_delta)/2;
         end
-        pH(nF) = pH(nF) + deltapH(nF);
-        nF     = abs(deltapH) > pHTol;
-        loopc=loopc+1;
+
+        pH(above_tolerance) = pH(above_tolerance) + delta_pH(above_tolerance);
+        above_tolerance = abs(delta_pH) > pH_tolerance;
+        counter = counter+1;
      
-        if loopc>10000
-            Fr=find(abs(deltapH) > pHTol);
-            pH(Fr)=NaN;  disp(['pH value did not converge for data on row(s): ' num2str((Fr)')]);
-            deltapH=pHTol*0.9;
+        if counter>10000
+            failed = find(abs(delta_pH) > pH_tolerance);
+            pH(failed) = NaN;
+            show_failed(failed);
         end
     end
     pH_out = pH;
 end
 
-function alkalinity = calculate_alkalinity_from_dic_pH(TCi, pHi,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
-    % ' SUB calculate_alkalinity_from_dic_pH, version 02.02, 10-10-97, written by Ernie Lewis.
-    % ' Inputs: TC, pH, K(), T()
-    % ' Output: TA
-    % ' This calculates TA from TC and pH.
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
-
-    K1F=K1(selected);     K2F=K2(selected);     KWF =KW(selected);
-    KP1F=KP1(selected);   KP2F=KP2(selected);   KP3F=KP3(selected);   TPF=phosphate(selected);
-    TSiF=silicate(selected);   KSiF=KSi(selected);   TNH4F=ammonia(selected); KNH4F=KNH4(selected);
-    TH2SF=sulphide(selected); KH2SF=KH2S(selected); TBF =boron(selected);    KBF=KB(selected);
-    TSF =sulphate(selected);    KSF =KS(selected);    TFF =fluorine(selected);    KFF=KF(selected);
-    H         = 10.^(-pHi);
-    CAlk      = TCi.*K1F.*(H + 2.*K2F)./(H.*H + K1F.*H + K1F.*K2F);
-    BAlk      = TBF.*KBF./(KBF + H);
-    OH        = KWF./H;
-    PhosTop   = KP1F.*KP2F.*H + 2.*KP1F.*KP2F.*KP3F - H.*H.*H;
-    PhosBot   = H.*H.*H + KP1F.*H.*H + KP1F.*KP2F.*H + KP1F.*KP2F.*KP3F;
-    PAlk      = TPF.*PhosTop./PhosBot;
-    SiAlk     = TSiF.*KSiF./(KSiF + H);
-    AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
-    HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-    [~,~,pHfree,~] = find_pH_on_all_scales(pHi,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k); % this converts pH to pHfree no matter the scale
-    Hfree = 10.^-pHfree; % this converts pHfree to Hfree
-    HSO4      = TSF./(1 + KSF./Hfree);% ' since KS is on the free scale
-    HF        = TFF./(1 + KFF./Hfree);% ' since KF is on the free scale
-    TActemp    = CAlk + BAlk + OH + PAlk + SiAlk + AmmAlk + HSAlk - Hfree - HSO4 - HF;
-    alkalinity = TActemp;
-end
-
-function pH_out = calculate_pH_from_dic_fco2(TCi, fCO2i, Ks,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    % ' SUB calculate_pH_from_dic_fco2, version 02.02, 11-12-96, written by Ernie Lewis.
-    % ' Inputs: TC, fCO2, K0, K1, K2
-    % ' Output: pH
-    % ' This calculates pH from TC and fCO2 using K0, K1, and K2 by solving the
-    % '       quadratic in H: fCO2.*K0 = TC.*H.*H./(K1.*H + H.*H + K1.*K2).
-    % ' if there is not a real root, then pH is returned as missingn.
-    RR = K0(selected).*fCO2i./TCi;
+function pH = calculate_pH_from_dic_fco2(dic,fco2,Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    RR = K0.*fco2./dic;
     %       if RR >= 1
     %          varargout{1}= missingn;
     %          disp('nein!');return;
     %       end
     % check after sub to see if pH = missingn.
-    Discr = (K1(selected).*RR).*(K1(selected).*RR) + 4.*(1 - RR).*(K1(selected).*K2(selected).*RR);
-    H     = 0.5.*(K1(selected).*RR + sqrt(Discr))./(1 - RR);
+    Discr = (K1.*RR).*(K1.*RR) + 4.*(1 - RR).*(K1.*K2.*RR);
+    H     = 0.5.*(K1.*RR + sqrt(Discr))./(1 - RR);
     %       if (H <= 0)
     %           pHctemp = missingn;
     %       else
-    pHctemp = log(H)./log(0.1);
+    pH = log(H)./log(0.1);
     %       end
-    pH_out = pHctemp;
 end
 
-function dic = calculate_dic_from_pH_fco2(pHi, fCO2i, Ks,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    % ' SUB calculate_dic_from_pH_fco2, version 01.02, 12-13-96, written by Ernie Lewis.
-    % ' Inputs: pH, fCO2, K0, K1, K2
-    % ' Output: TC
-    % ' This calculates TC from pH and fCO2, using K0, K1, and K2.
-    H       = 10.^(-pHi);
-    TCctemp = K0(selected).*fCO2i.*(H.*H + K1(selected).*H + K1(selected).*K2(selected))./(H.*H);
-    dic = TCctemp;
-end
+function pH_out = calculate_pH_from_alkalinity_hco3(alkalinity, hco3,Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
 
-function alkalinity = calculate_alkalinity_from_pH_hco3(pHi, HCO3i,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
-    % ' SUB calculate_alkalinity_from_pH_co3, version 01.0, 3-19, added by J. Sharp
-    % ' Inputs: pH, HCO3, K(), T()
-    % ' Output: TA
-    % ' This calculates TA from pH and HCO3.
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
+    pH_initial_guess = calculate_pH_from_alkalinity_hco3_munhoven(alkalinity,hco3,Ks);
+    pH = pH_initial_guess;
+    pH_tolerance = 1e-4; % tolerance
+    delta_pH = pH_tolerance+1;
 
-    K1F=K1(selected);     K2F=K2(selected);     KWF =KW(selected);
-    KP1F=KP1(selected);   KP2F=KP2(selected);   KP3F=KP3(selected);   TPF=phosphate(selected);
-    TSiF=silicate(selected);   KSiF=KSi(selected);   TNH4F=ammonia(selected); KNH4F=KNH4(selected);
-    TH2SF=sulphide(selected); KH2SF=KH2S(selected); TBF =boron(selected);    KBF=KB(selected);
-    TSF =sulphate(selected);    KSF =KS(selected);    TFF =fluorine(selected);    KFF=KF(selected);
-    H         = 10.^(-pHi);
-    CAlk      = HCO3i.*(2.*K2F./H + 1);
-    BAlk      = TBF.*KBF./(KBF + H);
-    OH        = KWF./H;
-    PhosTop   = KP1F.*KP2F.*H + 2.*KP1F.*KP2F.*KP3F - H.*H.*H;
-    PhosBot   = H.*H.*H + KP1F.*H.*H + KP1F.*KP2F.*H + KP1F.*KP2F.*KP3F;
-    PAlk      = TPF.*PhosTop./PhosBot;
-    SiAlk     = TSiF.*KSiF./(KSiF + H);
-    AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
-    HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-    [~,~,pHfree,~] = find_pH_on_all_scales(pHi,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k); % this converts pH to pHfree no matter the scale
-    Hfree = 10.^-pHfree; % this converts pHfree to Hfree
-    HSO4      = TSF./(1 + KSF./Hfree);% ' since KS is on the free scale
-    HF        = TFF./(1 + KFF./Hfree);% ' since KF is on the free scale
-    TActemp     = CAlk + BAlk + OH + PAlk + SiAlk + AmmAlk + HSAlk - Hfree - HSO4 - HF;
-    alkalinity = TActemp;
-end
+    counter = 0;
 
-function pH_out = calculate_pH_from_alkalinity_hco3(TAi, HCO3i,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
 
-    % ' SUB calculate_pH_from_alkalinity_hco3, version 01.0, 8-18, added by J. Sharp with
-    % ' modifications from Denis Pierrot.
-    % ' Inputs: TA, CO3, K0, K(), T()
-    % ' Output: pH
-    %
-    % ' This calculates pH from TA and CO3 using K1 and K2 by Newton's method.
-    % ' It tries to solve for the pH at which Residual = 0.
-    % ' The starting guess is determined by the method introduced by Munhoven
-    % ' (2013) and extended by Humphreys et al. (2021).
-    %
-    % ' This will continue iterating until all values in the vector are
-    % ' "abs(deltapH) < pHTol"
-    % ' However, once a given abs(deltapH) is less than pHTol, that pH value
-    % ' will be locked in. This avoids erroneous contributions to results from
-    % ' other lines of input.
-    K2F=K2(selected);     KWF =KW(selected);
-    KP1F=KP1(selected);   KP2F=KP2(selected);   KP3F=KP3(selected);   TPF=phosphate(selected);
-    TSiF=silicate(selected);   KSiF=KSi(selected);   TNH4F=ammonia(selected); KNH4F=KNH4(selected);
-    TH2SF=sulphide(selected); KH2SF=KH2S(selected); TBF =boron(selected);    KBF=KB(selected);
-    TSF =sulphate(selected);    KSF =KS(selected);    TFF =fluorine(selected);    KFF=KF(selected);
-    vl         = sum(selected); % vectorlength
-    % Find initital pH guess using method of Munhoven (2013)
-    pHGuess    = calculate_pH_from_alkalinity_hco3_munhoven(TAi,HCO3i,Ks,boron,selected);
-    ln10       = log(10);
-    pH         = pHGuess;
-    pHTol      = 0.0001; % tolerance
-    deltapH    = pHTol+pH;
-    loopc=0;
-    nF=(abs(deltapH) > pHTol);
-    while any(nF)
-        H         = 10.^(-pH);
-        CAlk      = HCO3i.*(H+2.*K2F)./H;
-        BAlk      = TBF.*KBF./(KBF + H);
-        OH        = KWF./H;
-        PhosTop   = KP1F.*KP2F.*H + 2.*KP1F.*KP2F.*KP3F - H.*H.*H;
-        PhosBot   = H.*H.*H + KP1F.*H.*H + KP1F.*KP2F.*H + KP1F.*KP2F.*KP3F;
-        PAlk      = TPF.*PhosTop./PhosBot;
-        SiAlk     = TSiF.*KSiF./(KSiF + H);
-        AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
-        HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-        [~,~,pHfree,~] = find_pH_on_all_scales(pH,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k); % this converts pH to pHfree no matter the scale
-        Hfree = 10.^-pHfree; % this converts pHfree to Hfree
-        HSO4      = TSF./(1 + KSF./Hfree); %' since KS is on the free scale
-        HF        = TFF./(1 + KFF./Hfree);% ' since KF is on the free scale
-        Residual  = TAi - CAlk - BAlk - OH - PAlk - SiAlk - AmmAlk - HSAlk + Hfree + HSO4 + HF;
-        % '               find Slope dTA/dpH
-        % '               (this is not exact, but keeps all important terms):
-        Slope = ln10 .* (2 .* HCO3i .* K2F ./ H + BAlk .* H ./ (KBF + H) + OH + H);
-        deltapH   = Residual./Slope; %' this is Newton's method
-        % ' to keep the jump from being too big:
-        while any(abs(deltapH) > 1)
-            FF=abs(deltapH)>1; deltapH(FF)=deltapH(FF)./2;
+    above_tolerance = (abs(delta_pH) > pH_tolerance);
+    while any(above_tolerance)
+        H = 10.^(-pH);
+        carbonate_alkalinity = hco3.*(H+2.*K2)./H;
+
+        [boron_alkalinity,hydroxide_alkalinity,phosphate_alkalinity,silicate_alkalinity,ammonia_alkalinity,sulphide_alkalinity,hydrogen_free,sulphate_acidity,fluorine_acidity] = calculate_alkalinity_parts(pH,Ks);
+
+        residual  = alkalinity - carbonate_alkalinity - boron_alkalinity - hydroxide_alkalinity - phosphate_alkalinity - silicate_alkalinity - ammonia_alkalinity - sulphide_alkalinity + hydrogen_free + sulphate_acidity + fluorine_acidity;
+
+        slope = log(10) .* (2 .* hco3 .* K2 ./ H + boron_alkalinity .* H ./ (KB + H) + hydroxide_alkalinity + H);
+        
+        delta_pH   = residual./slope; %' this is Newton's method
+        
+        while any(abs(delta_pH) > 1)
+            high_delta = abs(delta_pH)>1;
+            delta_pH(high_delta) = delta_pH(high_delta)./2;
         end
-        pH(nF) = pH(nF) + deltapH(nF);
-        nF     = abs(deltapH) > pHTol;
-        loopc=loopc+1;
+        pH(above_tolerance) = pH(above_tolerance) + delta_pH(above_tolerance);
+        above_tolerance = abs(delta_pH) > pH_tolerance;
+
+        counter = counter+1;
      
-        if loopc>10000
-            Fr=find(abs(deltapH) > pHTol);
-            pH(Fr)=NaN;  disp(['pH value did not converge for data on row(s): ' num2str((Fr)')]);
-            deltapH=pHTol*0.9;
+        if counter>10000
+            failed = find(abs(delta_pH) > pH_tolerance);
+            pH(failed) = NaN;
+            show_failed(failed);
         end
     end
     pH_out = pH;
 end
 
-function pH_out = CalculatepHfromTCHCO3(TCi, HCO3i, Ks,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    % ' SUB CalculatepHfromTCHCO3, version 01.0, 3-19, added by J. Sharp
-    % ' Inputs: TC, HCO3, K0, K1, K2
-    % ' Output: pH
-    % ' This calculates pH from TC and HCO3 using K1 and K2 by solving the
-    % '       quadratic in H: TC = HCO3i.*(H./K1 + 1 + K2./H).
-    % '       Therefore:      0  = H.*H./K1 + (1-TC/HCO3i).*H + K2.
-    % ' if there is not a real root, then pH is returned as missingn.
-    RR = TCi./HCO3i;
-    %       if RR >= 1
-    %          varargout{1}= missingn;
-    %          disp('nein!');return;
-    %       end
-    % check after sub to see if pH = missingn.
-    Discr = ((1-RR).*(1-RR) - 4.*(1./(K1(selected))).*(K2(selected)));
-    H     = 0.5.*((-(1-RR)) - sqrt(Discr))./(1./(K1(selected))); % Subtraction
-    %       if (H <= 0)
-    %           pHctemp = missingn;
-    %       else
-    pHctemp = log(H)./log(0.1);
-    %       end
-    pH_out = pHctemp;
-end
-
-function pH_out = calculate_pH_from_fco2_hco3(fCO2i, HCO3i, Ks,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    % ' SUB calculate_pH_from_fco2_hco3, version 01.0, 3-19, added by J. Sharp
-    % ' Inputs: fCO2, HCO3, K0, K1, K2
-    % ' Output: pH
-    % ' This calculates pH from fCO2 and HCO3, using K0, K1, and K2.
-    H            = (fCO2i.*K0(selected).*K1(selected))./HCO3i;  % removed incorrect (selected) index from HCO3i // MPH
-    pHx          = -log10(H);
-    pH_out = pHx;
-end % end nested function
+function pH_out = calculate_pH_from_dic_hco3(dic, hco3, Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     
-function [pH_out,fco2] = calculate_pH_fco2_from_dic_hco3(TCx, HCO3x, Ks,selected)
-    % Outputs pH fCO2, in that order
-    % SUB calculate_pH_fco2_from_dic_hco3, version 01.0, 3-19, added by J. Sharp
-    % Inputs: pHScale%, which_k1_k2%, which_kso4%, TC, HCO3, salinity, K(), T(), TempC, Pdbar
-    % Outputs: pH, fCO2
-    % This calculates pH and fCO2 from TC and HCO3 at output conditions.
-    pHx   = CalculatepHfromTCHCO3(TCx, HCO3x, Ks,selected); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
-    fCO2x = calculate_fco2_from_dic_pH(TCx, pHx, Ks,selected);
-    pH_out = pHx;
-    fco2 = fCO2x;
+    RR = dic./hco3;
+    discriminant = ((1-RR).*(1-RR) - 4.*(1./(K1)).*(K2));
+    H = 0.5.*((-(1-RR)) - sqrt(discriminant))./(1./(K1)); % Subtraction
+    
+    pH_out = log(H)./log(0.1);
 end
 
-function alkalinity = calculate_alkalinity_from_pH_co3(pHi, CO3i,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
+function pH_out = calculate_pH_from_alkalinity_co3(alkalinity,co3,Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
 
-    % ' SUB calculate_alkalinity_from_pH_co3, version 01.0, 8-18, added by J. Sharp
-    % ' Inputs: pH, CO3, K(), T()
-    % ' Output: TA
-    % ' This calculates TA from pH and CO3.
-    K1F=K1(selected);     K2F=K2(selected);     KWF =KW(selected);
-    KP1F=KP1(selected);   KP2F=KP2(selected);   KP3F=KP3(selected);   TPF=phosphate(selected);
-    TSiF=silicate(selected);   KSiF=KSi(selected);   TNH4F=ammonia(selected); KNH4F=KNH4(selected);
-    TH2SF=sulphide(selected); KH2SF=KH2S(selected); TBF =boron(selected);    KBF=KB(selected);
-    TSF =sulphate(selected);    KSF =KS(selected);    TFF =fluorine(selected);    KFF=KF(selected);
-    H         = 10.^(-pHi);
-    CAlk      = CO3i.*(H./K2F + 2);
-    BAlk      = TBF.*KBF./(KBF + H);
-    OH        = KWF./H;
-    PhosTop   = KP1F.*KP2F.*H + 2.*KP1F.*KP2F.*KP3F - H.*H.*H;
-    PhosBot   = H.*H.*H + KP1F.*H.*H + KP1F.*KP2F.*H + KP1F.*KP2F.*KP3F;
-    PAlk      = TPF.*PhosTop./PhosBot;
-    SiAlk     = TSiF.*KSiF./(KSiF + H);
-    AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
-    HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-    [~,~,pHfree,~] = find_pH_on_all_scales(pHi,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k); % this converts pH to pHfree no matter the scale
-    Hfree = 10.^-pHfree; % this converts pHfree to Hfree
-    HSO4      = TSF./(1 + KSF./Hfree);% ' since KS is on the free scale
-    HF        = TFF./(1 + KFF./Hfree);% ' since KF is on the free scale
-    TActemp     = CAlk + BAlk + OH + PAlk + SiAlk + AmmAlk + HSAlk - Hfree - HSO4 - HF;
-    alkalinity = TActemp;
-end
+    pH_initial_guess = calculate_pH_from_alkalinity_co3_munhoven(alkalinity,co3,Ks);
+    pH = pH_initial_guess;
+    pH_tolerance = 1e-4; % tolerance
+    delta_pH = pH_tolerance + 1.0;
 
-function pH_out = calculate_pH_from_alkalinity_co3(TAi,CO3i,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
-    % ' SUB calculate_pH_from_alkalinity_co3, version 01.0, 8-18, added by J. Sharp with
-    % ' modifications from Denis Pierrot.
-    % ' Inputs: TA, CO3, K0, K(), T()
-    % ' Output: pH
-    %
-    % ' This calculates pH from TA and CO3 using K1 and K2 by Newton's method.
-    % ' It tries to solve for the pH at which Residual = 0.
-    % ' The starting guess is determined by the method introduced by Munhoven
-    % ' (2013) and extended by Humphreys et al. (2021).
-    %
-    % ' This will continue iterating until all values in the vector are
-    % ' "abs(deltapH) < pHTol"
-    % ' However, once a given abs(deltapH) is less than pHTol, that pH value
-    % ' will be locked in. This avoids erroneous contributions to results from
-    % ' other lines of input.    
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
+    counter = 0;
 
-    K2F=K2(selected);     KWF =KW(selected);
-    KP1F=KP1(selected);   KP2F=KP2(selected);   KP3F=KP3(selected);   TPF=phosphate(selected);
-    TSiF=silicate(selected);   KSiF=KSi(selected);   TNH4F=ammonia(selected); KNH4F=KNH4(selected);
-    TH2SF=sulphide(selected); KH2SF=KH2S(selected); TBF =boron(selected);    KBF=KB(selected);
-    TSF =sulphate(selected);    KSF =KS(selected);    TFF =fluorine(selected);    KFF=KF(selected);
-    vl         = sum(selected); % vectorlength
-    % Find initital pH guess using method of Munhoven (2013)
-    pHGuess    = calculate_pH_from_alkalinity_co3Munhoven(TAi,CO3i,Ks,boron,selected);
-    ln10       = log(10);
-    pH         = pHGuess;
-    pHTol      = 0.0001; % tolerance
-    deltapH    = pHTol+pH;
-    loopc=0;
-    nF=(abs(deltapH) > pHTol);
-    while any(nF)
-        H         = 10.^(-pH);
-        CAlk      = CO3i.*(H+2.*K2F)./K2F;
-        BAlk      = TBF.*KBF./(KBF + H);
-        OH        = KWF./H;
-        PhosTop   = KP1F.*KP2F.*H + 2.*KP1F.*KP2F.*KP3F - H.*H.*H;
-        PhosBot   = H.*H.*H + KP1F.*H.*H + KP1F.*KP2F.*H + KP1F.*KP2F.*KP3F;
-        PAlk      = TPF.*PhosTop./PhosBot;
-        SiAlk     = TSiF.*KSiF./(KSiF + H);
-        AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
-        HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-        [~,~,pHfree,~] = find_pH_on_all_scales(pH,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k); % this converts pH to pHfree no matter the scale
-        Hfree = 10.^-pHfree; % this converts pHfree to Hfree
-        HSO4      = TSF./(1 + KSF./Hfree); %' since KS is on the free scale
-        HF        = TFF./(1 + KFF./Hfree);% ' since KF is on the free scale
-        Residual  = TAi - CAlk - BAlk - OH - PAlk - SiAlk - AmmAlk - HSAlk + Hfree + HSO4 + HF;
-        % '               find Slope dTA/dpH
-        % '               (this is not exact, but keeps all important terms):
-        Slope = ln10 .* (-CO3i .* H ./ K2F + BAlk .* H ./ (KBF + H) + OH + H);
-        deltapH   = Residual./Slope; %' this is Newton's method
-        % ' to keep the jump from being too big:
-        while any(abs(deltapH) > 1)
-            FF=abs(deltapH)>1; deltapH(FF)=deltapH(FF)./2;
+    
+    above_tolerance = (abs(delta_pH) > pH_tolerance);
+    while any(above_tolerance)
+        H = 10.^(-pH);
+        carbonate_alkalinity = co3.*(H+2.*K2)./K2;
+        
+        [boron_alkalinity,hydroxide_alkalinity,phosphate_alkalinity,silicate_alkalinity,ammonia_alkalinity,sulphide_alkalinity,hydrogen_free,sulphate_acidity,fluorine_acidity] = calculate_alkalinity_parts(pH,Ks);
+
+        residual  = alkalinity - carbonate_alkalinity - boron_alkalinity - hydroxide_alkalinity - phosphate_alkalinity - silicate_alkalinity - ammonia_alkalinity - sulphide_alkalinity + hydrogen_free + sulphate_acidity + fluorine_acidity;
+
+
+        slope = log(10) .* (-co3 .* H ./ K2 + boron_alkalinity .* H ./ (KB + H) + hydroxide_alkalinity + H);
+        delta_pH   = residual./slope;
+
+        while any(abs(delta_pH) > 1)
+            high_delta = abs(delta_pH)>1; 
+            delta_pH(high_delta) = delta_pH(high_delta)/2;
         end
-        pH(nF) = pH(nF) + deltapH(nF);
-        nF     = abs(deltapH) > pHTol;
-        loopc=loopc+1;
+        
+        pH(above_tolerance) = pH(above_tolerance) + delta_pH(above_tolerance);
+        above_tolerance     = abs(delta_pH) > pH_tolerance;
+        counter=counter+1;
      
-        if loopc>10000 
-            Fr=find(abs(deltapH) > pHTol);
-            pH(Fr)=NaN;  disp(['pH value did not converge for data on row(s): ' num2str((Fr)')]);
-            deltapH=pHTol*0.9;
+        if counter>10000 
+            failed = find(abs(delta_pH) > pH_tolerance);
+            pH(failed) = NaN;
+            show_failed(failed);
         end
     end
     pH_out = pH;
 end
 
-function pH_out=CalculatepHfromTCCO3(TCi, CO3i, Ks,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    % ' SUB CalculatepHfromTCCO3, version 01.0, 8-18, added by J. Sharp
-    % ' Inputs: TC, CO3, K0, K1, K2
-    % ' Output: pH
-    % ' This calculates pH from TC and CO3 using K1 and K2 by solving the
-    % '       quadratic in H: TC = CO3i.*(H.*H/(K1.*K2) + H./K2 + 1).
-    % '       Therefore:      0  = H.*H/(K1.*K2) + H./K2 + (1-TC./CO3i).
-    % ' if there is not a real root, then pH is returned as missingn.
-    RR = TCi./CO3i;
-    %       if RR >= 1
-    %          varargout{1}= missingn;
-    %          disp('nein!');return;
-    %       end
-    % check after sub to see if pH = missingn.
-    Discr = ((1./K2(selected)).*(1./K2(selected)) - 4.*(1./(K1(selected).*K2(selected))).*(1-RR));
-    H     = 0.5.*((-1./K2(selected)) + sqrt(Discr))./(1./(K1(selected).*K2(selected))); % Addition
-    %       if (H <= 0)
-    %           pHctemp = missingn;
-    %       else
-    pHctemp = log(H)./log(0.1);
-    %       end
-    pH_out = pHctemp;
+function pH = calculate_pH_from_dic_co3(dic, co3, Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+
+    RR = dic./co3;
+
+    discriminant = ((1./K2).*(1./K2) - 4.*(1./(K1.*K2)).*(1-RR));
+    H = 0.5.*((-1./K2) + sqrt(discriminant))./(1./(K1.*K2)); % Addition
+    pH = log(H)./log(0.1);
 end
 
-function pH_out = calculate_pH_from_fco2_co3(fCO2i, CO3i, Ks,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    % ' SUB calculate_pH_from_fco2_co3, version 01.0, 8-18, added by J. Sharp
-    % ' Inputs: fCO2, CO3, K0, K1, K2
-    % ' Output: pH
-    % ' This calculates pH from fCO2 and CO3, using K0, K1, and K2.
-    H            = sqrt((fCO2i.*K0(selected).*K1(selected).*K2(selected))./CO3i);    % removed incorrect (selected) index from CO3i // MPH
-    pHx          = -log10(H);
-    pH_out = pHx;
+function pH = calculate_pH_from_fco2_co3(fco2, co3, Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    H = sqrt((fco2.*K0.*K1.*K2)./co3);    % removed incorrect (selected) index from CO3i // MPH
+    pH = -log10(H);
 end
 
-function [pH_out,fco2] = calculate_pH_fco2_from_dic_co3(TCx, CO3x, Ks,selected)
-    % Outputs pH fCO2, in that order
-    % SUB calculate_pH_fco2_from_dic_co3, version 01.0, 8-18, added by J. Sharp
-    % Inputs: pHScale%, which_k1_k2%, which_kso4%, TC, CO3, salinity, K(), T(), TempC, Pdbar
-    % Outputs: pH, fCO2
-    % This calculates pH and fCO2 from TC and CO3 at output conditions.
-    pHx   = CalculatepHfromTCCO3(TCx, CO3x, Ks,selected); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
-    fCO2x = calculate_fco2_from_dic_pH(TCx, pHx, Ks,selected);
-    pH_out = pHx;
-    fco2 = fCO2x;
+function pH_out = calculate_pH_from_fco2_hco3(fco2, hco3, Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    H = (fco2.*K0.*K1)./hco3;  % removed incorrect (selected) index from HCO3i // MPH
+    pH_out = -log10(H);
 end
 
-function pH_out = calculate_pH_from_co3_hco3(CO3x, HCO3x, Ks,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    % ' SUB calculate_pH_from_co3_hco3, version 01.0, 3-19, added by J. Sharp
-    % ' Inputs: CO3, HCO3, K2
-    % ' Output: pH
-    % ' This calculates fCO2 from TC and pH, using K2.
-    H            = HCO3x.*K2(selected)./CO3x;
-    pHx          = -log10(H);
-    pH_out = pHx;
-end
-
-function [co3,hco3] = calculate_co3_hco3_from_dic_pH(TCx, pHx, Ks,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    % ' SUB CalculateCO3HCO3CO2fromTCpH, version 01.0, 3-19, added by J. Sharp
-    % ' Inputs: TC, pH, K1, K2
-    % ' Output: CO3, HCO3, CO2
-    % ' This calculates CO3, HCO3, and CO2 from TC and pH, using K1, and K2.
-    H            = 10.^(-pHx);
-    CO3x         = TCx.*K1(selected).*K2(selected)./(K1(selected).*H + H.*H + K1(selected).*K2(selected));
-    HCO3x        = TCx.*K1(selected).*H./(K1(selected).*H + H.*H + K1(selected).*K2(selected));
-    co3 = CO3x;
-    hco3 = HCO3x;
-end
-
-function co3 = calculate_co3_from_dic_pH(TCx, pHx, Ks,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    % ' SUB CalculateCO3CO2fromTCpH, version 01.0, 3-19, added by J. Sharp
-    % ' Inputs: TC, pH, K1, K2
-    % ' Output: CO3, CO2
-    % ' This calculates CO3 and CO2 from TC and pH, using K1, and K2.
-    H            = 10.^(-pHx);
-    CO3x         = TCx.*K1(selected).*K2(selected)./(K1(selected).*H + H.*H + K1(selected).*K2(selected));
-    co3 = CO3x;
-end
-
-function hco3 = calculate_hco3_from_dic_pH(TCx, pHx, Ks,selected)
-    % ' SUB CalculateHCO3CO2fromTCpH, version 01.0, 3-19, added by J. Sharp
-    % ' Inputs: TC, pH, K1, K2
-    % ' Output: HCO3, CO2
-    % ' This calculates HCO3 and CO2 from TC and pH, using K1, and K2.
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    H            = 10.^(-pHx);
-    HCO3x        = TCx.*K1(selected).*H./(K1(selected).*H + H.*H + K1(selected).*K2(selected));
-    hco3 = HCO3x;
+function pH = calculate_pH_from_co3_hco3(co3, hco3, Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    H = hco3.*K2./co3;
+    pH = -log10(H);
 end
 
 
-function pH_out = calculate_pH_from_alkalinity_dicMunhoven(TAi, TCi, Ks,boron_concentration,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+%% Calculate alkalinity
+function alkalinity = calculate_alkalinity_from_dic_pH(dic,pH,Ks)
+    [~,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
 
-    K1F=K1(selected);     K2F=K2(selected);     TBF =boron_concentration(selected);    KBF=KB(selected);
-    g0 = K1F.*K2F.*KBF.*(1-(2.*TCi+TBF)./TAi);
-    g1 = K1F.*(KBF.*(1-TBF./TAi-TCi./TAi)+K2F.*(1-2.*TCi./TAi));
-    g2 = KBF.*(1-TBF./TAi)+K1F.*(1-TCi./TAi);
+    H = 10.^(-pH);
+    carbonate_alkalinity = dic.*K1.*(H + 2.*K2)./(H.*H + K1.*H + K1.*K2);
+
+    [boron_alkalinity,hydroxide_alkalinity,phosphate_alkalinity,silicate_alkalinity,ammonia_alkalinity,sulphide_alkalinity,hydrogen_free,sulphate_acidity,fluorine_acidity] = calculate_alkalinity_parts(pH,Ks);
+
+    
+    alkalinity = carbonate_alkalinity + boron_alkalinity + hydroxide_alkalinity + phosphate_alkalinity + silicate_alkalinity + ammonia_alkalinity + sulphide_alkalinity - hydrogen_free - sulphate_acidity - fluorine_acidity;
+end
+
+function alkalinity = calculate_alkalinity_from_pH_hco3(pH,hco3,Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+
+    H = 10.^(-pH);
+    carbonate_alkalinity = hco3.*(2.*K2./H + 1);    
+    
+    [boron_alkalinity,hydroxide_alkalinity,phosphate_alkalinity,silicate_alkalinity,ammonia_alkalinity,sulphide_alkalinity,hydrogen_free,sulphate_acidity,fluorine_acidity] = calculate_alkalinity_parts(pH,Ks);
+
+    alkalinity = carbonate_alkalinity + boron_alkalinity + hydroxide_alkalinity + phosphate_alkalinity + silicate_alkalinity + ammonia_alkalinity + sulphide_alkalinity - hydrogen_free - sulphate_acidity - fluorine_acidity;
+end
+
+function alkalinity = calculate_alkalinity_from_pH_co3(pH,co3,Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+
+    H = 10.^(-pH);
+    carbonate_alkalinity = co3.*(H./K2 + 2);    
+    
+    [boron_alkalinity,hydroxide_alkalinity,phosphate_alkalinity,silicate_alkalinity,ammonia_alkalinity,sulphide_alkalinity,hydrogen_free,sulphate_acidity,fluorine_acidity] = calculate_alkalinity_parts(pH,Ks);
+
+    
+    alkalinity = carbonate_alkalinity + boron_alkalinity + hydroxide_alkalinity + phosphate_alkalinity + silicate_alkalinity + ammonia_alkalinity + sulphide_alkalinity - hydrogen_free - sulphate_acidity - fluorine_acidity;
+end
+
+
+%% Calculate dic
+function dic = calculate_dic_from_alkalinity_pH(alkalinity,pH,Ks)
+    [~,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    [boron_alkalinity,hydroxide_alkalinity,phosphate_alkalinity,silicate_alkalinity,ammonia_alkalinity,sulphide_alkalinity,hydrogen_free,sulphate_acidity,fluorine_acidity] = calculate_alkalinity_parts(pH,Ks);
+
+    H = 10.^(-pH);
+
+    carbonate_alkalinity = alkalinity - boron_alkalinity - hydroxide_alkalinity - phosphate_alkalinity - silicate_alkalinity - ammonia_alkalinity - sulphide_alkalinity + hydrogen_free + sulphate_acidity + fluorine_acidity;
+    dic = carbonate_alkalinity.*(H.*H + K1.*H + K1.*K2)./(K1.*(H + 2.*K2));
+end
+
+function dic = calculate_dic_from_pH_fco2(pH,fco2,Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+
+    H = 10.^(-pH);
+    dic = K0.*fco2.*(H.*H + K1.*H + K1.*K2)./(H.*H);
+end
+
+
+%% Calculate carbon species
+function fco2 = calculate_fco2_from_dic_pH(dic,pH,Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+
+    H = 10.^(-pH);
+    fco2 = dic.*H.*H./(H.*H + K1.*H + K1.*K2)./K0;
+end
+
+function co3 = calculate_co3_from_dic_pH(dic, pH, Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    H = 10.^(-pH);
+    co3 = dic.*K1.*K2./(K1.*H + H.*H + K1.*K2);
+end
+
+function hco3 = calculate_hco3_from_dic_pH(dic, pH, Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    H = 10.^(-pH);
+    hco3 = dic.*K1.*H./(K1.*H + H.*H + K1.*K2);
+end
+
+
+%% Calculate combinations
+function [pH,fco2] = calculate_pH_fco2_from_dic_hco3(dic, hco3, Ks)
+    pH   = calculate_pH_from_dic_hco3(dic, hco3, Ks); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
+    fco2 = calculate_fco2_from_dic_pH(dic, pH, Ks);
+end
+
+function [pH,fco2] = calculate_pH_fco2_from_dic_co3(dic, co3, Ks)
+    pH   = calculate_pH_from_dic_co3(dic, co3, Ks); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
+    fco2 = calculate_fco2_from_dic_pH(dic, pH, Ks);
+end
+
+function [co3,hco3] = calculate_co3_hco3_from_dic_pH(dic, pH, Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    H = 10.^(-pH);
+    co3 = dic.*K1.*K2./(K1.*H + H.*H + K1.*K2);
+    hco3 = dic.*K1.*H./(K1.*H + H.*H + K1.*K2);
+end
+
+
+%% Munhovens
+function pH_out = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    boron = Ks.controls.composition.boron;
+
+    g0 = K1.*K2.*KB.*(1-(2.*dic+boron)./alkalinity);
+    g1 = K1.*(KB.*(1-boron./alkalinity-dic./alkalinity)+K2.*(1-2.*dic./alkalinity));
+    g2 = KB.*(1-boron./alkalinity)+K1.*(1-dic./alkalinity);
+
     % Determine g21min
     g21min = g2.^2-3.*g1;
     g21min_positive = g21min > 0;
-    sq21 = nan(size(TAi,1),1);
+    sq21 = NaN(size(alkalinity,1),1);
     sq21(g21min_positive) = sqrt(g21min(g21min_positive));
     sq21(~g21min_positive) = 0;
+
     % Determine Hmin
-    Hmin = nan(size(TAi,1),1);
+    Hmin = NaN(size(alkalinity,1),1);
     g2_positive = g2 >=0;
     Hmin(~g2_positive) = (-g2(~g2_positive) + sq21(~g2_positive))./3;
     Hmin(g2_positive) = -g1(g2_positive)./(g2(g2_positive) + sq21(g2_positive));
+
     % Calculate initial pH
-    pHGuess = nan(size(TAi,1),1);
-    idx = TAi <= 0;
-    pHGuess(idx) = -log10(1e-3);
-    idx = TAi > 0 & TAi < 2.*TCi + TBF;
-    pHGuess(idx & g21min_positive) = ...
-        -log10(Hmin(idx & g21min_positive) + ...
-        sqrt(-(Hmin(idx & g21min_positive).^3 + g2(idx & g21min_positive).*Hmin(idx & g21min_positive).^2 + ...
-        g1(idx & g21min_positive).*Hmin(idx & g21min_positive) + ...
-        g0(idx & g21min_positive))./sq21(idx & g21min_positive)));
-    pHGuess(idx & ~g21min_positive) = -log10(1e-7);
-    idx = TAi >= 2.*TCi + TBF;
-    pHGuess(idx) = -log10(1e-10);
-    pH_out = pHGuess;
+    pH_initial_guess = NaN(size(alkalinity,1),1);
+    negative_alkalinity = alkalinity <= 0;
+    pH_initial_guess(negative_alkalinity) = -log10(1e-3);
+
+    medium_alkalinity = alkalinity > 0 & alkalinity < 2*dic + boron;
+    pH_initial_guess(medium_alkalinity & g21min_positive) = ...
+        -log10(Hmin(medium_alkalinity & g21min_positive) + ...
+        sqrt(-(Hmin(medium_alkalinity & g21min_positive).^3 + g2(medium_alkalinity & g21min_positive).*Hmin(medium_alkalinity & g21min_positive).^2 + ...
+        g1(medium_alkalinity & g21min_positive).*Hmin(medium_alkalinity & g21min_positive) + ...
+        g0(medium_alkalinity & g21min_positive))./sq21(medium_alkalinity & g21min_positive)));
+    pH_initial_guess(medium_alkalinity & ~g21min_positive) = -log10(1e-7);
+
+    high_alkalinity = alkalinity >= 2.*dic + boron;
+    pH_initial_guess(high_alkalinity) = -log10(1e-10);
+
+    pH_out = pH_initial_guess;
 end
 
-function pH_out = calculate_pH_from_alkalinity_co2_munhoven(TAi, CO2x, Ks, boron_concentration,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    K1F=K1(selected);     K2F=K2(selected);     TBF =boron_concentration(selected);    KBF=KB(selected);
-    g0 = -2.*K1F.*K2F.*KBF.*CO2x./TAi;
-    g1 = -K1F.*(2.*K2F.*CO2x+KBF.*CO2x)./TAi;
-    g2 = KBF-(TBF.*KBF+K1F.*CO2x)./TAi;
+function pH_out = calculate_pH_from_alkalinity_co2_munhoven(alkalinity, co2, Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    boron = Ks.controls.composition.boron;
+
+    g0 = -2.*K1.*K2.*KB.*co2./alkalinity;
+    g1 = -K1.*(2.*K2.*co2+KB.*co2)./alkalinity;
+    g2 = KB-(boron.*KB+K1.*co2)./alkalinity;
+
     % Determine Hmin
     g21min = g2.^2-3.*g1;
     g21min_positive = g21min > 0;
-    sq21 = nan(size(TAi,1),1);
+
+    sq21 = NaN(size(alkalinity,1),1);
     sq21(g21min_positive) = sqrt(g21min(g21min_positive));
     sq21(~g21min_positive) = 0;
-    Hmin = nan(size(TAi,1),1);
+
     g2_positive = g2 >=0;
+    Hmin = NaN(size(alkalinity,1),1);
     Hmin(~g2_positive) = (-g2(~g2_positive) + sq21(~g2_positive))./3;
     Hmin(g2_positive) = -g1(g2_positive)./(g2(g2_positive) + sq21(g2_positive));
+
     % Calculate initial pH
-    pHGuess = nan(size(TAi,1),1);
-    idx = TAi <= 0;
-    pHGuess(idx) = -log10(1e-3);
-    idx = TAi > 0;
-    pHGuess(idx & g21min_positive) = ...
-        -log10(Hmin(idx & g21min_positive) + ...
-        sqrt(-(Hmin(idx & g21min_positive).^3 + g2(idx & g21min_positive).*Hmin(idx & g21min_positive).^2 + ...
-        g1(idx & g21min_positive).*Hmin(idx & g21min_positive)+...
-        g0(idx & g21min_positive))./sq21(idx & g21min_positive)));
-    pHGuess(idx & ~g21min_positive) = -log10(1e-7);
-    pH_out = pHGuess;
+    pH_initial_guess = NaN(size(alkalinity,1),1);
+
+    negative_alkalinity = alkalinity <= 0;
+    pH_initial_guess(negative_alkalinity) = -log10(1e-3);
+
+    positive_alkalinity = alkalinity > 0;
+    pH_initial_guess(positive_alkalinity & g21min_positive) = ...
+        -log10(Hmin(positive_alkalinity & g21min_positive) + ...
+        sqrt(-(Hmin(positive_alkalinity & g21min_positive).^3 + g2(positive_alkalinity & g21min_positive).*Hmin(positive_alkalinity & g21min_positive).^2 + ...
+        g1(positive_alkalinity & g21min_positive).*Hmin(positive_alkalinity & g21min_positive)+...
+        g0(positive_alkalinity & g21min_positive))./sq21(positive_alkalinity & g21min_positive)));
+
+    pH_initial_guess(positive_alkalinity & ~g21min_positive) = -log10(1e-7);
+
+    pH_out = pH_initial_guess;
 end
 
-function pH_out = calculate_pH_from_alkalinity_hco3_munhoven(TAi, HCO3x, Ks, boron_concentration,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    K1F=K1(selected);     K2F=K2(selected);     TBF =boron_concentration(selected);    KBF=KB(selected);
-    g0 = 2.*K2F.*KBF.*HCO3x;
-    g1 = KBF.*(HCO3x+TBF-TAi)+2.*K2F.*HCO3x;
-    g2 = HCO3x-TAi;
+function pH_out = calculate_pH_from_alkalinity_hco3_munhoven(alkalinity, hco3, Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    boron = Ks.controls.composition.boron;
+
+    g0 = 2.*K2.*KB.*hco3;
+    g1 = KB.*(hco3+boron-alkalinity)+2.*K2.*hco3;
+    g2 = hco3-alkalinity;
+
     % Calculate initial pH
-    pHGuess = nan(size(TAi,1),1);
-    idx = TAi <= HCO3x;
-    pHGuess(idx) = -log10(1e-3);
-    idx = TAi > HCO3x;
-    pHGuess(idx) = ...
-        -log10((-g1(idx)-sqrt(g1(idx).^2-4.*g0(idx).*g2(idx)))./(2.*g2(idx)));
-    pH_out = pHGuess;
+    pH_initial_guess = NaN(size(alkalinity,1),1);
+
+    low_alkalinity = alkalinity <= hco3;
+    pH_initial_guess(low_alkalinity) = -log10(1e-3);
+
+    high_alkalinity = alkalinity > hco3;
+    pH_initial_guess(high_alkalinity) = ...
+        -log10((-g1(high_alkalinity)-sqrt(g1(high_alkalinity).^2-4.*g0(high_alkalinity).*g2(high_alkalinity)))./(2.*g2(high_alkalinity)));
+    
+    pH_out = pH_initial_guess;
 end
 
-function pH_out = calculate_pH_from_alkalinity_co3Munhoven(TAi, CO3x, Ks, boron_concentration,selected)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+function pH_out = calculate_pH_from_alkalinity_co3_munhoven(alkalinity, co3, Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    boron = Ks.controls.composition.boron;
 
-    K1F=K1(selected);     K2F=K2(selected);     TBF =boron_concentration(selected);    KBF=KB(selected);
-    g0 = K2F.*KBF.*(2.*CO3x+TBF-TAi);
-    g1 = KBF.*CO3x+K2F.*(2.*CO3x-TAi);
-    g2 = CO3x;
+    g0 = K2.*KB.*(2.*co3+boron-alkalinity);
+    g1 = KB.*co3+K2.*(2.*co3-alkalinity);
+    g2 = co3;
+
     % Calculate initial pH
-    pHGuess = nan(size(TAi,1),1);
-    idx = TAi <= 2.*CO3x+TBF;
-    pHGuess(idx) = -log10(1e-3);
-    idx = TAi > 2.*CO3x+TBF;
-    pHGuess(idx) = ...
-        -log10((-g1(idx)+sqrt(g1(idx).^2-4.*g0(idx).*g2(idx)))./(2.*g2(idx)));
-    pH_out = pHGuess;
+    pH_initial_guess = NaN(size(alkalinity,1),1);
+
+    low_alkalinity = alkalinity <= 2.*co3+boron;
+    pH_initial_guess(low_alkalinity) = -log10(1e-3);
+
+    high_alkalinity = alkalinity > 2.*co3+boron;
+    pH_initial_guess(high_alkalinity) = ...
+        -log10((-g1(high_alkalinity)+sqrt(g1(high_alkalinity).^2-4.*g0(high_alkalinity).*g2(high_alkalinity)))./(2.*g2(high_alkalinity)));
+    
+    pH_out = pH_initial_guess;
 end
 
-function revelle_factor = calculate_revelle_factor(TAi, TCi, pH_scale,Ks,composition,selected,which_ks,salinity,temp_k)
-    % ' SUB calculate_revelle_factor, version 01.03, 01-07-97, written by Ernie Lewis.
-    % ' Inputs: which_k1_k2%, TA, TC, K0, K(), T()
-    % ' Outputs: Revelle
-    % ' This calculates the Revelle factor (dfCO2/dTC)|TA/(fCO2/TC).
-    % ' It only makes sense to talk about it at pTot = 1 atm, but it is computed
-    % '       here at the given K(), which may be at pressure <> 1 atm. Care must
-    % '       thus be used to see if there is any validity to the number computed.
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
 
-    TC0 = TCi;
-    dTC = 0.00000001;% ' 0.01 umol/kg-SW (lower than prior versions of CO2SYS)
+%% Revelle - buffering
+function revelle = calculate_revelle_factor(alkalinity, dic,Ks)
+    dic_start = dic;
+    delta_dic = 0.00000001;% ' 0.01 umol/kg-SW (lower than prior versions of CO2SYS)
+
+
     % ' Find fCO2 at TA, TC + dTC
-    TCi = TC0 + dTC;
-    pHc= calculate_pH_from_alkalinity_dic(TAi, TCi, pH_scale,Ks,composition,selected,which_ks,salinity,temp_k);
-    fCO2c= calculate_fco2_from_dic_pH(TCi, pHc, Ks,selected);
-    fCO2plus = fCO2c;
+    dic_high = dic_start + delta_dic;
+    pH_high = calculate_pH_from_alkalinity_dic(alkalinity, dic_high,Ks);
+    fco2_high = calculate_fco2_from_dic_pH(dic_high, pH_high, Ks);
+
     % ' Find fCO2 at TA, TC - dTC
-    TCi = TC0 - dTC;
-    pHc= calculate_pH_from_alkalinity_dic(TAi, TCi, pH_scale,Ks,composition,selected,which_ks,salinity,temp_k);
-    fCO2c= calculate_fco2_from_dic_pH(TCi, pHc, Ks,selected);
-    fCO2minus = fCO2c;
+    dic_low = dic_start - delta_dic;
+    pH_low = calculate_pH_from_alkalinity_dic(alkalinity, dic_low,Ks);
+    fco2_low = calculate_fco2_from_dic_pH(dic_low, pH_low, Ks);
+
     % CalculateRevelleFactor:
-    Revelle = (fCO2plus - fCO2minus)./dTC./((fCO2plus + fCO2minus)./TC0); % Corrected error pointed out by MP Humphreys (https://pyco2sys.readthedocs.io/en/latest/validate/)
-    revelle_factor = Revelle;
+    revelle = (fco2_high - fco2_low)./delta_dic./((fco2_high + fco2_low)./dic_start); % Corrected error pointed out by MP Humphreys (https://pyco2sys.readthedocs.io/en/latest/validate/)
 end
 
 
-function [boron,oh,phosphate,silicate,ammonia,sulphide,h_free,sulphate,fluorine] = calculate_alkalinity_parts(pH,pH_scale,Ks,composition,selected,which_ks,salinity,temp_k)
-    % ' SUB calculate_alkalinity_parts, version 01.03, 10-10-97, written by Ernie Lewis.
-    % ' Inputs: pH, TC, K(), T()
-    % ' Outputs: BAlk, OH, PAlk, SiAlk, Hfree, HSO4, HF
-    % ' This calculates the various contributions to the alkalinity.
-    % ' Though it is coded for H on the total pH scale, for the pH values occuring
-    % ' in seawater (pH > 6) it will be equally valid on any pH scale (H terms
-    % ' negligible) as long as the K Constants are on that scale.
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
-    
-    KWF =KW(selected);
-    KP1F=KP1(selected);   KP2F=KP2(selected);   KP3F=KP3(selected);   TPF=phosphate(selected);
-    TSiF=silicate(selected);   KSiF=KSi(selected);   TNH4F=ammonia(selected); KNH4F=KNH4(selected);
-    TH2SF=sulphide(selected); KH2SF=KH2S(selected); TBF =boron(selected);    KBF=KB(selected);
-    TSF =sulphate(selected);    KSF =KS(selected);    TFF =fluorine(selected);    KFF=KF(selected);
-    
-    H         = 10.^(-pH(selected));
-    BAlk      = TBF.*KBF./(KBF + H);
-    OH        = KWF./H;
-    PhosTop   = KP1F.*KP2F.*H + 2.*KP1F.*KP2F.*KP3F - H.*H.*H;
-    PhosBot   = H.*H.*H + KP1F.*H.*H + KP1F.*KP2F.*H + KP1F.*KP2F.*KP3F;
-    PAlk      = TPF.*PhosTop./PhosBot;
-    SiAlk     = TSiF.*KSiF./(KSiF + H);
-    AmmAlk    = TNH4F.*KNH4F./(KNH4F + H);
-    HSAlk     = TH2SF.*KH2SF./(KH2SF + H);
-    [~,~,pHfree,~] = find_pH_on_all_scales(pH(selected),pH_scale,Ks,composition,selected,which_ks,salinity,temp_k); % this converts pH to pHfree no matter the scale
-    Hfree = 10.^-pHfree; % this converts pHfree to Hfree
-    HSO4      = TSF./(1 + KSF./Hfree); %' since KS is on the free scale
-    HF        = TFF./(1 + KFF./Hfree); %' since KF is on the free scale
-    
-    boron = BAlk;  oh = OH; phosphate = PAlk;
-    silicate = SiAlk; ammonia = AmmAlk; sulphide = HSAlk;
-    h_free = Hfree; sulphate = HSO4; fluorine = HF;
-end
-
-
+%% Solubility
 function [saturation_state_calcite,saturation_state_aragonite] = calculate_carbonate_solubility(salinity, TempC, TC, pH, Ks, sqrt_salinity, calcium_concentration,which_k1_k2,Pbar,selected)
-    % '***********************************************************************
-    % ' SUB calculate_carbonate_solubility, version 01.05, 05-23-97, written by Ernie Lewis.
-    % ' Inputs: which_k1_k2%, salinity, temperature_in, pressure_in, TCi, pHi, K1, K2
-    % ' Outputs: OmegaCa, OmegaAr
-    % ' This calculates omega, the solubility ratio, for calcite and aragonite.
-    % ' This is defined by: Omega = [CO3--]*[Ca++]./Ksp,
-    % '       where Ksp is the solubility product (either KCa or KAr).
-    % '***********************************************************************
-    % ' These are from:
-    % ' Mucci, Alphonso, The solubility of calcite and aragonite in seawater
-    % '       at various salinities, temperatures, and one atmosphere total
-    % '       pressure, American Journal of Science 283:781-799, 1983.
-    % ' Ingle, S. E., Solubility of calcite in the ocean,
-    % '       Marine Chemistry 3:301-319, 1975,
-    % ' Millero, Frank, The thermodynamics of the carbonate system in seawater,
-    % '       Geochemica et Cosmochemica Acta 43:1651-1661, 1979.
-    % ' Ingle et al, The solubility of calcite in seawater at atmospheric pressure
-    % '       and 35%o salinity, Marine Chemistry 1:295-307, 1973.
-    % ' Berner, R. A., The solubility of calcite and aragonite in seawater in
-    % '       atmospheric pressure and 34.5%o salinity, American Journal of
-    % '       Science 276:713-730, 1976.
-    % ' Takahashi et al, in GEOSECS Pacific Expedition, v. 3, 1982.
-    % ' Culberson, C. H. and Pytkowicz, R. M., Effect of pressure on carbonic acid,
-    % '       boric acid, and the pHi of seawater, Limnology and Oceanography
-    % '       13:403-417, 1968.
-    % '***********************************************************************
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
 
     temp_k    = TempC + 273.15;
     log_temp_k = log(temp_k);
     gas_constant = Constants.gas_constant;
 
     Ca=calcium_concentration(selected);
-    Ar=nan(sum(selected),1);
-    KCa=nan(sum(selected),1);
-    KAr=nan(sum(selected),1);
+    Ar=NaN(sum(selected),1);
+    KCa=NaN(sum(selected),1);
+    KAr=NaN(sum(selected),1);
     TempKx=temp_k;
     logTempKx=log_temp_k;
     sqrSalx=sqrt_salinity;
@@ -1402,51 +1113,31 @@ function [saturation_state_calcite,saturation_state_aragonite] = calculate_carbo
     saturation_state_aragonite = CO3.*Ca./KAr; % OmegaAr, dimensionless
 end
     
-function [pH_total,pH_seawater,pH_free,pH_NBS] = find_pH_on_all_scales(pH,pH_scale_in,Ks,composition,selected,which_ks,salinity,temp_k)
-    % ' SUB find_pH_on_all_scales, version 01.02, 01-08-97, written by Ernie Lewis.
-    % ' Inputs: pHScale%, pH, K(), T(), fH
-    % ' Outputs: pHNBS, pHfree, pHTot, pHSWS
-    % ' This takes the pH on the given scale and finds the pH on all scales.
-    %  sulphate_concentration = T(3); fluorine_concentration = T(2);
-    %  KS = K(6); KF = K(5);% 'these are at the given T, S, P
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks);
-    fH = calculate_fH(which_ks,salinity,temp_k);
 
-    TSx=composition.sulphate(selected); KSx=KS(selected); TFx=composition.fluorine(selected); KFx=KF(selected);fHx=fH(selected);
-    FREEtoTOT = (1 + TSx./KSx); % ' pH scale conversion factor
-    SWStoTOT  = (1 + TSx./KSx)./(1 + TSx./KSx + TFx./KFx);% ' pH scale conversion factor
-    factor=nan(sum(selected),1);
-    nF=pH_scale_in(selected)==1;  %'"pHtot"
-    factor(nF) = 0;
-    nF=pH_scale_in(selected)==2; % '"pHsws"
-    factor(nF) = -log(SWStoTOT(nF))./log(0.1);
-    nF=pH_scale_in(selected)==3; % '"pHfree"
-    factor(nF) = -log(FREEtoTOT(nF))./log(0.1);
-    nF=pH_scale_in(selected)==4;  %'"pHNBS"
-    factor(nF) = -log(SWStoTOT(nF))./log(0.1) + log(fHx(nF))./log(0.1);
-    pHtot  = pH    - factor;    % ' pH comes into this sub on the given scale
-    pHNBS  = pHtot - log(SWStoTOT) ./log(0.1) + log(fHx)./log(0.1);
-    pHfree = pHtot - log(FREEtoTOT)./log(0.1);
-    pHsws  = pHtot - log(SWStoTOT) ./log(0.1);
+%% Utility
+function [boron_alkalinity,hydroxide_alkalinity,phosphate_alkalinity,silicate_alkalinity,ammonia_alkalinity,sulphide_alkalinity,hydrogen_free,sulphate_acidity,fluorine_acidity] = calculate_alkalinity_parts(pH,Ks)
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = Ks.controls.composition.unpack_alkalinity();
     
-    pH_total = pHtot;
-    pH_seawater = pHsws;
-    pH_free = pHfree;
-    pH_NBS = pHNBS;
+    H = 10.^(-pH);
+    boron_alkalinity = boron.*KB./(KB + H);
+    hydroxide_alkalinity = KW./H;
+    phosphate_alkalinity = phosphate.*(KP1.*KP2.*H + 2.*KP1.*KP2.*KP3 - H.*H.*H)./(H.*H.*H + KP1.*H.*H + KP1.*KP2.*H + KP1.*KP2.*KP3);
+    silicate_alkalinity = silicate.*KSi./(KSi + H);
+    ammonia_alkalinity = ammonia.*KNH4./(KNH4 + H);
+    sulphide_alkalinity = sulphide.*KH2S./(KH2S + H);
+
+    [~,~,pHfree,~] = Ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,Ks.controls);
+        
+    hydrogen_free = 10.^-pHfree; % this converts pHfree to Hfree
+    sulphate_acidity = sulphate./(1 + KS./hydrogen_free); %' since KS is on the free scale
+    fluorine_acidity = fluorine./(1 + KF./hydrogen_free); %' since KF is on the free scale
 end
 
-function [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = unpack_Ks(Ks)
-    K0 = Ks("K0");
-    K1 = Ks("K1");
-    K2 = Ks("K2");
-    KW = Ks("KW");
-    KB = Ks("KB");
-    KF = Ks("KF");
-    KS = Ks("KS");
-    KP1 = Ks("KP1");
-    KP2 = Ks("KP2");
-    KP3 = Ks("KP3");
-    KSi = Ks("KSi");
-    KNH4 = Ks("KNH4");
-    KH2S = Ks("KH2S");
+function show_failed(failed)
+    if numel(failed)>1
+        disp(['pH values did not converge for data on rows: ',num2str((failed)')]);
+    else
+        disp(['pH value did not converge for data on row: ',num2str((failed)')]);
+    end
 end
