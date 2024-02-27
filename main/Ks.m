@@ -99,8 +99,26 @@ classdef Ks
     
         function ks = select(self,selected)
             if sum(selected)>0
-                ks = Ks(self.controls.temperature_celcius(selected),self.controls.pressure(selected),self.controls.composition.select(selected),...
-                    self.controls.which_pH_scale(selected),self.controls.which_ks.select(selected),self.controls.co2_pressure_correction(selected));
+                if numel(selected)==1 || all(selected)
+                    ks = self;
+                else
+                    ks = Ks(self.controls.temperature_celcius(selected),self.controls.pressure(selected),self.controls.composition.select(selected),...
+                        self.controls.which_pH_scale(selected),self.controls.which_ks.select(selected),self.controls.co2_pressure_correction(selected));
+
+                    ks.k0 = self.k0(selected);
+                    ks.k1 = self.k1(selected);
+                    ks.k2 = self.k2(selected);
+                    ks.kw = self.kw(selected);
+                    ks.kb = self.kb(selected);
+                    ks.kf = self.kf(selected);
+                    ks.ks = self.ks(selected);
+                    ks.kp1 = self.kp1(selected);
+                    ks.kp2 = self.kp2(selected);
+                    ks.kp3 = self.kp3(selected);
+                    ks.ksi = self.ksi(selected);
+                    ks.knh4 = self.knh4(selected);
+                    ks.kh2s = self.kh2s(selected);
+                end
             else
                 ks = NaN;
             end

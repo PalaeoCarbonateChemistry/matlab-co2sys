@@ -553,43 +553,43 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
 end 
 
 function pH_out = calculate_pH_from_alkalinity_dic(alkalinity,dic,Ks,composition,selected,which_ks,salinity,temp_k)
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
+    relevant_ks = Ks.select(selected);
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
 
-    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.unpack_alkalinity();
+    [ammonia,boron,fluorine,phosphate,silicate,sulphate,sulphide] = composition.select(selected).unpack_alkalinity();
     
     % Find initital pH guess using method of Munhoven (2013)
-    initial_pH_guess = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, Ks, boron,selected);
+    initial_pH_guess = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, relevant_ks, boron);
     pH = initial_pH_guess;
     pH_tolerance = 1e-4;  % tolerance for iterations end
     
     counter = 0;
-    delta_pH(1:sum(selected),1) = pH_tolerance+1;
+    delta_pH(1:numel(alkalinity),1) = pH_tolerance+1;
     above_tolerance = (abs(delta_pH) > pH_tolerance);
 
-    relevant_ks = Ks.select(selected);
     
     while any(above_tolerance)
         H = 10.^(-pH);
-        carbonate_denominator = (H.^2 + K1(selected).*H + K1(selected).*K2(selected));
-        carbonate_alkalinity = dic.*K1(selected).*(H + 2.*K2(selected))./carbonate_denominator;
-        boron_alkalinity = boron(selected).*KB(selected)./(KB(selected) + H);
-        hydroxide_alkalinity = KW(selected)./H;
-        phosphate_top = KP1(selected).*KP2(selected).*H + 2.*KP1(selected).*KP2(selected).*KP3(selected) - H.*H.*H;
-        phosphate_bottom = H.^3 + KP1(selected).*H.*H + KP1(selected).*KP2(selected).*H + KP1(selected).*KP2(selected).*KP3(selected);
-        phosphate_alkalinity = phosphate(selected).*phosphate_top./phosphate_bottom;
-        silicate_alkalinity = silicate(selected).*KSi(selected)./(KSi(selected) + H);
-        ammonia_alkalinity = ammonia(selected).*KNH4(selected)./(KNH4(selected) + H);
-        sulphide_alkalinity = sulphide(selected).*KH2S(selected)./(KH2S(selected) + H);
+        carbonate_denominator = (H.^2 + K1.*H + K1.*K2);
+        carbonate_alkalinity = dic.*K1.*(H + 2.*K2)./carbonate_denominator;
+        boron_alkalinity = boron.*KB./(KB + H);
+        hydroxide_alkalinity = KW./H;
+        phosphate_top = KP1.*KP2.*H + 2.*KP1.*KP2.*KP3 - H.*H.*H;
+        phosphate_bottom = H.^3 + KP1.*H.*H + KP1.*KP2.*H + KP1.*KP2.*KP3;
+        phosphate_alkalinity = phosphate.*phosphate_top./phosphate_bottom;
+        silicate_alkalinity = silicate.*KSi./(KSi + H);
+        ammonia_alkalinity = ammonia.*KNH4./(KNH4 + H);
+        sulphide_alkalinity = sulphide.*KH2S./(KH2S + H);
         [~,~,pHfree,~] = relevant_ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH,relevant_ks.controls);
         
         hydrogen_free = 10.^-pHfree; % this converts pHfree to Hfree
-        sulphate_acidity = sulphate(selected)./(1 + KS(selected)./hydrogen_free); % since KS is on the free scale
-        fluorine_acidity = fluorine(selected)./(1 + KF(selected)./hydrogen_free); % since KF is on the free scale
+        sulphate_acidity = sulphate./(1 + KS./hydrogen_free); % since KS is on the free scale
+        fluorine_acidity = fluorine./(1 + KF./hydrogen_free); % since KF is on the free scale
         residual  = alkalinity - carbonate_alkalinity - boron_alkalinity - hydroxide_alkalinity - phosphate_alkalinity - silicate_alkalinity  - ammonia_alkalinity - sulphide_alkalinity + hydrogen_free + sulphate_acidity + fluorine_acidity;
         
         % find Slope dTA/dpH;
         % (this is not exact, but keeps all important terms);
-        slope = log(10).*(dic.*K1(selected).*H.*(H.*H + K1(selected).*K2(selected) + 4.*H.*K2(selected))./carbonate_denominator./carbonate_denominator + boron_alkalinity.*H./(KB(selected) + H) + hydroxide_alkalinity + H);
+        slope = log(10).*(dic.*K1.*H.*(H.*H + K1.*K2 + 4.*H.*K2)./carbonate_denominator./carbonate_denominator + boron_alkalinity.*H./(KB + H) + hydroxide_alkalinity + H);
         delta_pH = residual./slope; %' this is Newton's method
         
         % ' to keep the jump from being too big:
@@ -978,12 +978,12 @@ function hco3 = calculate_hco3_from_dic_pH(dic, pH, Ks,selected)
 end
 
 
-function pH_out = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, Ks, boron_concentration, selected)
+function pH_out = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, Ks, boron_concentration)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
 
-    g0 = K1(selected).*K2(selected).*KB(selected).*(1-(2.*dic+boron_concentration(selected))./alkalinity);
-    g1 = K1(selected).*(KB(selected).*(1-boron_concentration(selected)./alkalinity-dic./alkalinity)+K2(selected).*(1-2.*dic./alkalinity));
-    g2 = KB(selected).*(1-boron_concentration(selected)./alkalinity)+K1(selected).*(1-dic./alkalinity);
+    g0 = K1.*K2.*KB.*(1-(2.*dic+boron_concentration)./alkalinity);
+    g1 = K1.*(KB.*(1-boron_concentration./alkalinity-dic./alkalinity)+K2.*(1-2.*dic./alkalinity));
+    g2 = KB.*(1-boron_concentration./alkalinity)+K1.*(1-dic./alkalinity);
 
     % Determine g21min
     g21min = g2.^2-3.*g1;
@@ -1003,7 +1003,7 @@ function pH_out = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, Ks,
     negative_alkalinity = alkalinity <= 0;
     pH_initial_guess(negative_alkalinity) = -log10(1e-3);
 
-    medium_alkalinity = alkalinity > 0 & alkalinity < 2*dic + boron_concentration(selected);
+    medium_alkalinity = alkalinity > 0 & alkalinity < 2*dic + boron_concentration;
     pH_initial_guess(medium_alkalinity & g21min_positive) = ...
         -log10(Hmin(medium_alkalinity & g21min_positive) + ...
         sqrt(-(Hmin(medium_alkalinity & g21min_positive).^3 + g2(medium_alkalinity & g21min_positive).*Hmin(medium_alkalinity & g21min_positive).^2 + ...
@@ -1011,7 +1011,7 @@ function pH_out = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, Ks,
         g0(medium_alkalinity & g21min_positive))./sq21(medium_alkalinity & g21min_positive)));
     pH_initial_guess(medium_alkalinity & ~g21min_positive) = -log10(1e-7);
 
-    high_alkalinity = alkalinity >= 2.*dic + boron_concentration(selected);
+    high_alkalinity = alkalinity >= 2.*dic + boron_concentration;
     pH_initial_guess(high_alkalinity) = -log10(1e-10);
 
     pH_out = pH_initial_guess;
