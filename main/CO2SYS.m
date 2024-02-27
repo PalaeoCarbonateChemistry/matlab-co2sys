@@ -744,7 +744,7 @@ function pH_out = calculate_pH_from_alkalinity_hco3(TAi, HCO3i,Ks,composition,se
     pH_out = pH;
 end
 
-function pH_out = CalculatepHfromTCHCO3(dic, hco3, Ks,selected)
+function pH_out = calculate_pH_from_dic_hco3(dic, hco3, Ks,selected)
     relevant_ks = Ks.select(selected);
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
     
@@ -810,7 +810,7 @@ function pH_out = calculate_pH_from_alkalinity_co3(alkalinity,co3,Ks,composition
     pH_out = pH;
 end
 
-function pH = CalculatepHfromTCCO3(dic, co3, Ks, selected)
+function pH = calculate_pH_from_dic_co3(dic, co3, Ks, selected)
     relevant_ks = Ks.select(selected);
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
 
@@ -842,9 +842,8 @@ function pH = calculate_pH_from_co3_hco3(co3, hco3, Ks, selected)
     pH = -log10(H);
 end
 
+
 %% Calculate alkalinity
-
-
 function alkalinity = calculate_alkalinity_from_dic_pH(dic,pH,Ks,composition,selected)
     relevant_ks = Ks.select(selected);
     [~,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = relevant_ks.unpack();
@@ -981,12 +980,12 @@ end
 
 %% Calculate combinations
 function [pH,fco2] = calculate_pH_fco2_from_dic_hco3(dic, hco3, Ks,selected)
-    pH   = CalculatepHfromTCHCO3(dic, hco3, Ks,selected); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
+    pH   = calculate_pH_from_dic_hco3(dic, hco3, Ks,selected); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
     fco2 = calculate_fco2_from_dic_pH(dic, pH, Ks,selected);
 end
 
 function [pH,fco2] = calculate_pH_fco2_from_dic_co3(dic, co3, Ks, selected)
-    pH   = CalculatepHfromTCCO3(dic, co3, Ks,selected); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
+    pH   = calculate_pH_from_dic_co3(dic, co3, Ks,selected); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
     fco2 = calculate_fco2_from_dic_pH(dic, pH, Ks,selected);
 end
 
