@@ -77,7 +77,7 @@ classdef Ks
                        .calculate_kh2s();
         end
 
-        function [k0,k1,k2,kw,kb,kf,ks,kp1,kp2,kp3,ksi,knh4,kh2s] = unpack(self)
+        function [k0,k1,k2,kw,kb,kf,ks,kp1,kp2,kp3,ksi,knh4,kh2s] = unpack_all(self)
             k0 = self.k0;
             k1 = self.k1;
             k2 = self.k2;
@@ -91,6 +91,11 @@ classdef Ks
             ksi = self.ksi;
             knh4 = self.knh4;
             kh2s = self.kh2s;
+        end
+        function varargout = unpack_some(self,names)
+            for index = 1:numel(names)
+                varargout{index} = self.(lower(names(index)));
+            end
         end
         function k_map = as_map(self)
             k_map = containers.Map(["K0","K1","K2","KW","KB","KF","KS","KP1","KP2","KP3","KSi","KNH4","KH2S"], ...
