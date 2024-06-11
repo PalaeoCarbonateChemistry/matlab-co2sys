@@ -644,7 +644,7 @@ function pH_out = calculate_pH_from_alkalinity_fco2(alkalinity, fco2,Ks)
     pH_out = pH;
 end
 
-function pH = calculate_pH_from_dic_fco2(dic,fco2,Ks)
+function pH_out = calculate_pH_from_dic_fco2(dic,fco2,Ks)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     RR = K0.*fco2./dic;
     %       if RR >= 1
@@ -657,7 +657,7 @@ function pH = calculate_pH_from_dic_fco2(dic,fco2,Ks)
     %       if (H <= 0)
     %           pHctemp = missingn;
     %       else
-    pH = log(H)./log(0.1);
+    pH_out = log(H)./log(0.1);
     %       end
 end
 
@@ -755,20 +755,20 @@ function pH_out = calculate_pH_from_alkalinity_co3(alkalinity,co3,Ks)
     pH_out = pH;
 end
 
-function pH = calculate_pH_from_dic_co3(dic, co3, Ks)
+function pH_out = calculate_pH_from_dic_co3(dic, co3, Ks)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
 
     RR = dic./co3;
 
     discriminant = ((1./K2).*(1./K2) - 4.*(1./(K1.*K2)).*(1-RR));
     H = 0.5.*((-1./K2) + sqrt(discriminant))./(1./(K1.*K2)); % Addition
-    pH = log(H)./log(0.1);
+    pH_out = log(H)./log(0.1);
 end
 
-function pH = calculate_pH_from_fco2_co3(fco2, co3, Ks)
+function pH_out = calculate_pH_from_fco2_co3(fco2, co3, Ks)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     H = sqrt((fco2.*K0.*K1.*K2)./co3);    % removed incorrect (selected) index from CO3i // MPH
-    pH = -log10(H);
+    pH_out = -log10(H);
 end
 
 function pH_out = calculate_pH_from_fco2_hco3(fco2, hco3, Ks)
@@ -777,10 +777,10 @@ function pH_out = calculate_pH_from_fco2_hco3(fco2, hco3, Ks)
     pH_out = -log10(H);
 end
 
-function pH = calculate_pH_from_co3_hco3(co3, hco3, Ks)
+function pH_out = calculate_pH_from_co3_hco3(co3, hco3, Ks)
     [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
     H = hco3.*K2./co3;
-    pH = -log10(H);
+    pH_out = -log10(H);
 end
 
 
