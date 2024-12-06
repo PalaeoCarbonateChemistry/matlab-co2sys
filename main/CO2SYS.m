@@ -179,26 +179,29 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
         selected = (~isnan(pH_in) & selected);
         if any(selected)
            fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
-           [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
+           hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
+           co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
         end
     end
 
     selected = (combination==13); % input TA, pH
     if any(selected)
-    selected = (~isnan(alkalinity_in) & ~isnan(pH_in) & selected);
+        selected = (~isnan(alkalinity_in) & ~isnan(pH_in) & selected);
         dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in.select(selected));
         fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
-        [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
+        hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
+        co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
     end
 
     selected = (combination==14 | combination==15 | combination==18); % input TA, (pCO2 or fCO2 or CO2)
     if any(selected)
-    selected=(~isnan(alkalinity_in) & ~isnan(fco2_in) & selected);
+        selected=(~isnan(alkalinity_in) & ~isnan(fco2_in) & selected);
         pH_in(selected) = calculate_pH_from_alkalinity_fco2(alkalinity_in(selected)-composition.peng_correction(selected),fco2_in(selected),Ks_in.select(selected));
         selected = (~isnan(pH_in) & selected);
         if any(selected)
-           dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in.select(selected));
-           [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
+            dic_in(selected) = calculate_dic_from_alkalinity_pH(alkalinity_in(selected)-composition.peng_correction(selected),pH_in(selected),Ks_in.select(selected));
+            hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
+            co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
         end
     end
 
@@ -228,24 +231,27 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
 
     selected = (combination==23); % input TC, pH
     if any(selected)
-    selected = (~isnan(dic_in) & ~isnan(pH_in) & selected);
+        selected = (~isnan(dic_in) & ~isnan(pH_in) & selected);
         alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected)) + composition.peng_correction(selected);
         fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
-        [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected), pH_in(selected),Ks_in.select(selected));
+        hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
+        co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
     end
     
     selected = (combination==24 | combination==25 | combination==28);  % input TC, (pCO2 or fCO2 or CO2)
     if any(selected)
-    selected = (~isnan(dic_in) & ~isnan(fco2_in) & selected);
+        selected = (~isnan(dic_in) & ~isnan(fco2_in) & selected);
         pH_in(selected) = calculate_pH_from_dic_fco2(dic_in(selected),fco2_in(selected), Ks_in.select(selected));
         alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected)) + composition.peng_correction(selected);
-        [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in.select(selected));
+        hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
+        co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
     end
 
     selected = (combination==26); % input TC, HCO3
     if any(selected)
     selected = (~isnan(dic_in) & ~isnan(hco3_in) & selected);
-        [pH_in(selected),fco2_in(selected)] = calculate_pH_fco2_from_dic_hco3(dic_in(selected),hco3_in(selected), Ks_in.select(selected));
+        pH_in(selected) = calculate_pH_from_dic_hco3(dic_in(selected), hco3_in(selected), Ks_in.select(selected)); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
+        fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected), pH_in(selected), Ks_in.select(selected));
         alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected)) + composition.peng_correction(selected);
         co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
     end
@@ -253,17 +259,20 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     selected = (combination==27); % input TC, CO3
     if any(selected)
     selected = (~isnan(dic_in) & ~isnan(co3_in) & selected);
-        [pH_in(selected),fco2_in(selected)] = calculate_pH_fco2_from_dic_co3(dic_in(selected),co3_in(selected), Ks_in.select(selected));
+        % [pH_in(selected),fco2_in(selected)] = calculate_pH_fco2_from_dic_co3(dic_in(selected),co3_in(selected), Ks_in.select(selected));
+        pH_in(selected) = calculate_pH_from_dic_co3(dic_in(selected), co3_in(selected), Ks_in.select(selected)); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
+        fco2_in(selected) = calculate_fco2_from_dic_pH(dic_in(selected), pH_in(selected), Ks_in.select(selected));
         alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected)) + composition.peng_correction(selected);
         hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in.select(selected));
     end
 
     selected = (combination==34 | combination==35 | combination==38); % input pH, (pCO2 or fCO2 or CO2)
     if any(selected)
-    selected = (~isnan(pH_in) & ~isnan(fco2_in) & selected);
+        selected = (~isnan(pH_in) & ~isnan(fco2_in) & selected);
         dic_in(selected) = calculate_dic_from_pH_fco2(pH_in(selected),fco2_in(selected), Ks_in.select(selected));
         alkalinity_in(selected) = calculate_alkalinity_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected)) + composition.peng_correction(selected);
-        [co3_in(selected),hco3_in(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_in(selected), Ks_in.select(selected));
+        hco3_in(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
+        co3_in(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_in(selected),Ks_in.select(selected));
     end
 
     selected = (combination==36); % input pH, HCO3
@@ -339,7 +348,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     phosphate_alkalinity_in(selected) = phosphate_alkalinity_in(selected)+composition.peng_correction(selected);
     revelle_alkalinity_in(selected) = calculate_revelle_factor(alkalinity_in(selected)-composition.peng_correction(selected), dic_in(selected),Ks_in.select(selected));
-    [saturation_state_calcite_in(selected),saturation_state_aragonite_in(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_in(selected), dic_in(selected), pH_in(selected), Ks_in, sqrt(salinity(selected)),composition.calcium,which_k1_k2,pressure_in/10,selected);
+    [saturation_state_calcite_in(selected),saturation_state_aragonite_in(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_in(selected), dic_in(selected), pH_in(selected), Ks_in.select(selected),composition.calcium(selected),which_k1_k2(selected),pressure_in(selected)/10);
     vapour_pressure_factor = calculate_vapour_pressure_factor(salinity,temp_k);
     co2_dry_alkalinity_in(~isnan(pco2_in),1) = pco2_in(~isnan(pco2_in),1)./vapour_pressure_factor(~isnan(pco2_in),1); % ' this assumes pTot = 1 atm
     
@@ -355,10 +364,10 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     [pHicT(selected),pHicS(selected),pHicF(selected),pHicN(selected)]=relevant_ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH_in(selected),relevant_ks.controls);
     
     % Merge the Ks at input into an array. Ks at output will be glued to this later.
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks_in.unpack_all();
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KC,KA,KNH4,KH2S] = Ks_in.unpack_all();
     k_in_vector = [K0,K1,K2,-log10(K1),-log10(K2),KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S];
 
-    clear K0 K1 K2 KW KB KF KS KP1 KP2 KP3 KSi KNH4 KH2S
+    clear K0 K1 K2 KW KB KF KS KP1 KP2 KP3 KSi KC KNH4 KH2S
     
     % Calculate the constants for all samples at output conditions
     Ks_out = Ks(temperature_out,...
@@ -377,8 +386,9 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     pH_out = NaN(number_of_points,1);
     [co3_out,hco3_out,fco2_out] = deal(pH_out);
     pH_out(selected) = calculate_pH_from_alkalinity_dic(alkalinity_in(selected)-composition.peng_correction(selected), dic_in(selected),Ks_out.select(selected)); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
-        fco2_out(selected) = calculate_fco2_from_dic_pH(dic_in(selected), pH_out(selected), Ks_out.select(selected));
-        [co3_out(selected),hco3_out(selected)] = calculate_co3_hco3_from_dic_pH(dic_in(selected),pH_out(selected), Ks_out.select(selected));
+    fco2_out(selected) = calculate_fco2_from_dic_pH(dic_in(selected), pH_out(selected), Ks_out.select(selected));
+    hco3_out(selected) = calculate_hco3_from_dic_pH(dic_in(selected),pH_out(selected),Ks_out.select(selected));
+    co3_out(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_out(selected),Ks_out.select(selected));
     
     % Generate the associated pCO2 value:
     fugacity_factor = calculate_fugacity_factor(co2_pressure_correction,number_of_points,which_k1_k2,temp_k);
@@ -400,7 +410,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     phosphate_alkalinity_out(selected)                 = phosphate_alkalinity_out(selected)+composition.peng_correction(selected);
     revelle_alkalinity_out(selected)              = calculate_revelle_factor(alkalinity_in(selected)-composition.peng_correction(selected), dic_in(selected),Ks_out.select(selected));
-    [saturation_state_calcite_out(selected),saturation_state_aragonite_out(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_out(selected), dic_in(selected), pH_out(selected), Ks_out, sqrt(salinity(selected)), composition.calcium,which_k1_k2,pressure_out/10,selected);
+    [saturation_state_calcite_out(selected),saturation_state_aragonite_out(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_out(selected), dic_in(selected), pH_out(selected), Ks_out.select(selected), composition.calcium(selected),which_k1_k2(selected),pressure_out(selected)/10);
     vapour_pressure_factor = calculate_vapour_pressure_factor(salinity,temp_k);
     co2_dry_alkalinity_out(~isnan(pco2_out),1)    = pco2_out(~isnan(pco2_out))./vapour_pressure_factor(~isnan(pco2_out)); % ' this assumes pTot = 1 atm
     substrate_inhibitor_ratio_out = hco3_out./(h_free_alkalinity_out.*1e6);
@@ -414,7 +424,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     relevant_ks = Ks_out.select(selected);
     [pH_out_total(selected),pH_out_seawater(selected),pH_out_free(selected),pH_out_NBS(selected)] = relevant_ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH_out(selected),relevant_ks.controls);
 
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks_out.unpack_all();
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KC,KA,KNH4,KH2S] = Ks_out.unpack_all();
     k_out_vector = [K0,K1,K2,-log10(K1),-log10(K2),KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S];
     concentration_vector =[composition.boron,composition.fluorine,composition.sulphate,composition.phosphate,composition.silicate,composition.ammonia,composition.sulphide];
     
@@ -860,26 +870,6 @@ function hco3 = calculate_hco3_from_dic_pH(dic, pH, Ks)
     hco3 = dic.*K1.*H./(K1.*H + H.*H + K1.*K2);
 end
 
-
-%% Calculate combinations
-function [pH,fco2] = calculate_pH_fco2_from_dic_hco3(dic, hco3, Ks)
-    pH   = calculate_pH_from_dic_hco3(dic, hco3, Ks); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
-    fco2 = calculate_fco2_from_dic_pH(dic, pH, Ks);
-end
-
-function [pH,fco2] = calculate_pH_fco2_from_dic_co3(dic, co3, Ks)
-    pH   = calculate_pH_from_dic_co3(dic, co3, Ks); % pH is returned on the scale requested in "pHscale" (see 'constants'...)
-    fco2 = calculate_fco2_from_dic_pH(dic, pH, Ks);
-end
-
-function [co3,hco3] = calculate_co3_hco3_from_dic_pH(dic, pH, Ks)
-    [K1,K2] = Ks.unpack_some(["K1","K2"]);
-    H = 10.^(-pH);
-    co3 = dic.*K1.*K2./(K1.*H + H.*H + K1.*K2);
-    hco3 = dic.*K1.*H./(K1.*H + H.*H + K1.*K2);
-end
-
-
 %% Munhovens
 function pH_out = calculate_pH_from_alkalinity_dic_munhoven(alkalinity, dic, Ks)
     % [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks.unpack();
@@ -1026,92 +1016,13 @@ end
 
 
 %% Solubility
-function [saturation_state_calcite,saturation_state_aragonite] = calculate_carbonate_solubility(salinity, TempC, TC, pH, Ks, sqrt_salinity, calcium_concentration,which_k1_k2,Pbar,selected)
-    [K1,K2] = Ks.unpack_some(["K1","K2"]);
-
-    temp_k    = TempC + 273.15;
-    log_temp_k = log(temp_k);
-    gas_constant = Constants.gas_constant;
-
-    Ca=calcium_concentration(selected);
-    Ar=NaN(sum(selected),1);
-    KCa=NaN(sum(selected),1);
-    KAr=NaN(sum(selected),1);
-    TempKx=temp_k;
-    logTempKx=log_temp_k;
-    sqrSalx=sqrt_salinity;
-    Pbarx=Pbar(selected);
-    RR = (gas_constant.*temp_k);
-    RTx = RR;
-    FF=(which_k1_k2(selected)~=6 & which_k1_k2(selected)~=7);
-    if any(FF)
-    % (below here, selected isn't used, since almost always all rows match the above criterium,
-    %  in all other cases the rows will be overwritten later on).
-        % CalciteSolubility:
-        % '       Mucci, Alphonso, Amer. J. of Science 283:781-799, 1983.
-        logKCa = -171.9065 - 0.077993.*TempKx(FF) + 2839.319./TempKx(FF);
-        logKCa = logKCa + 71.595.*logTempKx(FF)./log(10);
-        logKCa = logKCa + (-0.77712 + 0.0028426.*TempKx(FF) + 178.34./TempKx(FF)).*sqrSalx(FF);
-        logKCa = logKCa - 0.07711.*salinity(FF) + 0.0041249.*sqrSalx(FF).*salinity(FF);
-        % '       sd fit = .01 (for salinity part, not part independent of salinity)
-        KCa(FF) = 10.^(logKCa);% ' this is in (mol/kg-SW)^2
-        % AragoniteSolubility:
-        % '       Mucci, Alphonso, Amer. J. of Science 283:781-799, 1983.
-        logKAr = -171.945 - 0.077993.*TempKx(FF) + 2903.293./TempKx(FF);
-        logKAr = logKAr + 71.595.*logTempKx(FF)./log(10);
-        logKAr = logKAr + (-0.068393 + 0.0017276.*TempKx(FF) + 88.135./TempKx(FF)).*sqrSalx(FF);
-        logKAr = logKAr - 0.10018.*salinity(FF) + 0.0059415.*sqrSalx(FF).*salinity(FF);
-        % '       sd fit = .009 (for salinity part, not part independent of salinity)
-        KAr(FF)    = 10.^(logKAr);% ' this is in (mol/kg-SW)^2
-        % PressureCorrectionForCalcite:
-        % '       Ingle, Marine Chemistry 3:301-319, 1975
-        % '       same as in Millero, GCA 43:1651-1661, 1979, but Millero, GCA 1995
-        % '       has typos (-.5304, -.3692, and 10^3 for Kappa factor)
-        deltaVKCa = -48.76 + 0.5304.*TempC(FF);
-        KappaKCa  = (-11.76 + 0.3692.*TempC(FF))./1000;
-        lnKCafac  = (-deltaVKCa + 0.5.*KappaKCa.*Pbarx(FF)).*Pbarx(FF)./RTx(FF);
-        KCa(FF)       = KCa(FF).*exp(lnKCafac);
-        % PressureCorrectionForAragonite:
-        % '       Millero, Geochemica et Cosmochemica Acta 43:1651-1661, 1979,
-        % '       same as Millero, GCA 1995 except for typos (-.5304, -.3692,
-        % '       and 10^3 for Kappa factor)
-        deltaVKAr = deltaVKCa + 2.8;
-        KappaKAr  = KappaKCa;
-        lnKArfac  = (-deltaVKAr + 0.5.*KappaKAr.*Pbarx(FF)).*Pbarx(FF)./RTx(FF);
-        KAr(FF)       = KAr(FF).*exp(lnKArfac);
-    end
-    FF=(which_k1_k2(selected)==6 | which_k1_k2(selected)==7);
-    if any(FF)
-        % *** CalculateKCaforGEOSECS:
-        % Ingle et al, Marine Chemistry 1:295-307, 1973 is referenced in
-        % (quoted in Takahashi et al, GEOSECS Pacific Expedition v. 3, 1982
-        % but the fit is actually from Ingle, Marine Chemistry 3:301-319, 1975)
-        KCa(FF) = 0.0000001.*(-34.452 - 39.866.*salinity(FF).^(1./3) +...
-            110.21.*log(salinity(FF))./log(10) - 0.0000075752.*TempKx(FF).^2);
-        % this is in (mol/kg-SW)^2
-        %
-        % *** CalculateKArforGEOSECS:
-        % Berner, R. A., American Journal of Science 276:713-730, 1976:
-        % (quoted in Takahashi et al, GEOSECS Pacific Expedition v. 3, 1982)
-        KAr(FF) = 1.45.*KCa(FF);% ' this is in (mol/kg-SW)^2
-        % Berner (p. 722) states that he uses 1.48.
-        % It appears that 1.45 was used in the GEOSECS calculations
-        %
-        % *** CalculatePressureEffectsOnKCaKArGEOSECS:
-        % Culberson and Pytkowicz, Limnology and Oceanography 13:403-417, 1968
-        % (quoted in Takahashi et al, GEOSECS Pacific Expedition v. 3, 1982
-        % but their paper is not even on this topic).
-        % The fits appears to be new in the GEOSECS report.
-        % I can't find them anywhere else.
-        KCa(FF) = KCa(FF).*exp((36   - 0.2 .*TempC(FF)).*Pbarx(FF)./RTx(FF));
-        KAr(FF) = KAr(FF).*exp((33.3 - 0.22.*TempC(FF)).*Pbarx(FF)./RTx(FF));
-    end
+function [saturation_state_calcite,saturation_state_aragonite] = calculate_carbonate_solubility(salinity, temp_c, dic, pH, Ks, calcium,which_k1_k2,pressure)
+    [K1,K2,KC,KA] = Ks.unpack_some(["K1","K2","KC","KA"]);
     
-    % CalculateOmegasHere:
-    H = 10.^(-pH);
-    CO3 = TC.*K1(selected).*K2(selected)./(K1(selected).*H + H.*H + K1(selected).*K2(selected));
-    saturation_state_calcite = CO3.*Ca./KCa; % OmegaCa, dimensionless
-    saturation_state_aragonite = CO3.*Ca./KAr; % OmegaAr, dimensionless
+    h = 10.^(-pH);
+    co3 = dic.*K1.*K2./(K1.*h + h.*h + K1.*K2);
+    saturation_state_calcite = co3.*calcium./KC; % OmegaCa, dimensionless
+    saturation_state_aragonite = co3.*calcium./KA; % OmegaAr, dimensionless
 end
     
 
