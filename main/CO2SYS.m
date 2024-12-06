@@ -348,7 +348,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     phosphate_alkalinity_in(selected) = phosphate_alkalinity_in(selected)+composition.peng_correction(selected);
     revelle_alkalinity_in(selected) = calculate_revelle_factor(alkalinity_in(selected)-composition.peng_correction(selected), dic_in(selected),Ks_in.select(selected));
-    [saturation_state_calcite_in(selected),saturation_state_aragonite_in(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_in(selected), dic_in(selected), pH_in(selected), Ks_in, sqrt(salinity(selected)),composition.calcium,which_k1_k2,pressure_in/10,selected);
+    [saturation_state_calcite_in(selected),saturation_state_aragonite_in(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_in(selected), dic_in(selected), pH_in(selected), Ks_in.select(selected),composition.calcium(selected),which_k1_k2(selected),pressure_in(selected)/10);
     vapour_pressure_factor = calculate_vapour_pressure_factor(salinity,temp_k);
     co2_dry_alkalinity_in(~isnan(pco2_in),1) = pco2_in(~isnan(pco2_in),1)./vapour_pressure_factor(~isnan(pco2_in),1); % ' this assumes pTot = 1 atm
     
@@ -410,7 +410,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     phosphate_alkalinity_out(selected)                 = phosphate_alkalinity_out(selected)+composition.peng_correction(selected);
     revelle_alkalinity_out(selected)              = calculate_revelle_factor(alkalinity_in(selected)-composition.peng_correction(selected), dic_in(selected),Ks_out.select(selected));
-    [saturation_state_calcite_out(selected),saturation_state_aragonite_out(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_out(selected), dic_in(selected), pH_out(selected), Ks_out, sqrt(salinity(selected)), composition.calcium,which_k1_k2,pressure_out/10,selected);
+    [saturation_state_calcite_out(selected),saturation_state_aragonite_out(selected)] = calculate_carbonate_solubility(salinity(selected), temperature_out(selected), dic_in(selected), pH_out(selected), Ks_out.select(selected), composition.calcium(selected),which_k1_k2(selected),pressure_out(selected)/10);
     vapour_pressure_factor = calculate_vapour_pressure_factor(salinity,temp_k);
     co2_dry_alkalinity_out(~isnan(pco2_out),1)    = pco2_out(~isnan(pco2_out))./vapour_pressure_factor(~isnan(pco2_out)); % ' this assumes pTot = 1 atm
     substrate_inhibitor_ratio_out = hco3_out./(h_free_alkalinity_out.*1e6);
@@ -1016,74 +1016,70 @@ end
 
 
 %% Solubility
-function [saturation_state_calcite,saturation_state_aragonite] = calculate_carbonate_solubility(salinity, TempC, TC, pH, Ks, sqrt_salinity, calcium_concentration,which_k1_k2,Pbar,selected)
+function [saturation_state_calcite,saturation_state_aragonite] = calculate_carbonate_solubility(salinity, temp_c, dic, pH, Ks, calcium,which_k1_k2,pressure)
     [K1,K2] = Ks.unpack_some(["K1","K2"]);
 
-    temp_k    = TempC + 273.15;
+    temp_k = temp_c + 273.15;
     log_temp_k = log(temp_k);
+    sqrt_salinity = sqrt(salinity);
     gas_constant = Constants.gas_constant;
 
-    Ca=calcium_concentration(selected);
-    Ar=NaN(sum(selected),1);
-    KCa=NaN(sum(selected),1);
-    KAr=NaN(sum(selected),1);
-    TempKx=temp_k;
-    logTempKx=log_temp_k;
-    sqrSalx=sqrt_salinity;
-    Pbarx=Pbar(selected);
-    RR = (gas_constant.*temp_k);
-    RTx = RR;
-    FF=(which_k1_k2(selected)~=6 & which_k1_k2(selected)~=7);
-    if any(FF)
+    KCa = NaN(numel(temp_c),1);
+    KAr = NaN(numel(temp_c),1);
+
+    new_selected = (which_k1_k2~=6 & which_k1_k2~=7);
+    if any(new_selected)
     % (below here, selected isn't used, since almost always all rows match the above criterium,
     %  in all other cases the rows will be overwritten later on).
         % CalciteSolubility:
         % '       Mucci, Alphonso, Amer. J. of Science 283:781-799, 1983.
-        logKCa = -171.9065 - 0.077993.*TempKx(FF) + 2839.319./TempKx(FF);
-        logKCa = logKCa + 71.595.*logTempKx(FF)./log(10);
-        logKCa = logKCa + (-0.77712 + 0.0028426.*TempKx(FF) + 178.34./TempKx(FF)).*sqrSalx(FF);
-        logKCa = logKCa - 0.07711.*salinity(FF) + 0.0041249.*sqrSalx(FF).*salinity(FF);
-        % '       sd fit = .01 (for salinity part, not part independent of salinity)
-        KCa(FF) = 10.^(logKCa);% ' this is in (mol/kg-SW)^2
+        logKCa = (-171.9065 - 0.077993.*temp_k(new_selected) + 2839.319./temp_k(new_selected)...
+                  + 71.595.*log_temp_k(new_selected)./log(10)...
+                  + (-0.77712 + 0.0028426.*temp_k(new_selected) + 178.34./temp_k(new_selected)).*sqrt_salinity(new_selected)...
+                  - 0.07711.*salinity(new_selected) + 0.0041249.*sqrt_salinity(new_selected).*salinity(new_selected));
+        KCa(new_selected) = 10.^(logKCa);% ' this is in (mol/kg-SW)^2
+        
         % AragoniteSolubility:
         % '       Mucci, Alphonso, Amer. J. of Science 283:781-799, 1983.
-        logKAr = -171.945 - 0.077993.*TempKx(FF) + 2903.293./TempKx(FF);
-        logKAr = logKAr + 71.595.*logTempKx(FF)./log(10);
-        logKAr = logKAr + (-0.068393 + 0.0017276.*TempKx(FF) + 88.135./TempKx(FF)).*sqrSalx(FF);
-        logKAr = logKAr - 0.10018.*salinity(FF) + 0.0059415.*sqrSalx(FF).*salinity(FF);
-        % '       sd fit = .009 (for salinity part, not part independent of salinity)
-        KAr(FF)    = 10.^(logKAr);% ' this is in (mol/kg-SW)^2
+        logKAr = (-171.945 - 0.077993.*temp_k(new_selected) + 2903.293./temp_k(new_selected)...
+                  + 71.595.*log_temp_k(new_selected)./log(10)...
+                  + (-0.068393 + 0.0017276.*temp_k(new_selected) + 88.135./temp_k(new_selected)).*sqrt_salinity(new_selected)...
+                  - 0.10018.*salinity(new_selected) + 0.0059415.*sqrt_salinity(new_selected).*salinity(new_selected));
+        KAr(new_selected)    = 10.^(logKAr);% ' this is in (mol/kg-SW)^2
+        
         % PressureCorrectionForCalcite:
         % '       Ingle, Marine Chemistry 3:301-319, 1975
         % '       same as in Millero, GCA 43:1651-1661, 1979, but Millero, GCA 1995
         % '       has typos (-.5304, -.3692, and 10^3 for Kappa factor)
-        deltaVKCa = -48.76 + 0.5304.*TempC(FF);
-        KappaKCa  = (-11.76 + 0.3692.*TempC(FF))./1000;
-        lnKCafac  = (-deltaVKCa + 0.5.*KappaKCa.*Pbarx(FF)).*Pbarx(FF)./RTx(FF);
-        KCa(FF)       = KCa(FF).*exp(lnKCafac);
+        deltaVKCa = -48.76 + 0.5304.*temp_c(new_selected);
+        KappaKCa  = (-11.76 + 0.3692.*temp_c(new_selected))./1000;
+        lnKCafac  = (-deltaVKCa + 0.5.*KappaKCa.*pressure(new_selected)).*pressure(new_selected)./(gas_constant.*temp_k(new_selected));
+        KCa(new_selected)       = KCa(new_selected).*exp(lnKCafac);
+        
         % PressureCorrectionForAragonite:
         % '       Millero, Geochemica et Cosmochemica Acta 43:1651-1661, 1979,
         % '       same as Millero, GCA 1995 except for typos (-.5304, -.3692,
         % '       and 10^3 for Kappa factor)
         deltaVKAr = deltaVKCa + 2.8;
         KappaKAr  = KappaKCa;
-        lnKArfac  = (-deltaVKAr + 0.5.*KappaKAr.*Pbarx(FF)).*Pbarx(FF)./RTx(FF);
-        KAr(FF)       = KAr(FF).*exp(lnKArfac);
+        lnKArfac  = (-deltaVKAr + 0.5.*KappaKAr.*pressure(new_selected)).*pressure(new_selected)./(gas_constant.*temp_k(new_selected));
+        KAr(new_selected)       = KAr(new_selected).*exp(lnKArfac);
     end
-    FF=(which_k1_k2(selected)==6 | which_k1_k2(selected)==7);
-    if any(FF)
+
+    new_selected=(which_k1_k2==6 | which_k1_k2==7);
+    if any(new_selected)
         % *** CalculateKCaforGEOSECS:
         % Ingle et al, Marine Chemistry 1:295-307, 1973 is referenced in
         % (quoted in Takahashi et al, GEOSECS Pacific Expedition v. 3, 1982
         % but the fit is actually from Ingle, Marine Chemistry 3:301-319, 1975)
-        KCa(FF) = 0.0000001.*(-34.452 - 39.866.*salinity(FF).^(1./3) +...
-            110.21.*log(salinity(FF))./log(10) - 0.0000075752.*TempKx(FF).^2);
+        KCa(new_selected) = 0.0000001.*(-34.452 - 39.866.*salinity(new_selected).^(1./3) +...
+            110.21.*log(salinity(new_selected))./log(10) - 0.0000075752.*temp_k(new_selected).^2);
         % this is in (mol/kg-SW)^2
         %
         % *** CalculateKArforGEOSECS:
         % Berner, R. A., American Journal of Science 276:713-730, 1976:
         % (quoted in Takahashi et al, GEOSECS Pacific Expedition v. 3, 1982)
-        KAr(FF) = 1.45.*KCa(FF);% ' this is in (mol/kg-SW)^2
+        KAr(new_selected) = 1.45.*KCa(new_selected);% ' this is in (mol/kg-SW)^2
         % Berner (p. 722) states that he uses 1.48.
         % It appears that 1.45 was used in the GEOSECS calculations
         %
@@ -1093,15 +1089,15 @@ function [saturation_state_calcite,saturation_state_aragonite] = calculate_carbo
         % but their paper is not even on this topic).
         % The fits appears to be new in the GEOSECS report.
         % I can't find them anywhere else.
-        KCa(FF) = KCa(FF).*exp((36   - 0.2 .*TempC(FF)).*Pbarx(FF)./RTx(FF));
-        KAr(FF) = KAr(FF).*exp((33.3 - 0.22.*TempC(FF)).*Pbarx(FF)./RTx(FF));
+        KCa(new_selected) = KCa(new_selected).*exp((36   - 0.2 .*temp_c(new_selected)).*pressure(new_selected)./(gas_constant.*temp_k(new_selected)));
+        KAr(new_selected) = KAr(new_selected).*exp((33.3 - 0.22.*temp_c(new_selected)).*pressure(new_selected)./(gas_constant.*temp_k(new_selected)));
     end
     
     % CalculateOmegasHere:
     H = 10.^(-pH);
-    CO3 = TC.*K1(selected).*K2(selected)./(K1(selected).*H + H.*H + K1(selected).*K2(selected));
-    saturation_state_calcite = CO3.*Ca./KCa; % OmegaCa, dimensionless
-    saturation_state_aragonite = CO3.*Ca./KAr; % OmegaAr, dimensionless
+    CO3 = dic.*K1.*K2./(K1.*H + H.*H + K1.*K2);
+    saturation_state_calcite = CO3.*calcium./KCa; % OmegaCa, dimensionless
+    saturation_state_aragonite = CO3.*calcium./KAr; % OmegaAr, dimensionless
 end
     
 
