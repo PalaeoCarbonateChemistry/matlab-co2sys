@@ -499,6 +499,38 @@ classdef KFunctions
                 
             kc = KC;
         end
+        function ka = calculate_surface_ka(temp_c,salinity,which_ks,pH_scale_conversion)
+            temp_k = temp_c + 273.15;
+            log_temp_k = log(temp_k);
+
+            sqrt_salinity = sqrt(salinity);
+            
+            KA = NaN(numel(temp_c),1);
+            
+            selected = (which_ks.k1_k2~=6 & which_ks.k1_k2~=7);
+            if any(selected)                
+                % AragoniteSolubility:
+                % '       Mucci, Alphonso, Amer. J. of Science 283:781-799, 1983.
+                logKA = (-171.945 - 0.077993.*temp_k(selected) + 2903.293./temp_k(selected)...
+                          + 71.595.*log_temp_k(selected)./log(10)...
+                          + (-0.068393 + 0.0017276.*temp_k(selected) + 88.135./temp_k(selected)).*sqrt_salinity(selected)...
+                          - 0.10018.*salinity(selected) + 0.0059415.*sqrt_salinity(selected).*salinity(selected));
+                KA(selected)    = 10.^(logKA);% ' this is in (mol/kg-SW)^2
+            end
+
+            selected = (which_ks.k1_k2==6 | which_ks.k1_k2==7);
+            if any(selected)
+                % this is in (mol/kg-SW)^2
+                %
+                % *** CalculateKArforGEOSECS:
+                % Berner, R. A., American Journal of Science 276:713-730, 1976:
+                % (quoted in Takahashi et al, GEOSECS Pacific Expedition v. 3, 1982)
+                KA(selected) = 1.45.*0.0000001.*(-34.452 - 39.866.*salinity(selected).^(1./3) +...
+                    110.21.*log(salinity(selected))./log(10) - 0.0000075752.*temp_k(selected).^2);% ' this is in (mol/kg-SW)^2
+            end
+
+            ka = KA;
+        end
 
         function knh4 = calculate_surface_knh4(temp_c,salinity,which_ks,pH_scale_conversion)
             temp_k    = temp_c + 273.15;
@@ -840,10 +872,37 @@ classdef KFunctions
             % but their paper is not even on this topic).
             % The fits appears to be new in the GEOSECS report.
             % I can't find them anywhere else.
-            selected=(which_ks.k1_k2==6 | which_ks.k1_k2==7);
+            selected = (which_ks.k1_k2==6 | which_ks.k1_k2==7);
             kc_pressure_correction(selected) = exp((36   - 0.2 .*temp_c(selected)).*pressure_bar(selected)./(gas_constant.*temp_k(selected)));
         end
-        
+        function ka_pressure_correction = calculate_pressure_correction_ka(which_ks,temp_c,pressure_bar)
+            temp_k = temp_c + 273.15;
+            gas_constant = Constants.gas_constant;
+            
+            ka_pressure_correction = NaN(numel(temp_c),1);
+
+            selected = (which_ks.k1_k2~=6 & which_ks.k1_k2~=7);
+            if any(selected)                        
+                % PressureCorrectionForAragonite:
+                % '       Millero, Geochemica et Cosmochemica Acta 43:1651-1661, 1979,
+                % '       same as Millero, GCA 1995 except for typos (-.5304, -.3692,
+                % '       and 10^3 for Kappa factor)
+                deltaV = -48.76 + 0.5304.*temp_c(selected) + 2.8;
+                Kappa  = (-11.76 + 0.3692.*temp_c(selected))./1000;
+                lnKArfac  = (-deltaV + 0.5.*Kappa.*pressure_bar(selected)).*pressure_bar(selected)./(gas_constant.*temp_k(selected));
+                ka_pressure_correction(selected) = exp(lnKArfac);
+            end
+
+            selected = (which_ks.k1_k2==6 | which_ks.k1_k2==7);
+            % *** CalculatePressureEffectsOnKCaKArGEOSECS:
+            % Culberson and Pytkowicz, Limnology and Oceanography 13:403-417, 1968
+            % (quoted in Takahashi et al, GEOSECS Pacific Expedition v. 3, 1982
+            % but their paper is not even on this topic).
+            % The fits appears to be new in the GEOSECS report.
+            % I can't find them anywhere else.
+            ka_pressure_correction(selected) = exp((33.3 - 0.22.*temp_c(selected)).*pressure_bar(selected)./(gas_constant.*temp_k(selected)));
+        end
+
         function knh4_pressure_correction = calculate_pressure_correction_knh4(which_ks,temp_c,pressure_bar)
             temp_k    = temp_c + 273.15;
             gas_constant = Constants.gas_constant;
@@ -961,7 +1020,13 @@ classdef KFunctions
 
             kc = kc_surface.*kc_pressure_correction;
         end
-        
+        function ka = calculate_ka(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion)
+            ka_surface = KFunctions.calculate_surface_ka(temp_c,salinity,which_ks,pH_scale_conversion(1));
+            ka_pressure_correction = KFunctions.calculate_pressure_correction_ka(which_ks,temp_c,pressure_bar);
+
+            ka = ka_surface.*ka_pressure_correction;
+        end
+
         function knh4 = calculate_knh4(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion)
             knh4_surface = KFunctions.calculate_surface_knh4(temp_c,salinity,which_ks,pH_scale_conversion(1));
             knh4_pressure_correction = KFunctions.calculate_pressure_correction_knh4(which_ks,temp_c,pressure_bar);
@@ -1034,6 +1099,7 @@ classdef KFunctions
             ksi = KFunctions.calculate_surface_ksi(temp_c,salinity,which_ks,pH_scale_conversion);
             
             kc = KFunctions.calculate_surface_kc(temp_c,salinity,which_ks,pH_scale_conversion);
+            ka = KFunctions.calculate_surface_ka(temp_c,salinity,which_ks,pH_scale_conversion);
             
             knh4 = KFunctions.calculate_surface_knh4(temp_c,salinity,which_ks,pH_scale_conversion);
             kh2s = KFunctions.calculate_surface_kh2s(temp_c,salinity,which_ks,pH_scale_conversion);
@@ -1041,8 +1107,8 @@ classdef KFunctions
             ks = KFunctions.calculate_surface_ks(temp_c,salinity,which_ks);
             kf = KFunctions.calculate_surface_kf(temp_c,salinity,which_ks);
             
-            Ks = containers.Map(["K0","K1","K2","KW","KB","KF","KS","KP1","KP2","KP3","KSi","KC","KNH4","KH2S"], ...
-                        {k0,k1,k2,kw,kb,kf,ks,kp1,kp2,kp3,ksi,kc,knh4,kh2s});
+            Ks = containers.Map(["K0","K1","K2","KW","KB","KF","KS","KP1","KP2","KP3","KSi","KC","KA","KNH4","KH2S"], ...
+                        {k0,k1,k2,kw,kb,kf,ks,kp1,kp2,kp3,ksi,kc,ka,knh4,kh2s});
         end
         function pressure_correction = calculate_pressure_correction_all(which_ks,temp_c,pressure_bar,co2_correction)
             k0_pressure_correction = KFunctions.calculate_pressure_correction_k0(which_ks,temp_c,pressure_bar,co2_correction);
@@ -1056,6 +1122,7 @@ classdef KFunctions
             ksi_pressure_correction = KFunctions.calculate_pressure_correction_ksi(which_ks,temp_c,pressure_bar);
 
             kc_pressure_correction = KFunctions.calculate_pressure_correction_kc(which_ks,temp_c,pressure_bar);
+            ka_pressure_correction = KFunctions.calculate_pressure_correction_ka(which_ks,temp_c,pressure_bar);
 
             knh4_pressure_correction = KFunctions.calculate_pressure_correction_knh4(which_ks,temp_c,pressure_bar);
             kh2s_pressure_correction = KFunctions.calculate_pressure_correction_kh2s(which_ks,temp_c,pressure_bar);
@@ -1063,8 +1130,8 @@ classdef KFunctions
             ks_pressure_correction = KFunctions.calculate_pressure_correction_ks(which_ks,temp_c,pressure_bar);
             kf_pressure_correction = KFunctions.calculate_pressure_correction_kf(which_ks,temp_c,pressure_bar);
 
-            pressure_correction = containers.Map(["K0","K1","K2","KW","KB","KF","KS","KP1","KP2","KP3","KSi","KC","KNH4","KH2S"], ...
-                        {k0_pressure_correction,k1_pressure_correction,k2_pressure_correction,kw_pressure_correction,kb_pressure_correction,kf_pressure_correction,ks_pressure_correction,kp1_pressure_correction,kp2_pressure_correction,kp3_pressure_correction,ksi_pressure_correction,kc_pressure_correction,knh4_pressure_correction,kh2s_pressure_correction});
+            pressure_correction = containers.Map(["K0","K1","K2","KW","KB","KF","KS","KP1","KP2","KP3","KSi","KC","KA","KNH4","KH2S"], ...
+                        {k0_pressure_correction,k1_pressure_correction,k2_pressure_correction,kw_pressure_correction,kb_pressure_correction,kf_pressure_correction,ks_pressure_correction,kp1_pressure_correction,kp2_pressure_correction,kp3_pressure_correction,ksi_pressure_correction,kc_pressure_correction,ka_pressure_correction,knh4_pressure_correction,kh2s_pressure_correction});
 
         end
         function Ks = calculate_all(temp_c,pressure_bar,which_pH_scale,co2_correction,composition,which_ks)
@@ -1073,10 +1140,10 @@ classdef KFunctions
             pH_factor = pH_scale_conversion(2).calculate_pH_factor(temp_c,composition.salinity,which_ks);
 
             Ks = KFunctions.calculate_surface_all(temp_c,composition.salinity,which_ks,pH_scale_conversion(1));
-            [k0_surface,k1_surface,k2_surface,kw_surface,kb_surface,~,~,kp1_surface,kp2_surface,kp3_surface,ksi_surface,kc_surface,knh4_surface,kh2s_surface] = KFunctions.unpack_Ks(Ks);
+            [k0_surface,k1_surface,k2_surface,kw_surface,kb_surface,~,~,kp1_surface,kp2_surface,kp3_surface,ksi_surface,kc_surface,ka_surface,knh4_surface,kh2s_surface] = KFunctions.unpack_Ks(Ks);
         
             Ks_pressure_correction = KFunctions.calculate_pressure_correction_all(which_ks,temp_c,pressure_bar,co2_correction);
-            [k0_pressure_correction,k1_pressure_correction,k2_pressure_correction,kw_pressure_correction,kb_pressure_correction,~,~,kp1_pressure_correction,kp2_pressure_correction,kp3_pressure_correction,ksi_pressure_correction,kc_pressure_correction,knh4_pressure_correction,kh2s_pressure_correction] = KFunctions.unpack_Ks(Ks_pressure_correction);
+            [k0_pressure_correction,k1_pressure_correction,k2_pressure_correction,kw_pressure_correction,kb_pressure_correction,~,~,kp1_pressure_correction,kp2_pressure_correction,kp3_pressure_correction,ksi_pressure_correction,kc_pressure_correction,ka_pressure_correction,knh4_pressure_correction,kh2s_pressure_correction] = KFunctions.unpack_Ks(Ks_pressure_correction);
         
             k0 = k0_surface.*k0_pressure_correction;
             k1 = k1_surface.*k1_pressure_correction;
@@ -1089,6 +1156,7 @@ classdef KFunctions
             ksi = ksi_surface.*ksi_pressure_correction;
 
             kc = kc_surface.*kc_pressure_correction;
+            ka = ka_surface.*ka_pressure_correction;
 
             knh4 = knh4_surface.*knh4_pressure_correction;
             kh2s = kh2s_surface.*kh2s_pressure_correction;
@@ -1097,18 +1165,18 @@ classdef KFunctions
             kf = KFunctions.calculate_kf(temp_c,pressure_bar,composition.salinity,which_ks);
 
             % ConvertFromSWSpHScaleToChosenScale:
-            K0 = k0; KS = ks; KF = kf; KC = kc;
+            K0 = k0; KS = ks; KF = kf; KC = kc; KA = ka;
             K1   = k1.* pH_factor;  K2   = k2.* pH_factor;
             KW   = kw.* pH_factor;  KB   = kb.* pH_factor;
             KP1  = kp1.*pH_factor;  KP2  = kp2.*pH_factor;
             KP3  = kp3.*pH_factor;  KSi  = ksi.*pH_factor;
             KNH4 = knh4.*pH_factor; KH2S = kh2s.*pH_factor;
 
-            Ks = KFunctions.pack_Ks(K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KC,KNH4,KH2S);
+            Ks = KFunctions.pack_Ks(K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KC,KA,KNH4,KH2S);
         end
 
         %% Packing and unpacking
-        function [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KC,KNH4,KH2S] = unpack_Ks(Ks)
+        function [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KC,KA,KNH4,KH2S] = unpack_Ks(Ks)
             K0 = Ks("K0");
             K1 = Ks("K1");
             K2 = Ks("K2");
@@ -1121,12 +1189,13 @@ classdef KFunctions
             KP3 = Ks("KP3");
             KSi = Ks("KSi");
             KC = Ks("KC");
+            KA = Ks("KA");
             KNH4 = Ks("KNH4");
             KH2S = Ks("KH2S");
         end
-        function Ks = pack_Ks(K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KC,KNH4,KH2S)
-                Ks = containers.Map(["K0","K1","K2","KW","KB","KF","KS","KP1","KP2","KP3","KSi","KC","KNH4","KH2S"], ...
-                        {K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KC,KNH4,KH2S});
+        function Ks = pack_Ks(K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KC,KA,KNH4,KH2S)
+                Ks = containers.Map(["K0","K1","K2","KW","KB","KF","KS","KP1","KP2","KP3","KSi","KC","KA","KNH4","KH2S"], ...
+                        {K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KC,KA,KNH4,KH2S});
         end
         
         %% Suboperations

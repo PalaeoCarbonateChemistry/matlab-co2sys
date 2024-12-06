@@ -14,6 +14,7 @@ classdef Ks
         kp3
         ksi
         kc
+        ka
         knh4
         kh2s
     end
@@ -58,6 +59,9 @@ classdef Ks
         function self = calculate_kc(self)
             self.kc = KFunctions.calculate_kc(self.controls.temperature_celcius,self.controls.pressure,self.controls.composition.salinity,self.controls.which_ks,self.controls.pH_scale_conversion);
         end
+        function self = calculate_ka(self)
+            self.ka = KFunctions.calculate_ka(self.controls.temperature_celcius,self.controls.pressure,self.controls.composition.salinity,self.controls.which_ks,self.controls.pH_scale_conversion);
+        end
         function self = calculate_knh4(self)
             self.knh4 = KFunctions.calculate_knh4(self.controls.temperature_celcius,self.controls.pressure,self.controls.composition.salinity,self.controls.which_ks,self.controls.pH_scale_conversion);
         end
@@ -78,11 +82,12 @@ classdef Ks
                        .calculate_kp3()...
                        .calculate_ksi()...
                        .calculate_kc()...
+                       .calculate_ka()...
                        .calculate_knh4()...
                        .calculate_kh2s();
         end
 
-        function [k0,k1,k2,kw,kb,kf,ks,kp1,kp2,kp3,ksi,kc,knh4,kh2s] = unpack_all(self)
+        function [k0,k1,k2,kw,kb,kf,ks,kp1,kp2,kp3,ksi,kc,ka,knh4,kh2s] = unpack_all(self)
             k0 = self.k0;
             k1 = self.k1;
             k2 = self.k2;
@@ -95,6 +100,7 @@ classdef Ks
             kp3 = self.kp3;
             ksi = self.ksi;
             kc = self.kc;
+            ka = self.ka;
             knh4 = self.knh4;
             kh2s = self.kh2s;
         end
@@ -104,8 +110,8 @@ classdef Ks
             end
         end
         function k_map = as_map(self)
-            k_map = containers.Map(["K0","K1","K2","KW","KB","KF","KS","KP1","KP2","KP3","KSi","KC","KNH4","KH2S"], ...
-                        {self.k0,self.k1,self.k2,self.kw,self.kb,self.kf,self.ks,self.kp1,self.kp2,self.kp3,self.ksi,self.kc,self.knh4,self.kh2s});
+            k_map = containers.Map(["K0","K1","K2","KW","KB","KF","KS","KP1","KP2","KP3","KSi","KC","KA","KNH4","KH2S"], ...
+                        {self.k0,self.k1,self.k2,self.kw,self.kb,self.kf,self.ks,self.kp1,self.kp2,self.kp3,self.ksi,self.kc,self.ka,self.knh4,self.kh2s});
         end
     
         function ks = select(self,selected)
@@ -127,6 +133,7 @@ classdef Ks
                     ks.kp2 = self.kp2(selected);
                     ks.kp3 = self.kp3(selected);
                     ks.kc = self.kc(selected);
+                    ks.ka = self.ka(selected);
                     ks.ksi = self.ksi(selected);
                     ks.knh4 = self.knh4(selected);
                     ks.kh2s = self.kh2s(selected);

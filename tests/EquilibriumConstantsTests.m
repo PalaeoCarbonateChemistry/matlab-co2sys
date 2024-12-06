@@ -89,6 +89,7 @@ classdef EquilibriumConstantsTests < matlab.unittest.TestCase
              ksi_individual = KFunctions.calculate_ksi(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion);
              
              kc_individual = KFunctions.calculate_kc(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion);
+             ka_individual = KFunctions.calculate_ka(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion);
              
              knh4_individual = KFunctions.calculate_knh4(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion);
              kh2s_individual = KFunctions.calculate_kh2s(temp_c,pressure_bar,salinity,which_ks,pH_scale_conversion);
@@ -96,7 +97,7 @@ classdef EquilibriumConstantsTests < matlab.unittest.TestCase
              ks_individual = KFunctions.calculate_ks(temp_c,pressure_bar,salinity,which_ks);
              kf_individual = KFunctions.calculate_kf(temp_c,pressure_bar,salinity,which_ks);
 
-             calculated = KFunctions.pack_Ks(k0_individual,k1_individual,k2_individual,kw_individual,kb_individual,kf_individual,ks_individual,kp1_individual,kp2_individual,kp3_individual,ksi_individual,kc_individual,knh4_individual,kh2s_individual);
+             calculated = KFunctions.pack_Ks(k0_individual,k1_individual,k2_individual,kw_individual,kb_individual,kf_individual,ks_individual,kp1_individual,kp2_individual,kp3_individual,ksi_individual,kc_individual,ka_individual,knh4_individual,kh2s_individual);
          end
          function calculated = calculate_all_bound(inputs)
              temp_c = inputs.temperature_in;
