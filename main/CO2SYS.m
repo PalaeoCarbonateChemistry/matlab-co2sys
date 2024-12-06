@@ -364,10 +364,10 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     [pHicT(selected),pHicS(selected),pHicF(selected),pHicN(selected)]=relevant_ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH_in(selected),relevant_ks.controls);
     
     % Merge the Ks at input into an array. Ks at output will be glued to this later.
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks_in.unpack_all();
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KC,KNH4,KH2S] = Ks_in.unpack_all();
     k_in_vector = [K0,K1,K2,-log10(K1),-log10(K2),KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S];
 
-    clear K0 K1 K2 KW KB KF KS KP1 KP2 KP3 KSi KNH4 KH2S
+    clear K0 K1 K2 KW KB KF KS KP1 KP2 KP3 KSi KC KNH4 KH2S
     
     % Calculate the constants for all samples at output conditions
     Ks_out = Ks(temperature_out,...
@@ -424,7 +424,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     relevant_ks = Ks_out.select(selected);
     [pH_out_total(selected),pH_out_seawater(selected),pH_out_free(selected),pH_out_NBS(selected)] = relevant_ks.controls.pH_scale_conversion(2).find_pH_on_all_scales(pH_out(selected),relevant_ks.controls);
 
-    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S] = Ks_out.unpack_all();
+    [K0,K1,K2,KW,KB,KF,KS,KP1,KP2,KP3,KSi,KC,KNH4,KH2S] = Ks_out.unpack_all();
     k_out_vector = [K0,K1,K2,-log10(K1),-log10(K2),KW,KB,KF,KS,KP1,KP2,KP3,KSi,KNH4,KH2S];
     concentration_vector =[composition.boron,composition.fluorine,composition.sulphate,composition.phosphate,composition.silicate,composition.ammonia,composition.sulphide];
     
@@ -1024,20 +1024,12 @@ function [saturation_state_calcite,saturation_state_aragonite] = calculate_carbo
     sqrt_salinity = sqrt(salinity);
     gas_constant = Constants.gas_constant;
 
-    KCa = NaN(numel(temp_c),1);
     KAr = NaN(numel(temp_c),1);
 
     new_selected = (which_k1_k2~=6 & which_k1_k2~=7);
     if any(new_selected)
     % (below here, selected isn't used, since almost always all rows match the above criterium,
     %  in all other cases the rows will be overwritten later on).
-        % CalciteSolubility:
-        % '       Mucci, Alphonso, Amer. J. of Science 283:781-799, 1983.
-        logKCa = (-171.9065 - 0.077993.*temp_k(new_selected) + 2839.319./temp_k(new_selected)...
-                  + 71.595.*log_temp_k(new_selected)./log(10)...
-                  + (-0.77712 + 0.0028426.*temp_k(new_selected) + 178.34./temp_k(new_selected)).*sqrt_salinity(new_selected)...
-                  - 0.07711.*salinity(new_selected) + 0.0041249.*sqrt_salinity(new_selected).*salinity(new_selected));
-        KCa(new_selected) = 10.^(logKCa);% ' this is in (mol/kg-SW)^2
         
         % AragoniteSolubility:
         % '       Mucci, Alphonso, Amer. J. of Science 283:781-799, 1983.
@@ -1046,40 +1038,26 @@ function [saturation_state_calcite,saturation_state_aragonite] = calculate_carbo
                   + (-0.068393 + 0.0017276.*temp_k(new_selected) + 88.135./temp_k(new_selected)).*sqrt_salinity(new_selected)...
                   - 0.10018.*salinity(new_selected) + 0.0059415.*sqrt_salinity(new_selected).*salinity(new_selected));
         KAr(new_selected)    = 10.^(logKAr);% ' this is in (mol/kg-SW)^2
-        
-        % PressureCorrectionForCalcite:
-        % '       Ingle, Marine Chemistry 3:301-319, 1975
-        % '       same as in Millero, GCA 43:1651-1661, 1979, but Millero, GCA 1995
-        % '       has typos (-.5304, -.3692, and 10^3 for Kappa factor)
-        deltaVKCa = -48.76 + 0.5304.*temp_c(new_selected);
-        KappaKCa  = (-11.76 + 0.3692.*temp_c(new_selected))./1000;
-        lnKCafac  = (-deltaVKCa + 0.5.*KappaKCa.*pressure(new_selected)).*pressure(new_selected)./(gas_constant.*temp_k(new_selected));
-        KCa(new_selected)       = KCa(new_selected).*exp(lnKCafac);
-        
+                
         % PressureCorrectionForAragonite:
         % '       Millero, Geochemica et Cosmochemica Acta 43:1651-1661, 1979,
         % '       same as Millero, GCA 1995 except for typos (-.5304, -.3692,
         % '       and 10^3 for Kappa factor)
-        deltaVKAr = deltaVKCa + 2.8;
-        KappaKAr  = KappaKCa;
+        deltaVKAr = -48.76 + 0.5304.*temp_c(new_selected) + 2.8;
+        KappaKAr  = (-11.76 + 0.3692.*temp_c(new_selected))./1000;
         lnKArfac  = (-deltaVKAr + 0.5.*KappaKAr.*pressure(new_selected)).*pressure(new_selected)./(gas_constant.*temp_k(new_selected));
         KAr(new_selected)       = KAr(new_selected).*exp(lnKArfac);
     end
 
     new_selected=(which_k1_k2==6 | which_k1_k2==7);
     if any(new_selected)
-        % *** CalculateKCaforGEOSECS:
-        % Ingle et al, Marine Chemistry 1:295-307, 1973 is referenced in
-        % (quoted in Takahashi et al, GEOSECS Pacific Expedition v. 3, 1982
-        % but the fit is actually from Ingle, Marine Chemistry 3:301-319, 1975)
-        KCa(new_selected) = 0.0000001.*(-34.452 - 39.866.*salinity(new_selected).^(1./3) +...
-            110.21.*log(salinity(new_selected))./log(10) - 0.0000075752.*temp_k(new_selected).^2);
         % this is in (mol/kg-SW)^2
         %
         % *** CalculateKArforGEOSECS:
         % Berner, R. A., American Journal of Science 276:713-730, 1976:
         % (quoted in Takahashi et al, GEOSECS Pacific Expedition v. 3, 1982)
-        KAr(new_selected) = 1.45.*KCa(new_selected);% ' this is in (mol/kg-SW)^2
+        KAr(new_selected) = 1.45.*0.0000001.*(-34.452 - 39.866.*salinity(new_selected).^(1./3) +...
+            110.21.*log(salinity(new_selected))./log(10) - 0.0000075752.*temp_k(new_selected).^2);% ' this is in (mol/kg-SW)^2
         % Berner (p. 722) states that he uses 1.48.
         % It appears that 1.45 was used in the GEOSECS calculations
         %
@@ -1089,14 +1067,13 @@ function [saturation_state_calcite,saturation_state_aragonite] = calculate_carbo
         % but their paper is not even on this topic).
         % The fits appears to be new in the GEOSECS report.
         % I can't find them anywhere else.
-        KCa(new_selected) = KCa(new_selected).*exp((36   - 0.2 .*temp_c(new_selected)).*pressure(new_selected)./(gas_constant.*temp_k(new_selected)));
         KAr(new_selected) = KAr(new_selected).*exp((33.3 - 0.22.*temp_c(new_selected)).*pressure(new_selected)./(gas_constant.*temp_k(new_selected)));
     end
     
     % CalculateOmegasHere:
     H = 10.^(-pH);
     CO3 = dic.*K1.*K2./(K1.*H + H.*H + K1.*K2);
-    saturation_state_calcite = CO3.*calcium./KCa; % OmegaCa, dimensionless
+    saturation_state_calcite = CO3.*calcium./Ks.kc; % OmegaCa, dimensionless
     saturation_state_aragonite = CO3.*calcium./KAr; % OmegaAr, dimensionless
 end
     
