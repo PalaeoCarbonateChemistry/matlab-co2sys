@@ -7,6 +7,8 @@ jobs:
     steps:
       - name: Check out repository
         uses: actions/checkout@v3 
+      - name: Check out submodules
+        run: git submodule update --init --recursive
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v1
         with:
@@ -14,7 +16,7 @@ jobs:
       - name: Run script
         uses: matlab-actions/run-command@v1
         with:
-          command: cd 'tests', addpath("./../main/"), assertSuccess(run_performance_tests)
+          command: cd '.submodules/tests', addpath("../../main/"), assertSuccess(run_performance_tests)
       - name: Gist
         uses: exuanbo/actions-deploy-gist@v1
         with:
