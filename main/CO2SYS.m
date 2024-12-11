@@ -17,9 +17,11 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
                 length(silicate) length(phosphate) length(ammonia) length(sulphide)...
                 length(pH_scale_in) length(which_k1_k2) length(which_kso4)...
 	            length(which_kf) length(which_boron)];
+    unique_lengths = unique(input_lengths);
+    unique_non_scalar_lengths = unique_lengths(unique_lengths~=1);
     
-    if length(unique(input_lengths))>2
-	    disp(' '); disp('*** INPUT ERROR: Input vectors must all be of same length, or of length 1. ***'); disp(' '); return
+    if length(unique_non_scalar_lengths)>1
+        error("Input error - inputs must be either scalar (length of 1) or all the same length. Found non scalar lengths of: %s",string(unique_non_scalar_lengths).join(", "))
     end
     
     % Find the longest column vector:
@@ -146,7 +148,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     
     % Make sure fCO2 is available for each sample that has pCO2 or CO2.
     temp_k = temperature_in+273.15;
-    fugacity_factor = calculate_fugacity_factor(co2_pressure_correction,number_of_points,which_k1_k2,temp_k);
+    fugacity_factor = calculate_fugacity_factor(co2_pressure_correction,number_of_points,which_k1_k2,temp_k,pressure_in);
     
     selected = (~isnan(pco2) & (parameter_1_type==4 | parameter_2_type==4));
     fco2(selected) = pco2(selected).*fugacity_factor(selected);
@@ -391,7 +393,7 @@ function [data,headers,nice_headers]=CO2SYS(parameter_1,parameter_2, ...
     co3_out(selected) = calculate_co3_from_dic_pH(dic_in(selected),pH_out(selected),Ks_out.select(selected));
     
     % Generate the associated pCO2 value:
-    fugacity_factor = calculate_fugacity_factor(co2_pressure_correction,number_of_points,which_k1_k2,temp_k);
+    fugacity_factor = calculate_fugacity_factor(co2_pressure_correction,number_of_points,which_k1_k2,temp_k,pressure_out);
     pco2_out  = fco2_out./fugacity_factor;
     % Generate the associated CO2 value:
 

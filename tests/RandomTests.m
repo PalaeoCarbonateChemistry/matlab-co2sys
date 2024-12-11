@@ -25,7 +25,7 @@ classdef RandomTests < matlab.unittest.TestCase
             % random uniform sampling between wide endpoints
             dic = RandomTests.random_between(0,10000,number_of_points);
             alkalinity = RandomTests.random_between(0,10000,number_of_points);
-        end
+        end        
         
         % Reference creation
         function generate_temperature_salinity_pressure_reference()

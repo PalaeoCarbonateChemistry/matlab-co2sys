@@ -1,4 +1,4 @@
-function fugacity_factor = calculate_fugacity_factor(p_opt,number_of_points,which_k1_k2,temp_k)
+function fugacity_factor = calculate_fugacity_factor(p_opt,number_of_points,which_k1_k2,temp_k,Pbar)
     % CalculateFugacityConstants:
     % In previos versions of CO2SYS, the fugacity factor was calculated
     % assuming pressure at one atmosphere, or close to it. Starting with
