@@ -1,0 +1,3 @@
+[submodule ".submodules/tests"]
+	path = .submodules/tests
+	url = https://github.com/PalaeoCarbonateChemistry/matlab-co2sys-tests

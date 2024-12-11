@@ -8,7 +8,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v3
       - name: Check out submodules
-        run: git submodule update --init --recursive
+        run: git submodule update --init --recursive; git submodule foreach git pull origin main;
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v1
         with:
@@ -25,7 +25,7 @@ jobs:
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY }}
-        run: dvc pull .submodules/tests/small_data
+        run: cd .submodules/tests; dvc pull small_data/; cd ../..
       - name: Run script
         uses: matlab-actions/run-command@v1
         with:
