@@ -6,7 +6,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v3 
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
       - name: Set up MATLAB
         uses: matlab-actions/setup-matlab@v1
         with:
@@ -14,11 +16,11 @@ jobs:
       - name: Run script
         uses: matlab-actions/run-command@v1
         with:
-          command: cd 'tests', addpath("./../main/"), assertSuccess(run_performance_tests)
+          command: cd '.submodules/tests', addpath("../../main/"), assertSuccess(run_performance_tests)
       - name: Gist
         uses: exuanbo/actions-deploy-gist@v1
         with:
           token: ${{ secrets.CO2SYS_GIST_KEY }}
           gist_id: c68eb447f90f281a543bca7ab1d7a56a
-          file_path: tests/co2sys-performance-metrics.json
+          file_path: .submodules/tests/co2sys-performance-metrics.json
           file_type: text

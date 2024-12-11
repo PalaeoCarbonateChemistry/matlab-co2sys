@@ -1,6 +1,0 @@
-outs:
-- md5: f79dcd62cc75b340456e5a6c510156f2.dir
-  size: 47989404
-  nfiles: 10
-  hash: md5
-  path: small_data
