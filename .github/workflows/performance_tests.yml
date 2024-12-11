@@ -22,5 +22,5 @@ jobs:
         with:
           token: ${{ secrets.CO2SYS_GIST_KEY }}
           gist_id: c68eb447f90f281a543bca7ab1d7a56a
-          file_path: tests/co2sys-performance-metrics.json
+          file_path: co2sys-performance-metrics.json
           file_type: text

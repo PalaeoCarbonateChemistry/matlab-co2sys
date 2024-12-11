@@ -29,4 +29,4 @@ jobs:
       - name: Run script
         uses: matlab-actions/run-command@v1
         with:
-          command: cd '.submodules/tests', addpath("./../main/"), assertSuccess(run_small_tests)
+          command: cd '.submodules/tests', addpath("./../../main/"), assertSuccess(run_small_tests)
